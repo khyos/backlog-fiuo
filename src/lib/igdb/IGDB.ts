@@ -1,0 +1,69 @@
+import { IGDB_CLIENT_ID, IGDB_CLIENT_SECRET } from "$env/static/private";
+import { GameDB } from "$lib/server/model/game/GameDB";
+import { PlatformDB } from "$lib/server/model/game/PlatformDB";
+
+export class IGDB {
+    static async authenticateIGDB(): Promise<any> {
+        const response = await fetch("https://id.twitch.tv/oauth2/token", {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `client_id=${IGDB_CLIENT_ID}&client_secret=${IGDB_CLIENT_SECRET}&grant_type=client_credentials`
+        });
+        return await response.json();
+    }
+
+    static getHeaders(access_token: string): any {
+        return {
+            'Accept': 'application/json',
+            'Client-ID': IGDB_CLIENT_ID,
+            'Authorization': `Bearer ${access_token}`
+        };
+    }
+
+    static async getGame(gameId: string): Promise<any> {
+        const { access_token } = await this.authenticateIGDB();
+        const response = await fetch("https://api.igdb.com/v4/games", {
+            method: 'POST',
+            headers: IGDB.getHeaders(access_token),
+            body: `fields alternative_names,category,cover,first_release_date,genres,name,platforms,status,storyline,summary,url; where id = ${gameId};`
+        });
+        return (await response.json())[0];
+    }
+
+    static async initGenres(): Promise<any> {
+        const { access_token } = await this.authenticateIGDB();
+        const response = await fetch("https://api.igdb.com/v4/genres", {
+            method: 'POST',
+            headers: IGDB.getHeaders(access_token),
+            body: `fields name; limit 500;`
+        });
+        const genres = await response.json();
+        for (const genre of genres) {
+            try {
+                await GameDB.addGameGenre(genre.id, genre.name);
+            } catch (e: any) {
+                console.error(e.message);
+            }   
+        }
+    }
+
+    static async initPlatforms(): Promise<any> {
+        const { access_token } = await this.authenticateIGDB();
+        const response = await fetch("https://api.igdb.com/v4/platforms", {
+            method: 'POST',
+            headers: IGDB.getHeaders(access_token),
+            body: `fields name; limit 500;`
+        });
+        const platforms = await response.json();
+        for (const platform of platforms) {
+            try {
+                await PlatformDB.addPlatform(platform.id, platform.name);
+            } catch (e: any) {
+                console.error(e.message);
+            }
+        }
+    }
+}

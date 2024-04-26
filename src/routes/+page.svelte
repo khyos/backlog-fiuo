@@ -1,0 +1,1 @@
+<h1 class="text-2xl font-extrabold dark:text-white mb-4">Welcome to Backlog</h1>

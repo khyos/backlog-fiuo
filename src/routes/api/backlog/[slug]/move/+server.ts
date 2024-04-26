@@ -1,0 +1,20 @@
+import { User, UserRights } from "$lib/model/User";
+import { BacklogDB } from "$lib/server/model/BacklogDB";
+import { error, json } from "@sveltejs/kit";
+
+export async function POST({ params, request, locals }: any) {
+    const { user } = locals;
+	const userInst = User.deserialize(user);
+    const backlogId = parseInt(params.slug);
+    const authorization = await BacklogDB.canEditBacklog(userInst, backlogId);
+    if (authorization.status !== 200) {
+        return error(authorization.status, authorization.message);
+    }
+	const { srcRank, targetRank } = await request.json();
+    try {
+        await BacklogDB.moveBacklogItem(backlogId, srcRank, targetRank);
+        return json({ moved: backlogId });
+    } catch (e: any) {
+        return error(500, e.message );
+    }
+}
