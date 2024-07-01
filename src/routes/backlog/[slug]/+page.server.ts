@@ -6,12 +6,14 @@ import { MovieDB } from '$lib/server/model/movie/MovieDB';
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { User, UserRights } from '$lib/model/User';
+import type { BacklogOrder } from '$lib/model/Backlog';
 
-export const load = (async ({ params, locals }: any) => {
+export const load = (async ({ params, locals, url }: any) => {
 	const { user } = locals;
 	const userInst = User.deserialize(user);
 	const backlogId = parseInt(params.slug);
-	const backlog = await BacklogDB.getBacklogById(backlogId);
+	const order: BacklogOrder = url.searchParams.get('order');
+	const backlog = await BacklogDB.getBacklogByIdWithItems(backlogId, order);
 	if (backlog) {
 		const backlogTags: string[] = [];
 		for (const item of backlog.backlogItems) {

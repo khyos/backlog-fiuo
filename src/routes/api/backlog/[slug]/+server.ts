@@ -4,7 +4,7 @@ import { error, json } from "@sveltejs/kit";
 
 export async function GET({ params }: any) {
 	const backlogId = parseInt(params.slug);
-	const backlog = await BacklogDB.getBacklogById(backlogId);
+	const backlog = await BacklogDB.getBacklogByIdWithItems(backlogId);
 	if (backlog) {
 		return json(backlog.serialize());
 	}

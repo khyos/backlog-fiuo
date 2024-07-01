@@ -10,12 +10,11 @@ export async function POST({ params, request, locals }: any) {
     if (authorization.status !== 200) {
         return error(authorization.status, authorization.message);
     }
-	const { artifactId } = await request.json();
+	const { winnerArtifactId, loserArtifactId } = await request.json();
     try {
-        const rank = await BacklogDB.getBacklogMaxRank(backlogId);
-        const backlogItemId = await BacklogDB.addBacklogItem(backlogId, artifactId, rank + 1);
-        return json({ backlogItemId });
+        await BacklogDB.eloFight(backlogId, winnerArtifactId, loserArtifactId);
+        return json({});
     } catch (e: any) {
-        return error(500, e.message);
+        return error(500, e.message );
     }
 }
