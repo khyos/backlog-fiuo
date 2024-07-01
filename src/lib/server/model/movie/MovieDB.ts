@@ -1,4 +1,5 @@
 import { ArtifactType } from "$lib/model/Artifact";
+import { BacklogOrder } from "$lib/model/Backlog";
 import { BacklogItem } from "$lib/model/BacklogItem";
 import { Genre } from "$lib/model/Genre";
 import { Link } from "$lib/model/Link";
@@ -87,12 +88,16 @@ export class MovieDB {
         });
     }
 
-    static async getBacklogItems(backlogId: number): Promise<BacklogItem[]> {
+    static async getBacklogItems(backlogId: number, order: BacklogOrder = BacklogOrder.RANK): Promise<BacklogItem[]> {
+        let sqlOrder = 'rank ASC';
+        if (order === BacklogOrder.ELO) {
+            sqlOrder = 'elo DESC, rank ASC';
+        }
         return await new Promise(async (resolve, reject) => {
             db.all(`SELECT * FROM backlog_items
                     INNER JOIN artifact ON backlog_items.artifactId = artifact.id
                     WHERE backlogId = ?
-                    ORDER BY rank`, [backlogId], async (error, rows: any[]) => {
+                    ORDER BY ${sqlOrder}`, [backlogId], async (error, rows: any[]) => {
                 if (error) {
                     reject(error);
                 } else {
@@ -102,7 +107,7 @@ export class MovieDB {
                         movie.genres = await MovieDB.getGenres(row.artifactId);
                         movie.ratings = await RatingDB.getRatings(row.artifactId);
                         const tags = await BacklogItemDB.getTags(row.backlogId, row.artifactId);
-                        return new BacklogItem(row.rank, movie, tags);
+                        return new BacklogItem(row.rank, row.elo, movie, tags);
                     }));
                     resolve(backlogItems);
                 }

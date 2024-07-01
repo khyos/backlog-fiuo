@@ -1,6 +1,6 @@
 import { ArtifactType } from "$lib/model/Artifact";
 import { AuthorizationStatus } from "$lib/model/AuthorizationStatus";
-import { Backlog } from "$lib/model/Backlog";
+import { Backlog, BacklogOrder } from "$lib/model/Backlog";
 import { BacklogItem } from "$lib/model/BacklogItem";
 import { UserRights, type User } from "$lib/model/User";
 import { db, execQuery } from "../database";
@@ -30,7 +30,22 @@ export class BacklogDB {
                     resolve(null);
                 } else {
                     const backlog = new Backlog(row.id, row.userId, row.title, row.artifactType);
-                    backlog.backlogItems = await BacklogDB.getBacklogItems(row.id as number, row.artifactType);
+                    resolve(backlog);
+                }
+            });
+        });
+    }
+
+    static async getBacklogByIdWithItems(id: number, order: BacklogOrder = BacklogOrder.RANK): Promise<Backlog | null> {
+        return await new Promise((resolve, reject) => {
+            db.get(`SELECT * FROM backlog WHERE id = ?`, [id], async (error, row: any) => {
+                if (error) {
+                    reject(error);
+                } else if (!row) {
+                    resolve(null);
+                } else {
+                    const backlog = new Backlog(row.id, row.userId, row.title, row.artifactType);
+                    backlog.backlogItems = await BacklogDB.getBacklogItems(row.id as number, row.artifactType, order);
                     resolve(backlog);
                 }
             });
@@ -64,11 +79,11 @@ export class BacklogDB {
         });
     }
 
-    static async getBacklogItems(backlogId: number, artifactType: ArtifactType): Promise<BacklogItem[]> {
+    static async getBacklogItems(backlogId: number, artifactType: ArtifactType, order: BacklogOrder = BacklogOrder.RANK): Promise<BacklogItem[]> {
         if (artifactType === ArtifactType.GAME) {
-            return await GameDB.getBacklogItems(backlogId);
+            return await GameDB.getBacklogItems(backlogId, order);
         } else if (artifactType === ArtifactType.MOVIE){
-            return await MovieDB.getBacklogItems(backlogId);
+            return await MovieDB.getBacklogItems(backlogId, order);
         }
         return [];
     }
@@ -107,6 +122,23 @@ export class BacklogDB {
        
     }
 
+    static async eloFight(backlogId: number, winnerArtifactId: number, loserArtifactId: number) {
+        await db.get(`SELECT * FROM backlog_items WHERE backlogId = ? AND artifactId = ?`, [backlogId, winnerArtifactId], function (error, winnerRow: any) {
+            db.get(`SELECT * FROM backlog_items WHERE backlogId = ? AND artifactId = ?`, [backlogId, loserArtifactId], function (error2, loserRow: any) {
+                if (!error && !error2 && winnerRow && loserRow) {
+                    const winnerElo = winnerRow.elo;
+                    const loserElo = loserRow.elo;
+                    const winnerExpected = 1 / (1 + Math.pow(10, (loserElo - winnerElo) / 400));
+                    const loserExpected = 1 / (1 + Math.pow(10, (winnerElo - loserElo) / 400));
+                    const winnerNewElo = winnerElo + Math.round(32 * (1 - winnerExpected));
+                    const loserNewElo = loserElo + Math.round(32 * (0 - loserExpected));
+                    db.run(`UPDATE backlog_items SET elo = ? WHERE backlogId = ? AND artifactId = ?`, [winnerNewElo, backlogId, winnerArtifactId]);
+                    db.run(`UPDATE backlog_items SET elo = ? WHERE backlogId = ? AND artifactId = ?`, [loserNewElo, backlogId, loserArtifactId]);
+                }
+            });
+        });
+    }
+
     static deleteBacklog(id: number) {
         db.run(`DELETE FROM backlog WHERE id = ?`, [id]);
     }
@@ -140,6 +172,7 @@ export class BacklogDB {
             backlogId INTEGER NOT NULL,
             artifactId INTEGER NOT NULL,
             rank INTEGER NOT NULL,
+            elo INTERGER NOT NULL DEFAULT 1200,
             PRIMARY KEY (backlogId, artifactId)
         )`);
     }

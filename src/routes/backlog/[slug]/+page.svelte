@@ -15,6 +15,7 @@
         ListgroupItem,
         Modal,
         MultiSelect,
+        Radio,
         Range,
         Select,
         TabItem,
@@ -53,6 +54,7 @@
     };
 
     let selectedTab: string = "filters";
+    let selectedOrderType: string = "comparison";
 
     let showTagModal: boolean = false;
     let tagArtifactId: number;
@@ -108,10 +110,12 @@
     }
     let includedPlatforms: any[] = [];
 
-    let itemToOrder: any = null;
-    let itemToCompareWith: any = null;
+    let orderByComparisonItemA: any = null;
+    let orderByComparisonItemB: any = null;
     let highestRank: number;
     let lowestRank: number;
+    let orderByEloItemA: any = null;
+    let orderByEloItemB: any = null;
 
     $: includedGenres,
         excludedGenres,
@@ -338,9 +342,9 @@
     const orderByComparison = (artifactId: number) => {
         highestRank = 1;
         lowestRank = data.backlog.backlogItems.length;
-        itemToOrder = data.backlog.backlogItems.find((bi) => bi.artifact.id === artifactId);
+        orderByComparisonItemA = data.backlog.backlogItems.find((bi) => bi.artifact.id === artifactId);
         let randomIndex = OrderUtil.getRandomIntegerBetween(highestRank - 1, lowestRank - 1);
-        itemToCompareWith = data.backlog.backlogItems[randomIndex];
+        orderByComparisonItemB = data.backlog.backlogItems[randomIndex];
         selectedTab = "order";
         hiddenDrawer = false;
     }
@@ -350,45 +354,74 @@
         moveToRankBacklogItem = backlogItem;
     }
 
-    const orderPickRandom = () => {
+    const orderByComparisonPickRandom = () => {
         highestRank = 1;
         lowestRank = data.backlog.backlogItems.length;
         let randomIndex = OrderUtil.getRandomIntegerBetween(highestRank - 1, lowestRank - 1);
-        itemToOrder = data.backlog.backlogItems[randomIndex];
+        orderByComparisonItemA = data.backlog.backlogItems[randomIndex];
         randomIndex = OrderUtil.getRandomIntegerBetween(highestRank - 1, lowestRank - 1);
-        itemToCompareWith = data.backlog.backlogItems[randomIndex];
+        orderByComparisonItemB = data.backlog.backlogItems[randomIndex];
     }
 
-    const orderPickHigher = () => {
-        lowestRank = itemToCompareWith.rank - 1;
-        if (itemToCompareWith.rank < itemToOrder.rank) {
-            moveBacklogItem(itemToOrder.rank, itemToCompareWith.rank).then(() => {
+    const orderByComparisonPickHigher = () => {
+        lowestRank = orderByComparisonItemB.rank - 1;
+        if (orderByComparisonItemB.rank < orderByComparisonItemA.rank) {
+            moveBacklogItem(orderByComparisonItemA.rank, orderByComparisonItemB.rank).then(() => {
                 setTimeout(() => {
                     let randomIndex = OrderUtil.getRandomIntegerBetween(highestRank - 1, lowestRank - 1);
-                    itemToOrder = data.backlog.backlogItems[itemToCompareWith.rank - 1];
-                    itemToCompareWith = data.backlog.backlogItems[randomIndex];
+                    orderByComparisonItemA = data.backlog.backlogItems[orderByComparisonItemB.rank - 1];
+                    orderByComparisonItemB = data.backlog.backlogItems[randomIndex];
                 }, 200);
             }) 
         } else {
             let randomIndex = OrderUtil.getRandomIntegerBetween(highestRank - 1, lowestRank - 1);
-            itemToCompareWith = data.backlog.backlogItems[randomIndex];
+            orderByComparisonItemB = data.backlog.backlogItems[randomIndex];
         }
     }
 
-    const orderPickLower = () => {
-        highestRank = itemToCompareWith.rank + 2;
-        if (itemToCompareWith.rank > itemToOrder.rank) {
-            moveBacklogItem(itemToOrder.rank, itemToCompareWith.rank).then(() => {
+    const orderByComparisonPickLower = () => {
+        highestRank = orderByComparisonItemB.rank + 2;
+        if (orderByComparisonItemB.rank > orderByComparisonItemA.rank) {
+            moveBacklogItem(orderByComparisonItemA.rank, orderByComparisonItemB.rank).then(() => {
                 setTimeout(() => {
                     let randomIndex = OrderUtil.getRandomIntegerBetween(highestRank - 1, lowestRank - 1);
-                    itemToOrder = data.backlog.backlogItems[itemToCompareWith.rank - 1];
-                    itemToCompareWith = data.backlog.backlogItems[randomIndex];
+                    orderByComparisonItemA = data.backlog.backlogItems[orderByComparisonItemB.rank - 1];
+                    orderByComparisonItemB = data.backlog.backlogItems[randomIndex];
                 }, 200); 
             });
         } else {
             let randomIndex = OrderUtil.getRandomIntegerBetween(highestRank - 1, lowestRank - 1);
-            itemToCompareWith = data.backlog.backlogItems[randomIndex];
+            orderByComparisonItemB = data.backlog.backlogItems[randomIndex];
         }
+    }
+
+    const orderByEloPickRandom = () => {
+        let randomIndex = OrderUtil.getRandomIntegerBetween(0, data.backlog.backlogItems.length - 1);
+        orderByEloItemA = data.backlog.backlogItems[randomIndex];
+        randomIndex = OrderUtil.getRandomIntegerBetween(0, data.backlog.backlogItems.length - 1);
+        orderByEloItemB = data.backlog.backlogItems[randomIndex];
+    }
+
+    const orderByEloFight = (winner: string) => {
+        let winnerItem: any;
+        let loserItem: any;
+        if (winner === "A") {
+            winnerItem = orderByEloItemA;
+            loserItem = orderByEloItemB;
+        } else {
+            winnerItem = orderByEloItemB;
+            loserItem = orderByEloItemA;
+        }
+        fetch(`/api/backlog/${data.backlog.id}/elo`, {
+            method: "POST",
+            body: JSON.stringify({
+                winnerArtifactId: winnerItem.artifact.id,
+                loserArtifactId: loserItem.artifact.id,
+            }),
+        }).then(() => {
+            refreshBacklog();
+            orderByEloPickRandom();
+        });
     }
 </script>
 
@@ -437,6 +470,7 @@
                             {/each}
                         </div>
                     </div>
+                    <Badge class="mr-1">{backlogItem.elo}</Badge>
                     {#if data.canEdit}
                         <Button size="xs"><ChevronDownOutline /></Button>
                         <Dropdown>
@@ -573,28 +607,54 @@
             {/if}
         </TabItem>
         <TabItem open={selectedTab == 'order'} title="Order" class="w-full" disabled={!data.canEdit}>
-            <Label class="block mb-2">Order items</Label>
-            <Button
-                class="w-full mb-2"
-                on:click={orderPickRandom}
-                >Pick a Random Item</Button>
-            {#if itemToOrder}
-                <p class="mb-2">Item to Order: <Badge class="mr-1">{itemToOrder.rank}</Badge>{itemToOrder.artifact.title}</p>
+            <Radio name="orderType" value="comparison" bind:group={selectedOrderType}>Order by Comparison</Radio>
+            <Radio name="orderType" value="elo" bind:group={selectedOrderType}>Order by Elo</Radio>
+            {#if selectedOrderType === "comparison"}
                 <Button
-                    class="mb-2"
-                    on:click={orderPickRandom}
-                    >Right Place</Button>
+                    class="w-full mb-2 mt-2"
+                    on:click={orderByComparisonPickRandom}
+                    >Pick a Random Item</Button>
+                {#if orderByComparisonItemA}
+                    <p class="mb-2">Item to Order: <Badge class="mr-1">{orderByComparisonItemA.rank}</Badge>{orderByComparisonItemA.artifact.title}</p>
+                    <Button
+                        class="mb-2"
+                        on:click={orderByComparisonPickRandom}
+                        >Right Place</Button>
+                    <Button
+                        class="mb-2"
+                        on:click={orderByComparisonPickHigher}
+                        >Higher</Button>
+                    <Button
+                        class="mb-2"
+                        on:click={orderByComparisonPickLower}
+                        >Lower</Button>
+                    <p class="mb-2">Compared to: <Badge class="mr-1">{orderByComparisonItemB.rank}</Badge>{orderByComparisonItemB.artifact.title}</p>
+                {/if}
+            {:else if selectedOrderType === "elo"}
                 <Button
-                    class="mb-2"
-                    on:click={orderPickHigher}
-                    >Higher</Button>
-                <Button
-                    class="mb-2"
-                    on:click={orderPickLower}
-                    >Lower</Button>
-                <p class="mb-2">Compared to: <Badge class="mr-1">{itemToCompareWith.rank}</Badge>{itemToCompareWith.artifact.title}</p>
-            {/if}
-            
+                    class="w-full mb-2 mt-2"
+                    on:click={orderByEloPickRandom}
+                    >Pick a Random Item</Button>
+                {#if orderByEloItemA}
+                    <p class="mb-2">Elo Fight:</p>
+                    <Button
+                        class="mb-2 w-full"
+                        on:click={() => { orderByEloFight("A")}}
+                        >
+                        <Badge class="mr-1">{orderByEloItemA.rank}</Badge>
+                        <p style="flex-grow: 1;">{orderByEloItemA.artifact.title}</p>
+                        <Badge class="ml-1">{orderByEloItemA.elo}</Badge>
+                    </Button>
+                    <Button
+                        class="mb-2 w-full"
+                        on:click={() => { orderByEloFight("B")}}
+                        >
+                        <Badge class="mr-1">{orderByEloItemB.rank}</Badge>
+                        <p style="flex-grow: 1;">{orderByEloItemB.artifact.title}</p>
+                        <Badge class="ml-1">{orderByEloItemB.elo}</Badge>
+                    </Button>
+                {/if}
+            {/if} 
         </TabItem>
         <CloseButton
             on:click={() => (hiddenDrawer = true)}

@@ -1,6 +1,11 @@
 import { ArtifactType } from "./Artifact"
 import { BacklogItem } from "./BacklogItem"
 
+export enum BacklogOrder {
+    RANK = "rank",
+    ELO = "elo",
+}
+
 export class Backlog {
     id: number
     userId: number

@@ -1,4 +1,4 @@
-import { User, UserRights } from "$lib/model/User";
+import { User } from "$lib/model/User";
 import { BacklogDB } from "$lib/server/model/BacklogDB";
 import { error, json } from "@sveltejs/kit";
 

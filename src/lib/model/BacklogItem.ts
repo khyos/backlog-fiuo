@@ -5,11 +5,13 @@ import { Movie } from "./movie/Movie";
 
 export class BacklogItem {
     rank: number;
+    elo: number;
     artifact: Artifact;
     tags: Tag[];
 
-    constructor(rank: number, artifact: Artifact, tags: Tag[]) {
+    constructor(rank: number, elo: number, artifact: Artifact, tags: Tag[]) {
         this.rank = rank;
+        this.elo = elo;
         this.artifact = artifact;
         this.tags = tags;
     }
@@ -17,6 +19,7 @@ export class BacklogItem {
     serialize() {
         return {
             rank: this.rank,
+            elo: this.elo,
             artifact: this.artifact.serialize(),
             tags: this.tags.map(tag => tag.serialize()),
         };
@@ -34,6 +37,6 @@ export class BacklogItem {
         const tags = data.tags.map((tagData: any) => {
             return Tag.deserialize(tagData);
         });
-        return new BacklogItem(data.rank, artifact, tags);
+        return new BacklogItem(data.rank, data.elo, artifact, tags);
     }
 }
