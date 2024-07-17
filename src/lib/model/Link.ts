@@ -1,4 +1,4 @@
-import { Artifact, ArtifactType } from "./Artifact";
+import { ArtifactType } from "./Artifact";
 
 export enum LinkType {
     HLTB = 'HLTB',
@@ -93,6 +93,7 @@ export class Link {
                 } else if (artifactType === ArtifactType.MOVIE) {
                     return `https://www.senscritique.com/film/${url}`;
                 }
+                break;
             case LinkType.TMDB:
                 return `https://www.themoviedb.org/movie/${url}`;
             default:

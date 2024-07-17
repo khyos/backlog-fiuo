@@ -131,7 +131,7 @@ export class GameDB {
         if (order === BacklogOrder.ELO) {
             sqlOrder = 'elo DESC, rank ASC';
         }
-        return await new Promise(async (resolve, reject) => {
+        return await new Promise((resolve, reject) => {
             db.all(`SELECT * FROM backlog_items
                     INNER JOIN artifact ON backlog_items.artifactId = artifact.id
                     WHERE backlogId = ?
