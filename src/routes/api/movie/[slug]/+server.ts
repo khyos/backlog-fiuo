@@ -3,10 +3,10 @@ import { MovieDB } from "$lib/server/model/movie/MovieDB";
 import { error, json } from "@sveltejs/kit";
 
 export async function GET({ params }: any) {
-  	const movieId = parseInt(params.slug);
+	const movieId = parseInt(params.slug);
 	const movie = await MovieDB.getById(movieId);
 	if (movie) {
-	  	return json(movie.serialize());
+		return json(movie.serialize());
 	}
 	error(404, 'Not found');
 }

@@ -80,6 +80,13 @@ export class TMDB {
         return frName || usName || originCountryName;
     }
 
+    static async getImageURL(movieId: string) {
+        const movie = await TMDB.getMovie(movieId);
+        if (movie?.poster_path) {
+            return `https://image.tmdb.org/t/p/w600_and_h900_bestv2/${movie?.poster_path}`;
+        }
+    }
+
     static async initGenres(): Promise<any> {
         const response = await fetch("https://api.themoviedb.org/3/genre/movie/list?language=en", {
             method: 'GET',

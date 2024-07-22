@@ -14,7 +14,7 @@ export async function POST({ params, request, locals }: any) {
     if (!userInst.hasRight(UserRights.EDIT_ARTIFACT)) {
         return error(403, "Forbidden");
     }
-  	const movieId = parseInt(params.slug);
+    const movieId = parseInt(params.slug);
     const { type, url } = await request.json();
 	if (type === LinkType.SENSCRITIQUE) {
         const scRating = await SensCritique.getMovieRating(url);

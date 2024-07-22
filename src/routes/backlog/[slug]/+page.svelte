@@ -116,6 +116,8 @@
     let lowestRank: number;
     let orderByEloItemA: any = null;
     let orderByEloItemB: any = null;
+    let orderbyEloItemAPoster: string | null = null;
+    let orderbyEloItemBPoster: string | null = null;
 
     $: includedGenres,
         excludedGenres,
@@ -138,6 +140,18 @@
                 invalidate("searchedArtifacts");
             });
     };
+
+    const getPosterURL = async (artifactId: string) => {
+        let url = "";
+        if (data.backlog.artifactType === ArtifactType.GAME) {
+            const response = await fetch(`/api/game/${artifactId}/poster`);
+            url = await response.text();
+        } else if (data.backlog.artifactType === ArtifactType.MOVIE) {
+            const response = await fetch(`/api/movie/${artifactId}/poster`);
+            url = await response.text();
+        }
+        return url;
+    }
 
     const addBacklogItem = (e: any) => {
         const artifactId = e.currentTarget.getAttribute("data-id");
@@ -395,11 +409,15 @@
         }
     }
 
-    const orderByEloPickRandom = () => {
+    const orderByEloPickRandom = async () => {
+        orderbyEloItemAPoster = '';
+        orderbyEloItemBPoster = '';
         let randomIndex = OrderUtil.getRandomIntegerBetween(0, data.backlog.backlogItems.length - 1);
         orderByEloItemA = data.backlog.backlogItems[randomIndex];
         randomIndex = OrderUtil.getRandomIntegerBetween(0, data.backlog.backlogItems.length - 1);
         orderByEloItemB = data.backlog.backlogItems[randomIndex];
+        orderbyEloItemAPoster = await getPosterURL(orderByEloItemA.artifact.id);
+        orderbyEloItemBPoster = await getPosterURL(orderByEloItemB.artifact.id);
     }
 
     const orderByEloFight = (winner: string) => {
@@ -637,22 +655,32 @@
                     >Pick a Random Item</Button>
                 {#if orderByEloItemA}
                     <p class="mb-2">Elo Fight:</p>
-                    <Button
-                        class="mb-2 w-full"
-                        on:click={() => { orderByEloFight("A")}}
-                        >
-                        <Badge class="mr-1">{orderByEloItemA.rank}</Badge>
-                        <p style="flex-grow: 1;">{orderByEloItemA.artifact.title}</p>
-                        <Badge class="ml-1">{orderByEloItemA.elo}</Badge>
-                    </Button>
-                    <Button
-                        class="mb-2 w-full"
-                        on:click={() => { orderByEloFight("B")}}
-                        >
-                        <Badge class="mr-1">{orderByEloItemB.rank}</Badge>
-                        <p style="flex-grow: 1;">{orderByEloItemB.artifact.title}</p>
-                        <Badge class="ml-1">{orderByEloItemB.elo}</Badge>
-                    </Button>
+                    <div class="mb-2" style="display: inline-flex">
+                        <Button
+                            class="w-1/2 px-2.5"
+                            style="display:flex; flex-direction: column; margin-right: 0.25rem"
+                            on:click={() => { orderByEloFight("A")}}
+                            >
+                            <div class="w-full mb-1" style="display: inline-flex">
+                                <div style="flex-grow: 1; text-align: left;"><Badge class="mr-1">{orderByEloItemA.rank}</Badge></div>
+                                <div style="flex-grow: 1; text-align: right;"><Badge class="ml-1">{orderByEloItemA.elo}</Badge></div>
+                            </div>
+                            <img src={orderbyEloItemAPoster} alt="poster"/>
+                            <p style="flex-grow: 1;">{`${orderByEloItemA.artifact.title} (${new Date(orderByEloItemA.artifact.releaseDate).getFullYear()})`}</p>
+                        </Button>
+                        <Button
+                            class="w-1/2 px-2.5"
+                            style="display:flex; flex-direction: column; margin-right: 0.25rem"
+                            on:click={() => { orderByEloFight("B")}}
+                            >
+                            <div class="w-full mb-1" style="display: inline-flex">
+                                <div style="flex-grow: 1; text-align: left;"><Badge class="mr-1">{orderByEloItemB.rank}</Badge></div>
+                                <div style="flex-grow: 1; text-align: right;"><Badge class="ml-1">{orderByEloItemB.elo}</Badge></div>
+                            </div>
+                            <img src={orderbyEloItemBPoster} alt="poster"/>
+                            <p style="flex-grow: 1;">{`${orderByEloItemB.artifact.title} (${new Date(orderByEloItemB.artifact.releaseDate).getFullYear()})`}</p>
+                        </Button>
+                    </div>
                 {/if}
             {/if} 
         </TabItem>
