@@ -24,7 +24,10 @@ export async function POST({ request, locals }: any) {
         error(500, 'Movie already exists in list');
     }
     const tmdbMovie = await TMDB.getMovie(tmdbId);
-    const releaseDate = await TMDB.getReleaseDate(tmdbId, tmdbMovie.origin_country?.[0]);
+    let releaseDate = await TMDB.getReleaseDate(tmdbId, tmdbMovie.origin_country?.[0]);
+    if (!releaseDate) {
+        releaseDate = new Date(tmdbMovie.release_date);
+    }
     let title = await TMDB.getTitle(tmdbId, tmdbMovie);
     if (!title) {
         title = tmdbMovie.title;

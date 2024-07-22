@@ -18,7 +18,7 @@ export class TMDB {
         return await response.json();
     }
 
-    static async getReleaseDate(movieId: string, originCountry: string): Promise<Date> {
+    static async getReleaseDate(movieId: string, originCountry: string): Promise<Date | null> {
         const response = await fetch(`https://api.themoviedb.org/3/movie/${movieId}/release_dates`, {
             method: 'GET',
             headers: TMDB.getHeaders()
@@ -31,27 +31,45 @@ export class TMDB {
         let defaultDate = null;
     
         for (const releaseDatesForCountry of releaseDatesByCountries) {
-            let theatrical = null;
+            let theatricalNoNote = null;
+            let theatricalWithNote = null;
             let notTheatricalDate = null;
             for (const releaseDate of releaseDatesForCountry.release_dates) {
-                if (releaseDate.type === 3) {
-                    theatrical = releaseDate.release_date;
+                if (!theatricalNoNote && releaseDate.type === 3 && (!releaseDate.note || releaseDate.note === '')) {
+                    theatricalNoNote = releaseDate.release_date;
+                } else if (releaseDate.type === 3) {
+                    theatricalWithNote = releaseDate.release_date;
                 } else {
                     notTheatricalDate = releaseDate.release_date;
                 }
             }
+            const finalDate = new Date(theatricalNoNote || theatricalWithNote || notTheatricalDate);
             if (releaseDatesForCountry.iso_3166_1 === 'FR') {
-                frDate = theatrical || notTheatricalDate;
+                frDate = finalDate;
             } else if (releaseDatesForCountry.iso_3166_1 === 'US') {
-                usDate = theatrical || notTheatricalDate;
+                usDate = finalDate;
             } else if (releaseDatesForCountry.iso_3166_1.toLowerCase() === originCountry?.toLowerCase()) {
-                originCountryDate = theatrical || notTheatricalDate;
+                originCountryDate = finalDate;
             } else {
-                defaultDate = theatrical || notTheatricalDate;
+                defaultDate = finalDate;
             }
         }
-        const releaseDate = originCountryDate || frDate || usDate || defaultDate;
-        return new Date(releaseDate);
+        let releaseDate = originCountryDate;
+        if (!releaseDate) {
+            if (frDate && usDate) {
+                if (frDate.getTime() > usDate.getTime()) {
+                    releaseDate = usDate;
+                } else {
+                    releaseDate = frDate;
+                }
+            } else {
+                releaseDate = frDate || usDate;
+            }
+        }
+        if (!releaseDate) {
+            releaseDate = defaultDate;
+        }
+        return releaseDate;
     }
 
     static async getTitle(movieId: string, tmdbMovie: any): Promise<string> {
@@ -85,6 +103,7 @@ export class TMDB {
         if (movie?.poster_path) {
             return `https://image.tmdb.org/t/p/w600_and_h900_bestv2/${movie?.poster_path}`;
         }
+        return null;
     }
 
     static async initGenres(): Promise<any> {

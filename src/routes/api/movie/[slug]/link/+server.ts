@@ -6,6 +6,8 @@ import { RottenTomatoes } from "$lib/rottentomatoes/RottenTomatoes";
 import { SensCritique } from "$lib/senscritique/SensCritique";
 import { LinkDB } from "$lib/server/model/LinkDB";
 import { RatingDB } from "$lib/server/model/RatingDB";
+import { MovieDB } from "$lib/server/model/movie/MovieDB";
+import { TMDB } from "$lib/tmdb/TMDB";
 import { error, json } from "@sveltejs/kit";
 
 export async function POST({ params, request, locals }: any) {
@@ -51,6 +53,20 @@ export async function PUT({ params, request, locals }: any) {
     for (const type of types) {
         const url = links.find(link => link.type === type)?.url;
         if (url) {
+            if (type === LinkType.TMDB) {     
+                const tmdbMovie = await TMDB.getMovie(url);
+                let releaseDate = await TMDB.getReleaseDate(url, tmdbMovie.origin_country?.[0]);
+                if (!releaseDate) {
+                    releaseDate = new Date(tmdbMovie.release_date);
+                }
+                let title = await TMDB.getTitle(url, tmdbMovie);
+                if (!title) {
+                    title = tmdbMovie.title;
+                }
+
+                const duration = tmdbMovie.runtime * 60;
+                await MovieDB.refreshData(movieId, title, releaseDate, duration);
+            }
             if (type === LinkType.SENSCRITIQUE) {
                 const scRating = await SensCritique.getMovieRating(url);
                 if (scRating) {

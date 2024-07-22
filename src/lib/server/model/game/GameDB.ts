@@ -145,7 +145,7 @@ export class GameDB {
                         game.platforms = await GameDB.getPlatforms(row.artifactId);
                         game.genres = await GameDB.getGenres(row.artifactId);
                         game.ratings = await RatingDB.getRatings(row.artifactId);
-                        const tags = await BacklogItemDB.getTags(row.backlogId, row.artifactId);
+                        const tags = await BacklogItemDB.getTags(row.backlogId, 'game', row.artifactId);
                         return new BacklogItem(row.rank, row.elo, game, tags);
                     }));
                     resolve(backlogItems);

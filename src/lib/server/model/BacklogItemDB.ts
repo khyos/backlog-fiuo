@@ -2,11 +2,11 @@ import { Tag } from "$lib/model/Tag";
 import { db } from "../database";
 
 export class BacklogItemDB {
-    static getTags(backlogId: number, artifactId: number): Promise<Tag[]> {
+    static getTags(backlogId: number, artifactType: string, artifactId: number): Promise<Tag[]> {
         return new Promise((resolve, reject) => {
             db.all(`SELECT * FROM backlog_item_tag
                     INNER JOIN tag ON backlog_item_tag.tagId = tag.id
-                    WHERE backlogId = ? AND artifactId = ?`, [backlogId, artifactId], (error, rows: any[]) => {
+                    WHERE backlogId = ? AND artifactId = ? AND artifactType = ?`, [backlogId, artifactId, artifactType], (error, rows: any[]) => {
                 if (error) {
                     reject(error);
                 } else {
