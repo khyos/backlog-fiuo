@@ -6,8 +6,17 @@ export class RatingDB {
         db.run(`INSERT INTO rating (artifactId, type, rating) VALUES (?, ?, ?)`, [artifactId, type, rating]);
     }
 
-    static updateRating(artifactId: number, type: string, rating: number | null) {
-        db.run(`UPDATE rating SET rating = ? WHERE artifactId = ? AND type = ?`, [rating, artifactId, type]);
+    static async updateRating(artifactId: number, type: string, rating: number | null): Promise<null> {
+        return await new Promise((resolve) => {
+            db.get(`SELECT * FROM rating WHERE artifactId = ? AND type = ?`, [artifactId, type], async (error, row: any) => {
+                if (error || !row) {
+                    RatingDB.addRating(artifactId, type, rating);
+                } else {
+                    db.run(`UPDATE rating SET rating = ? WHERE artifactId = ? AND type = ?`, [rating, artifactId, type]);
+                }
+                resolve(null);
+            });
+        });
     }
 
     static async getRatings(artifactId: number): Promise<Rating[]> {

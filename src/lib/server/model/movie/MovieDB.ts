@@ -106,7 +106,7 @@ export class MovieDB {
                         const movie = new Movie(row.artifactId, row.title, row.type, releaseDate, row.duration);
                         movie.genres = await MovieDB.getGenres(row.artifactId);
                         movie.ratings = await RatingDB.getRatings(row.artifactId);
-                        const tags = await BacklogItemDB.getTags(row.backlogId, row.artifactId);
+                        const tags = await BacklogItemDB.getTags(row.backlogId, 'movie', row.artifactId);
                         return new BacklogItem(row.rank, row.elo, movie, tags);
                     }));
                     resolve(backlogItems);
@@ -141,8 +141,16 @@ export class MovieDB {
         });
     }
 
-    static async refreshData(movieId: number) {
-
+    static async refreshData(id: number, title: string, releaseDate: Date, duration: number = 0) {
+        return await new Promise((resolve, reject) => {
+            db.run(`UPDATE artifact SET title = ?, releaseDate = ?, duration = ? WHERE id = ?`, [title, releaseDate, duration, id], async function (error) {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve(null);
+                }
+            });
+        });
     }
 
     static deleteMovie(id: number) {

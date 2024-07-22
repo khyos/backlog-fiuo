@@ -34,10 +34,19 @@ export class IGDB {
     }
 
     static async getImageURL(gameId: string) {
-        const movie = await IGDB.getGame(gameId);
-        if (movie?.poster_path) {
-            return `https://image.tmdb.org/t/p/w600_and_h900_bestv2/${movie?.poster_path}`;
+        const { access_token } = await this.authenticateIGDB();
+        const response = await fetch("https://api.igdb.com/v4/covers", {
+            method: 'POST',
+            headers: IGDB.getHeaders(access_token),
+            body: `fields alpha_channel,animated,checksum,game,game_localization,height,image_id,url,width; where game = ${gameId};`
+        });
+        const url = (await response.json())[0]?.url;
+        if (url) {
+            const parts = url.split('/');
+            const lastPart = parts[parts.length - 1];
+            return `https://images.igdb.com/igdb/image/upload/t_cover_big/${lastPart}`;
         }
+        return null;
     }
 
     static async initGenres(): Promise<any> {
