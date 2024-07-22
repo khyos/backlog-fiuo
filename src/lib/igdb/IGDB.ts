@@ -33,6 +33,13 @@ export class IGDB {
         return (await response.json())[0];
     }
 
+    static async getImageURL(gameId: string) {
+        const movie = await IGDB.getGame(gameId);
+        if (movie?.poster_path) {
+            return `https://image.tmdb.org/t/p/w600_and_h900_bestv2/${movie?.poster_path}`;
+        }
+    }
+
     static async initGenres(): Promise<any> {
         const { access_token } = await this.authenticateIGDB();
         const response = await fetch("https://api.igdb.com/v4/genres", {
