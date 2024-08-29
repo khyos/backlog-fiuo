@@ -1,10 +1,12 @@
+import type { BacklogOrder } from "$lib/model/Backlog";
 import { User } from "$lib/model/User";
 import { BacklogDB } from "$lib/server/model/BacklogDB";
 import { error, json } from "@sveltejs/kit";
 
-export async function GET({ params }: any) {
+export async function GET({ params, url }: any) {
 	const backlogId = parseInt(params.slug);
-	const backlog = await BacklogDB.getBacklogByIdWithItems(backlogId);
+	const order: BacklogOrder = url.searchParams.get('order');
+	const backlog = await BacklogDB.getBacklogByIdWithItems(backlogId, order);
 	if (backlog) {
 		return json(backlog.serialize());
 	}

@@ -6,7 +6,7 @@ import { MovieDB } from '$lib/server/model/movie/MovieDB';
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { User, UserRights } from '$lib/model/User';
-import type { BacklogOrder } from '$lib/model/Backlog';
+import { BacklogOrder } from '$lib/model/Backlog';
 
 export const load = (async ({ params, locals, url }: any) => {
 	const { user } = locals;
@@ -45,7 +45,8 @@ export const load = (async ({ params, locals, url }: any) => {
 			backlogTags: backlogTags.map(tag => { return { value: tag, name: tag }; } ),
 			genres: genres,
 			platforms: platforms,
-			canEdit: userInst.hasRight(UserRights.EDIT_BACKLOG) && backlog.userId === userInst.id
+			canEdit: userInst.hasRight(UserRights.EDIT_BACKLOG) && backlog.userId === userInst.id,
+			order: order ?? BacklogOrder.RANK
 		};
 	}
 	error(404, 'Not found');
