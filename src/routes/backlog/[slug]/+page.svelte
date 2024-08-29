@@ -54,7 +54,12 @@
     };
 
     let selectedTab: string = "filters";
-    let selectedOrderType: string = "comparison";
+    let selectedOrderType: string = "elo";
+    let orders = [
+        { value: 'elo', name: 'Elo' },
+        { value: 'rank', name: 'Rank' },
+    ];
+    let selectedOrder = data.order;
 
     let showTagModal: boolean = false;
     let tagArtifactId: number;
@@ -249,7 +254,7 @@
     };
 
     const refreshBacklog = () => {
-        return fetch(`/api/backlog/${data.backlog.id}`)
+        return fetch(`/api/backlog/${data.backlog.id}?order=${selectedOrder}`)
             .then((res) => res.json())
             .then((backlog) => {
                 data.backlog = Backlog.deserialize(backlog);
@@ -371,10 +376,10 @@
     const orderByComparisonPickRandom = () => {
         highestRank = 1;
         lowestRank = data.backlog.backlogItems.length;
-        let randomIndex = OrderUtil.getRandomIntegerBetween(highestRank - 1, lowestRank - 1);
-        orderByComparisonItemA = data.backlog.backlogItems[randomIndex];
-        randomIndex = OrderUtil.getRandomIntegerBetween(highestRank - 1, lowestRank - 1);
-        orderByComparisonItemB = data.backlog.backlogItems[randomIndex];
+        const randomIndexA = OrderUtil.getRandomIntegerBetween(highestRank - 1, lowestRank - 1);
+        orderByComparisonItemA = data.backlog.backlogItems[randomIndexA];
+        const randomIndexB = OrderUtil.getRandomIntegerBetween(highestRank - 1, lowestRank - 1);
+        orderByComparisonItemB = data.backlog.backlogItems[randomIndexB];
     }
 
     const orderByComparisonPickHigher = () => {
@@ -410,12 +415,18 @@
     }
 
     const orderByEloPickRandom = async () => {
+        if (data.backlog.backlogItems.length < 2) {
+            return;
+        }
         orderbyEloItemAPoster = '';
         orderbyEloItemBPoster = '';
-        let randomIndex = OrderUtil.getRandomIntegerBetween(0, data.backlog.backlogItems.length - 1);
-        orderByEloItemA = data.backlog.backlogItems[randomIndex];
-        randomIndex = OrderUtil.getRandomIntegerBetween(0, data.backlog.backlogItems.length - 1);
-        orderByEloItemB = data.backlog.backlogItems[randomIndex];
+        const randomIndexA = OrderUtil.getRandomIntegerBetween(0, data.backlog.backlogItems.length - 1);
+        orderByEloItemA = data.backlog.backlogItems[randomIndexA];
+        let randomIndexB = OrderUtil.getRandomIntegerBetween(0, data.backlog.backlogItems.length - 1);
+        while (randomIndexB === randomIndexA) {
+            randomIndexB = OrderUtil.getRandomIntegerBetween(0, data.backlog.backlogItems.length - 1);
+        }
+        orderByEloItemB = data.backlog.backlogItems[randomIndexB];
         orderbyEloItemAPoster = await getPosterURL(orderByEloItemA.artifact.id);
         orderbyEloItemBPoster = await getPosterURL(orderByEloItemB.artifact.id);
     }
@@ -451,6 +462,7 @@
         >
             {data.backlog.title} ({TimeUtil.formatDuration(totalTime)})
         </h3>
+        <Select size="sm" class="w-24" items={orders} bind:value={selectedOrder} on:change={refreshBacklog}/>
         <Button on:click={() => (hiddenDrawer = false)}>Filters / Add</Button>
     </div>
     {#each filteredBacklogItems as backlogItem}
@@ -625,8 +637,8 @@
             {/if}
         </TabItem>
         <TabItem open={selectedTab == 'order'} title="Order" class="w-full" disabled={!data.canEdit}>
-            <Radio name="orderType" value="comparison" bind:group={selectedOrderType}>Order by Comparison</Radio>
             <Radio name="orderType" value="elo" bind:group={selectedOrderType}>Order by Elo</Radio>
+            <Radio name="orderType" value="comparison" bind:group={selectedOrderType}>Order by Comparison</Radio>
             {#if selectedOrderType === "comparison"}
                 <Button
                     class="w-full mb-2 mt-2"
