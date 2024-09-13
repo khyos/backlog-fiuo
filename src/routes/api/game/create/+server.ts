@@ -8,6 +8,7 @@ import { OpenCritic } from "$lib/opencritic/OpenCritic";
 import { SensCritique } from "$lib/senscritique/SensCritique";
 import { LinkDB } from "$lib/server/model/LinkDB";
 import { GameDB } from "$lib/server/model/game/GameDB";
+import { Steam } from "$lib/steam/Steam";
 import { error, json } from "@sveltejs/kit";
 
 export async function POST({ request, locals }: any) {
@@ -16,7 +17,7 @@ export async function POST({ request, locals }: any) {
     if (!userInst.hasRight(UserRights.CREATE_ARTIFACT)) {
         return error(403, "Forbidden");
     }
-    const { igdbId, hltbId, scId, ocId, mcId } = await request.json();
+    const { igdbId, hltbId, scId, ocId, mcId, steamId } = await request.json();
     if (!igdbId) {
         error(500, 'No IGDB ID provided');
     }
@@ -57,6 +58,14 @@ export async function POST({ request, locals }: any) {
         const mcRating = await MetaCritic.getGameRating(mcId);
         if (mcRating) {
             ratings.push(new Rating(RatingType.METACRITIC, mcRating));
+        }
+    }
+
+    if (steamId) {
+        links.push(new Link(LinkType.STEAM, steamId));
+        const steamRating = await Steam.getGameRating(steamId);
+        if (steamRating) {
+            ratings.push(new Rating(RatingType.STEAM, steamRating));
         }
     }
 
