@@ -27,7 +27,9 @@ export abstract class Artifact {
         this.duration = duration;
     }
 
-    serialize(): any {
+    abstract getMeanRating(): number | null;
+
+    serialize() {
         return {
             id: this.id,
             title: this.title,
@@ -37,6 +39,7 @@ export abstract class Artifact {
             links: this.links.map(link => link.serialize()),
             genres: this.genres.map(genre => genre.serialize()),
             ratings: this.ratings.map(rating => rating.serialize()),
+            meanRating: this.getMeanRating(),
             tags: this.tags.map(tag => tag.serialize())
         }
     }

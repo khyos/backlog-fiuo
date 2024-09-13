@@ -36,6 +36,7 @@
     import type { PageData } from "./$types";
     import { OrderUtil } from "$lib/util/OrderUtil";
     import "./page.pcss";
+    import type { Platform } from "$lib/model/game/Platform";
 
     export let data: PageData;
 
@@ -119,6 +120,7 @@
     let orderByComparisonItemB: any = null;
     let highestRank: number;
     let lowestRank: number;
+    let orderByEloArtifactId: number | null = null;
     let orderByEloItemA: any = null;
     let orderByEloItemB: any = null;
     let orderbyEloItemAPoster: string | null = null;
@@ -257,8 +259,7 @@
         return fetch(`/api/backlog/${data.backlog.id}?order=${selectedOrder}`)
             .then((res) => res.json())
             .then((backlog) => {
-                data.backlog = Backlog.deserialize(backlog);
-                backlog = data.backlog;
+                data.backlog = backlog;
                 invalidate("data.backlog");
                 invalidate("totalTime");
                 applyFilters();
@@ -322,25 +323,17 @@
         }
         if (includedPlatforms.length > 0) {
             filteredBacklogItems = filteredBacklogItems.filter((item) => {
-                const game = item.artifact as Game;
-                return game.platforms.some((platform) => {
+                const game: any = item;
+                return game.platforms.some((platform: Platform) => {
                     return includedPlatforms.includes(platform.id);
                 });
             });
         }
         if (ratingValue > 0) {
             filteredBacklogItems = filteredBacklogItems.filter((item) => {
-                let meanRating: number = 0;
-                let ratingCount = 0;
-                for (const rating of item.artifact.ratings) {
-                    if (rating.rating != null) {
-                        meanRating += rating.rating;
-                        ratingCount++;
-                    }
-                }
                 return (
-                    meanRating === 0 ||
-                    meanRating / ratingCount >= ratingValue
+                    item.artifact.meanRating === null ||
+                    item.artifact.meanRating >= ratingValue
                 );
             });
         }
@@ -415,6 +408,7 @@
     }
 
     const orderByEloPickRandom = async () => {
+        orderByEloArtifactId = null;
         if (data.backlog.backlogItems.length < 2) {
             return;
         }
@@ -427,6 +421,26 @@
             randomIndexB = OrderUtil.getRandomIntegerBetween(0, data.backlog.backlogItems.length - 1);
         }
         orderByEloItemB = data.backlog.backlogItems[randomIndexB];
+        orderbyEloItemAPoster = await getPosterURL(orderByEloItemA.artifact.id);
+        orderbyEloItemBPoster = await getPosterURL(orderByEloItemB.artifact.id);
+    }
+
+    const orderByEloPick = async (artifactId: number) => {
+        selectedTab = "order";
+        hiddenDrawer = false;
+        orderByEloArtifactId = artifactId;
+        if (data.backlog.backlogItems.length < 2) {
+            return;
+        }
+        orderbyEloItemAPoster = '';
+        orderbyEloItemBPoster = '';
+        orderByEloItemA = data.backlog.backlogItems.find(backlogItem => backlogItem.artifact.id === artifactId);
+        let randomIndexB = OrderUtil.getRandomIntegerBetween(0, data.backlog.backlogItems.length - 1);
+        orderByEloItemB = data.backlog.backlogItems[randomIndexB];
+        while (orderByEloItemA.artifact.id === orderByEloItemB.artifact.id) {
+            randomIndexB = OrderUtil.getRandomIntegerBetween(0, data.backlog.backlogItems.length - 1);
+            orderByEloItemB = data.backlog.backlogItems[randomIndexB];
+        }
         orderbyEloItemAPoster = await getPosterURL(orderByEloItemA.artifact.id);
         orderbyEloItemBPoster = await getPosterURL(orderByEloItemB.artifact.id);
     }
@@ -449,7 +463,11 @@
             }),
         }).then(() => {
             refreshBacklog();
-            orderByEloPickRandom();
+            if (orderByEloArtifactId) {
+                orderByEloPick(orderByEloArtifactId);
+            } else {
+                orderByEloPickRandom();
+            }
         });
     }
 </script>
@@ -507,6 +525,7 @@
                             <DropdownItem on:click={() => openTags(backlogItem.artifact.id)}>Add Tag</DropdownItem>
                             <DropdownItem on:click={() => moveToRankShow(backlogItem)}>Move to Rank</DropdownItem>
                             <DropdownItem on:click={() => orderByComparison(backlogItem.artifact.id)}>Order by Comparison</DropdownItem>
+                            <DropdownItem on:click={() => orderByEloPick(backlogItem.artifact.id)}>Order by Elo</DropdownItem>
                             <DropdownItem data-id={backlogItem.artifact.id} on:click={deleteBacklogItem}>Delete</DropdownItem>
                         </Dropdown>
                     {/if}

@@ -7,6 +7,7 @@ export enum LinkType {
     OPENCRITIC = 'OPENCRITIC',
     ROTTEN_TOMATOES =  'ROTTEN_TOMATOES',
     SENSCRITIQUE = 'SENSCRITIQUE',
+    STEAM = 'STEAM',
     TMDB = 'TMDB'
 }
 
@@ -25,6 +26,8 @@ export namespace LinkType {
                 return 'Rotten Tomatoes';
             case LinkType.SENSCRITIQUE:
                 return 'SensCritique';
+            case LinkType.STEAM:
+                return 'Steam';
             case LinkType.TMDB:
                 return 'TMDB';
             default:
@@ -42,7 +45,7 @@ export namespace LinkType {
     }
 
     export function getGameLinkTypes() {
-        return [LinkType.IGDB, LinkType.HLTB, LinkType.SENSCRITIQUE, LinkType.METACRITIC, LinkType.OPENCRITIC, ];
+        return [LinkType.IGDB, LinkType.HLTB, LinkType.SENSCRITIQUE, LinkType.METACRITIC, LinkType.OPENCRITIC, LinkType.STEAM];
     }
 
     export function getMovieLinkTypes() {
@@ -94,6 +97,8 @@ export class Link {
                     return `https://www.senscritique.com/film/${url}`;
                 }
                 break;
+            case LinkType.STEAM:
+                return `https://store.steampowered.com/app/${url}`;
             case LinkType.TMDB:
                 return `https://www.themoviedb.org/movie/${url}`;
             default:

@@ -8,6 +8,7 @@ import { SensCritique } from "$lib/senscritique/SensCritique";
 import { LinkDB } from "$lib/server/model/LinkDB";
 import { RatingDB } from "$lib/server/model/RatingDB";
 import { GameDB } from "$lib/server/model/game/GameDB";
+import { Steam } from "$lib/steam/Steam";
 import { error, json } from "@sveltejs/kit";
 
 export async function POST({ params, request, locals }: any) {
@@ -16,7 +17,7 @@ export async function POST({ params, request, locals }: any) {
     if (!userInst.hasRight(UserRights.EDIT_ARTIFACT)) {
         return error(403, "Forbidden");
     }
-  	const gameId = parseInt(params.slug);
+    const gameId = parseInt(params.slug);
     const { type, url } = await request.json();
     if (type === LinkType.HLTB) {
         const duration = await HLTB.getGameDuration(url);
@@ -24,17 +25,22 @@ export async function POST({ params, request, locals }: any) {
     } else if (type === LinkType.SENSCRITIQUE) {
         const scRating = await SensCritique.getGameRating(url);
         if (scRating) {
-            await RatingDB.addRating(gameId, RatingType.SENSCRITIQUE, scRating);
+            RatingDB.addRating(gameId, RatingType.SENSCRITIQUE, scRating);
         }
     } else if (type === LinkType.OPENCRITIC) {
         const ocGame = await OpenCritic.getGame(url);
         if (ocGame && ocGame.medianScore >= 0) {
-            await RatingDB.addRating(gameId, RatingType.OPENCRITIC, Math.round(ocGame.medianScore));
+            RatingDB.addRating(gameId, RatingType.OPENCRITIC, Math.round(ocGame.medianScore));
         }
     } else if (type === LinkType.METACRITIC) {
         const mcRating = await MetaCritic.getGameRating(url);
         if (mcRating) {
-            await RatingDB.addRating(gameId, RatingType.METACRITIC, mcRating);
+            RatingDB.addRating(gameId, RatingType.METACRITIC, mcRating);
+        }
+    } else if (type === LinkType.STEAM) {
+        const steamRating = await Steam.getGameRating(url);
+        if (steamRating) {
+            RatingDB.addRating(gameId, RatingType.STEAM, steamRating);
         }
     }
     LinkDB.addLink(gameId, type, url);
@@ -70,6 +76,11 @@ export async function PUT({ params, request, locals }: any) {
                 const mcRating = await MetaCritic.getGameRating(url);
                 if (mcRating) {
                     await RatingDB.updateRating(gameId, RatingType.METACRITIC, mcRating);
+                }
+            }else if (type === LinkType.STEAM) {
+                const steamRating = await Steam.getGameRating(url);
+                if (steamRating) {
+                    await RatingDB.updateRating(gameId, RatingType.STEAM, steamRating);
                 }
             }
         }

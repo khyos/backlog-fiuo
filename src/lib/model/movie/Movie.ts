@@ -6,6 +6,19 @@ export class Movie extends Artifact {
         this.type = ArtifactType.MOVIE;
     }
 
+    getMeanRating(): number | null {
+        let nbOfRatings = 0;
+        let meanRating = 0;
+        for (const rating of this.ratings) {
+            if (rating.rating != null) {
+                meanRating += rating.rating;
+                nbOfRatings++;
+            }
+        }
+
+        return nbOfRatings > 0 ? meanRating / nbOfRatings : null;
+    }
+
     serialize() {
         return {
             ...super.serialize()
