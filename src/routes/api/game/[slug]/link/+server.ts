@@ -44,7 +44,7 @@ export async function POST({ params, request, locals }: any) {
         }
     }
     LinkDB.addLink(gameId, type, url);
-    json({ success: true });
+    return json({ success: true });
 }
 
 export async function PUT({ params, request, locals }: any) {

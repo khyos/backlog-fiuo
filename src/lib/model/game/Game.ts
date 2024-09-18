@@ -15,6 +15,8 @@ export class Game extends Artifact {
         let meanRating = 0;
         let mcRating;
         let ocRating;
+        let scRating;
+        let steamRating;
         for (const rating of this.ratings) {
             if (rating.rating != null) {
                 switch (rating.type) {
@@ -25,9 +27,10 @@ export class Game extends Artifact {
                         ocRating = rating.rating;
                         break;
                     case RatingType.SENSCRITIQUE:
+                        scRating = rating.rating;
+                        break;
                     case RatingType.STEAM:
-                        meanRating += rating.rating;
-                        nbOfRatings++;
+                        steamRating = rating.rating;
                         break;
                     default:
                         break;
@@ -44,6 +47,15 @@ export class Game extends Artifact {
         } else if (ocRating) {
             meanRating += ocRating;
             nbOfRatings++;
+        }
+
+        if (scRating && steamRating) {
+            meanRating += (scRating + 0.2 * steamRating) / 1.2;
+            nbOfRatings++;
+        } else if (scRating) {
+            meanRating += scRating;
+        } else if (steamRating) {
+            meanRating += steamRating;
         }
 
         return nbOfRatings > 0 ? meanRating / nbOfRatings : null;
