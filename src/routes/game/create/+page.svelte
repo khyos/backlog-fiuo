@@ -18,6 +18,7 @@
         const scId = (<HTMLInputElement>document.getElementById("scId"))?.value;
         const mcId = (<HTMLInputElement>document.getElementById("mcId"))?.value;
         const ocId = (<HTMLInputElement>document.getElementById("ocId"))?.value;
+        const steamId = (<HTMLInputElement>document.getElementById("steamId"))?.value;
 
         fetch("/api/game/create", {
             method: "POST",
@@ -27,6 +28,7 @@
                 scId,
                 mcId,
                 ocId,
+                steamId
             }),
         }).then(async (response) => {
             document.getElementById("createButton")?.removeAttribute("disabled");
@@ -108,6 +110,19 @@
             </Popover>
         </div>
         <Input type="text" id="ocId" name="ocId" />
+    </div>
+    <div class="mb-6">
+        <div style="display: inline-flex; align-items: center;" class="mb-1">
+            <Label class="m-1" for="steamId">Steam ID:</Label>
+            <Button class="p-1" size="xs" id="steamHelpId"><QuestionCircleOutline /></Button>
+            <Popover class="text-sm" triggeredBy="#steamHelpId">
+                <p>Go to <a href="https://store.steampowered.com/" style="text-decoration: underline" target="_blank">Steam Store</a></p>
+                <p>Search for the game you want to add</p>
+                <p>Copy the numeric ID from the URL of the page</p>
+                <p>Example: https://store.steampowered.com/app/<span style="color: red; font-weight: bold">70</span>/HalfLife</p>
+            </Popover>
+        </div>
+        <Input type="text" id="steamId" name="steamId" />
     </div>
     <div style="display: flex; align-items: center;">
         <Button id="createButton" type="submit">Create</Button>
