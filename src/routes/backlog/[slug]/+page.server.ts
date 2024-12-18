@@ -6,14 +6,12 @@ import { MovieDB } from '$lib/server/model/movie/MovieDB';
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { User, UserRights } from '$lib/model/User';
-import { BacklogOrder } from '$lib/model/Backlog';
 
-export const load = (async ({ params, locals, url }: any) => {
+export const load = (async ({ params, locals }: any) => {
 	const { user } = locals;
 	const userInst = User.deserialize(user);
 	const backlogId = parseInt(params.slug);
-	const order: BacklogOrder = url.searchParams.get('order');
-	const backlog = await BacklogDB.getBacklogByIdWithItems(backlogId, order);
+	const backlog = await BacklogDB.getBacklogByIdWithItems(backlogId);
 	if (backlog) {
 		const backlogTags: string[] = [];
 		for (const item of backlog.backlogItems) {
@@ -45,8 +43,7 @@ export const load = (async ({ params, locals, url }: any) => {
 			backlogTags: backlogTags.map(tag => { return { value: tag, name: tag }; } ),
 			genres: genres,
 			platforms: platforms,
-			canEdit: userInst.hasRight(UserRights.EDIT_BACKLOG) && backlog.userId === userInst.id,
-			order: order ?? BacklogOrder.RANK
+			canEdit: userInst.hasRight(UserRights.EDIT_BACKLOG) && backlog.userId === userInst.id
 		};
 	}
 	error(404, 'Not found');

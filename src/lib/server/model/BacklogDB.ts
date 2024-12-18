@@ -1,6 +1,6 @@
 import { ArtifactType } from "$lib/model/Artifact";
 import { AuthorizationStatus } from "$lib/model/AuthorizationStatus";
-import { Backlog, BacklogOrder } from "$lib/model/Backlog";
+import { Backlog, BacklogRankingType } from "$lib/model/Backlog";
 import { BacklogItem } from "$lib/model/BacklogItem";
 import { UserRights, type User } from "$lib/model/User";
 import { db, execQuery } from "../database";
@@ -8,14 +8,14 @@ import { GameDB } from "./game/GameDB";
 import { MovieDB } from "./movie/MovieDB";
 
 export class BacklogDB {
-    static async createBacklog(userId: number, title: string, artifactType: ArtifactType): Promise<Backlog | null> {
+    static async createBacklog(userId: number, title: string, artifactType: ArtifactType, rankingType: BacklogRankingType): Promise<Backlog | null> {
         return await new Promise((resolve, reject) => {
-            db.run(`INSERT INTO backlog (userId, title, artifactType) VALUES (?, ?, ?)`, [userId, title, artifactType], async function (error) {
+            db.run(`INSERT INTO backlog (userId, title, artifactType, rankingType) VALUES (?, ?, ?, ?)`, [userId, title, artifactType, rankingType], async function (error) {
                 if (error) {
                     reject(error);
                 } else {
                     const backlogId = this.lastID;
-                    resolve(new Backlog(backlogId, userId, title, artifactType));
+                    resolve(new Backlog(backlogId, userId, rankingType, title, artifactType));
                 }
             });
         });
@@ -29,14 +29,14 @@ export class BacklogDB {
                 } else if (!row) {
                     resolve(null);
                 } else {
-                    const backlog = new Backlog(row.id, row.userId, row.title, row.artifactType);
+                    const backlog = new Backlog(row.id, row.userId, row.rankingType, row.title, row.artifactType);
                     resolve(backlog);
                 }
             });
         });
     }
 
-    static async getBacklogByIdWithItems(id: number, order: BacklogOrder = BacklogOrder.RANK): Promise<Backlog | null> {
+    static async getBacklogByIdWithItems(id: number): Promise<Backlog | null> {
         return await new Promise((resolve, reject) => {
             db.get(`SELECT * FROM backlog WHERE id = ?`, [id], async (error, row: any) => {
                 if (error) {
@@ -44,8 +44,8 @@ export class BacklogDB {
                 } else if (!row) {
                     resolve(null);
                 } else {
-                    const backlog = new Backlog(row.id, row.userId, row.title, row.artifactType);
-                    backlog.backlogItems = await BacklogDB.getBacklogItems(row.id as number, row.artifactType, order);
+                    const backlog = new Backlog(row.id, row.userId, row.rankingType, row.title, row.artifactType);
+                    backlog.backlogItems = await BacklogDB.getBacklogItems(row.id as number, row.artifactType, row.rankingType);
                     resolve(backlog);
                 }
             });
@@ -60,7 +60,7 @@ export class BacklogDB {
                 } else if (!rows) {
                     resolve([]);
                 } else {
-                    const backlogs: Backlog[] = rows.map((row: any) => new Backlog(row.id, row.userId, row.title, row.artifactType)); 
+                    const backlogs: Backlog[] = rows.map((row: any) => new Backlog(row.id, row.userId, row.rankingType, row.title, row.artifactType)); 
                     resolve(backlogs);
                 }
             });
@@ -79,13 +79,20 @@ export class BacklogDB {
         });
     }
 
-    static async getBacklogItems(backlogId: number, artifactType: ArtifactType, order: BacklogOrder = BacklogOrder.RANK): Promise<BacklogItem[]> {
+    static async getBacklogItems(backlogId: number, artifactType: ArtifactType, rankingType: BacklogRankingType): Promise<BacklogItem[]> {
+        let backlogItems: BacklogItem[] = [];
         if (artifactType === ArtifactType.GAME) {
-            return await GameDB.getBacklogItems(backlogId, order);
+            backlogItems = await GameDB.getBacklogItems(backlogId, rankingType);
         } else if (artifactType === ArtifactType.MOVIE){
-            return await MovieDB.getBacklogItems(backlogId, order);
+            backlogItems = await MovieDB.getBacklogItems(backlogId, rankingType);
         }
-        return [];
+        if (rankingType === BacklogRankingType.ELO) {
+            let rank = 1;
+            backlogItems.forEach((backlogItem) => {
+                backlogItem.rank = rank++;
+            })
+        }
+        return backlogItems;
     }
 
     static addBacklogItem(backlogId: number, artifactId: number, rank: number): Promise<number> {
@@ -162,6 +169,7 @@ export class BacklogDB {
         execQuery(`CREATE TABLE IF NOT EXISTS backlog (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             userId INTEGER NOT NULL,
+            type TEXT NOT NULL,
             title TEXT NOT NULL,
             artifactType TEXT NOT NULL
         )`);
