@@ -1,7 +1,7 @@
 import { ArtifactType } from "./Artifact"
 import { BacklogItem } from "./BacklogItem"
 
-export enum BacklogOrder {
+export enum BacklogRankingType {
     RANK = "rank",
     ELO = "elo",
 }
@@ -9,13 +9,15 @@ export enum BacklogOrder {
 export class Backlog {
     id: number
     userId: number
+    rankingType: BacklogRankingType
     backlogItems: BacklogItem[]
     artifactType: ArtifactType
     title: string
 
-    constructor(id: number, userId: number, title: string, artifactType: ArtifactType) {
+    constructor(id: number, userId: number, rankingType: BacklogRankingType, title: string, artifactType: ArtifactType) {
         this.id = id;
         this.userId = userId;
+        this.rankingType = rankingType;
         this.title = title;
         this.artifactType = artifactType;
         this.backlogItems = [];
@@ -24,6 +26,7 @@ export class Backlog {
     serialize() {
         return {
             id: this.id,
+            rankingType: this.rankingType,
             title: this.title,
             artifactType: this.artifactType,
             backlogItems: this.backlogItems.map(backlogItem => backlogItem.serialize()),
@@ -31,7 +34,7 @@ export class Backlog {
     }
 
     static deserialize(data: any) {
-        const backlog = new Backlog(data.id, data.userId, data.title, data.artifactType);
+        const backlog = new Backlog(data.id, data.userId, data.type, data.title, data.artifactType);
         backlog.backlogItems = data.backlogItems.map((backlogItemData: any) => {
             return BacklogItem.deserialize(backlogItemData);
         });

@@ -15,7 +15,6 @@
         ListgroupItem,
         Modal,
         MultiSelect,
-        Radio,
         Range,
         Select,
         TabItem,
@@ -29,14 +28,13 @@
     } from "flowbite-svelte-icons";
     import { sineIn } from "svelte/easing";
     import { draggable, dropzone } from "./dnd";
-    import { Backlog } from "$lib/model/Backlog";
     import { Artifact, ArtifactType } from "$lib/model/Artifact";
-    import type { Game } from "$lib/model/game/Game";
     import { Tag } from "$lib/model/Tag";
     import type { PageData } from "./$types";
     import { OrderUtil } from "$lib/util/OrderUtil";
     import "./page.pcss";
     import type { Platform } from "$lib/model/game/Platform";
+    import { Backlog, BacklogRankingType } from "$lib/model/Backlog";
 
     export let data: PageData;
 
@@ -55,12 +53,6 @@
     };
 
     let selectedTab: string = "filters";
-    let selectedOrderType: string = "elo";
-    let orders = [
-        { value: 'elo', name: 'Elo' },
-        { value: 'rank', name: 'Rank' },
-    ];
-    let selectedOrder = data.order;
 
     let showTagModal: boolean = false;
     let tagArtifactId: number;
@@ -256,7 +248,7 @@
     };
 
     const refreshBacklog = () => {
-        return fetch(`/api/backlog/${data.backlog.id}?order=${selectedOrder}`)
+        return fetch(`/api/backlog/${data.backlog.id}`)
             .then((res) => res.json())
             .then((backlog) => {
                 data.backlog = backlog;
@@ -480,13 +472,12 @@
         >
             {data.backlog.title} ({TimeUtil.formatDuration(totalTime)})
         </h3>
-        <Select size="sm" class="w-24" items={orders} bind:value={selectedOrder} on:change={refreshBacklog}/>
         <Button on:click={() => (hiddenDrawer = false)}>Filters / Add</Button>
     </div>
     {#each filteredBacklogItems as backlogItem}
         <div
-            use:draggable={{ canEdit: data.canEdit, rank: backlogItem.rank }}
-            use:dropzone={{ canEdit: data.canEdit, rank: backlogItem.rank, onDrop: moveBacklogItem }}
+            use:draggable={{ canEdit: data.canEdit && data.backlog.rankingType === BacklogRankingType.RANK, rank: backlogItem.rank }}
+            use:dropzone={{ canEdit: data.canEdit && data.backlog.rankingType === BacklogRankingType.RANK, rank: backlogItem.rank, onDrop: moveBacklogItem }}
         >
             <ListgroupItem>
                 <div class="flexCenter">
@@ -656,9 +647,7 @@
             {/if}
         </TabItem>
         <TabItem open={selectedTab == 'order'} title="Order" class="w-full" disabled={!data.canEdit}>
-            <Radio name="orderType" value="elo" bind:group={selectedOrderType}>Order by Elo</Radio>
-            <Radio name="orderType" value="comparison" bind:group={selectedOrderType}>Order by Comparison</Radio>
-            {#if selectedOrderType === "comparison"}
+            {#if data.backlog.rankingType === BacklogRankingType.RANK}
                 <Button
                     class="w-full mb-2 mt-2"
                     on:click={orderByComparisonPickRandom}
@@ -679,7 +668,7 @@
                         >Lower</Button>
                     <p class="mb-2">Compared to: <Badge class="mr-1">{orderByComparisonItemB.rank}</Badge>{orderByComparisonItemB.artifact.title}</p>
                 {/if}
-            {:else if selectedOrderType === "elo"}
+            {:else if data.backlog.rankingType === BacklogRankingType.ELO}
                 <Button
                     class="w-full mb-2 mt-2"
                     on:click={orderByEloPickRandom}

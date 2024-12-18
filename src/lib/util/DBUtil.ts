@@ -6,6 +6,7 @@ import { LinkDB } from "$lib/server/model/LinkDB";
 import { RatingDB } from "$lib/server/model/RatingDB";
 import { TagDB } from "$lib/server/model/TagDB";
 import { UserDB } from "$lib/server/model/UserDB";
+import { UserRatingDB } from "$lib/server/model/UserRatingDB";
 import { GameDB } from "$lib/server/model/game/GameDB";
 import { PlatformDB } from "$lib/server/model/game/PlatformDB";
 import { MovieDB } from "$lib/server/model/movie/MovieDB";
@@ -27,6 +28,7 @@ export class DBUtil {
         PlatformDB.createPlatformTable();
         RatingDB.createRatingTable();
         UserDB.createUserTable();
+        UserRatingDB.createUserRatingTable();
         TagDB.createTagTable();
 
         await IGDB.initGenres();

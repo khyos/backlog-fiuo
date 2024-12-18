@@ -1,5 +1,5 @@
 import { ArtifactType } from "$lib/model/Artifact";
-import { BacklogOrder } from "$lib/model/Backlog";
+import { BacklogRankingType } from "$lib/model/Backlog";
 import { BacklogItem } from "$lib/model/BacklogItem";
 import { Genre } from "$lib/model/Genre";
 import { Link } from "$lib/model/Link";
@@ -126,9 +126,9 @@ export class GameDB {
         });
     }
 
-    static async getBacklogItems(backlogId: number, order: BacklogOrder = BacklogOrder.RANK): Promise<BacklogItem[]> {
+    static async getBacklogItems(backlogId: number, rankingType: BacklogRankingType): Promise<BacklogItem[]> {
         let sqlOrder = 'rank ASC';
-        if (order === BacklogOrder.ELO) {
+        if (rankingType === BacklogRankingType.ELO) {
             sqlOrder = 'elo DESC, rank ASC';
         }
         return await new Promise((resolve, reject) => {

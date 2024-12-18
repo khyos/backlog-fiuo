@@ -8,8 +8,8 @@ export async function POST({ request, locals }: any) {
     if (!userInst.hasRight(UserRights.CREATE_BACKLOG)) {
         return error(403, "Not authorized");
     }
-	const { title, artifactType } = await request.json();
-    const backlog = await BacklogDB.createBacklog(userInst.id, title, artifactType);
+	const { title, artifactType, rankingType } = await request.json();
+    const backlog = await BacklogDB.createBacklog(userInst.id, title, artifactType, rankingType);
     if (backlog) {
         return json(backlog.serialize());
     } else {
