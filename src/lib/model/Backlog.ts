@@ -6,6 +6,12 @@ export enum BacklogRankingType {
     ELO = "elo",
 }
 
+export enum BacklogOrder {
+    RANK = "rank",
+    ELO = "elo",
+    DATE_ADDED = "dateAdded"
+}
+
 export class Backlog {
     id: number
     userId: number

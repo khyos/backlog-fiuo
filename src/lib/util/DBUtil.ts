@@ -16,6 +16,7 @@ export class DBUtil {
     static async initDb(): Promise<void> {
         createDatabase();
         ArtifactDB.createArtifactTable();
+        ArtifactDB.createUserArtifactTable();
         BacklogDB.createBacklogTable();
         BacklogDB.createBacklogItemsTable();
         BacklogDB.createBacklogItemTagTable();

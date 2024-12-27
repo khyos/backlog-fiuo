@@ -1,5 +1,5 @@
 import { ArtifactType } from "$lib/model/Artifact";
-import { BacklogRankingType } from "$lib/model/Backlog";
+import { BacklogOrder, BacklogRankingType } from "$lib/model/Backlog";
 import { BacklogItem } from "$lib/model/BacklogItem";
 import { Genre } from "$lib/model/Genre";
 import { Link } from "$lib/model/Link";
@@ -88,13 +88,21 @@ export class MovieDB {
         });
     }
 
-    static async getBacklogItems(backlogId: number, rankingType: BacklogRankingType): Promise<BacklogItem[]> {
-        let sqlOrder = 'rank ASC';
-        if (rankingType === BacklogRankingType.ELO) {
-            sqlOrder = 'elo DESC, rank ASC';
-        }
+    static async getBacklogItems(backlogId: number, rankingType: BacklogRankingType, backlogOrder: BacklogOrder): Promise<BacklogItem[]> {
+        let rank = '';
+                if (rankingType === BacklogRankingType.ELO) {
+                    rank = ', RANK() OVER (ORDER BY elo DESC) AS rank';
+                }
+        
+                let sqlOrder = 'rank ASC, dateAdded ASC';
+                if (backlogOrder === BacklogOrder.ELO) {
+                    sqlOrder = 'elo DESC, dateAdded ASC';
+                } else if (backlogOrder === BacklogOrder.DATE_ADDED) {
+                    sqlOrder = 'dateAdded ASC';
+                }
         return await new Promise((resolve, reject) => {
-            db.all(`SELECT * FROM backlog_items
+            db.all(`SELECT *, CAST(strftime('%s', dateAdded) AS INTEGER) AS dateAdded${rank}
+                    FROM backlog_items
                     INNER JOIN artifact ON backlog_items.artifactId = artifact.id
                     WHERE backlogId = ?
                     ORDER BY ${sqlOrder}`, [backlogId], async (error, rows: any[]) => {
@@ -107,7 +115,7 @@ export class MovieDB {
                         movie.genres = await MovieDB.getGenres(row.artifactId);
                         movie.ratings = await RatingDB.getRatings(row.artifactId);
                         const tags = await BacklogItemDB.getTags(row.backlogId, 'movie', row.artifactId);
-                        return new BacklogItem(row.rank, row.elo, movie, tags);
+                        return new BacklogItem(row.rank, row.elo, row.dateAdded, movie, tags);
                     }));
                     resolve(backlogItems);
                 }

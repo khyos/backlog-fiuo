@@ -34,7 +34,7 @@
     import { OrderUtil } from "$lib/util/OrderUtil";
     import "./page.pcss";
     import type { Platform } from "$lib/model/game/Platform";
-    import { Backlog, BacklogRankingType } from "$lib/model/Backlog";
+    import { BacklogOrder, BacklogRankingType } from "$lib/model/Backlog";
 
     export let data: PageData;
 
@@ -75,6 +75,20 @@
     let searchedArtifacts: Artifact[] = [];
     let searchTagTerm = "";
     let searchedTags: Tag[] = [];
+
+    let orderBacklogByItems = [
+        { value: data.backlog.rankingType, name: data.backlog.rankingType },
+        { value: "dateAdded", name: "Date" }
+    ];
+    let orderBacklogBy : BacklogOrder;
+    switch (data.backlog.rankingType) {
+        case BacklogRankingType.RANK:
+            orderBacklogBy = BacklogOrder.RANK;
+            break;
+        case BacklogRankingType.ELO:
+        orderBacklogBy = BacklogOrder.ELO;
+            break;
+    }
 
     let filteredBacklogItems = data.backlog.backlogItems;
     let includedGenres: string[] = [];
@@ -118,7 +132,8 @@
     let orderbyEloItemAPoster: string | null = null;
     let orderbyEloItemBPoster: string | null = null;
 
-    $: includedGenres,
+    $: orderBacklogBy,
+        includedGenres,
         excludedGenres,
         includedTags,
         excludedTags,
@@ -260,6 +275,11 @@
 
     const applyFilters = () => {
         filteredBacklogItems = data.backlog.backlogItems;
+        if (orderBacklogBy === BacklogOrder.DATE_ADDED) {
+            filteredBacklogItems.sort((a, b) => {
+                return a.dateAdded - b.dateAdded;
+            })
+        }
         if (includedGenres.length > 0) {
             filteredBacklogItems = filteredBacklogItems.filter((item: any) => {
                 return item.artifact.genres.some((genre: any) => {
@@ -575,6 +595,8 @@
         style="align-items: center"
     >
         <TabItem open={selectedTab == 'filters'} title="Filters" class="w-full">
+            <Label class="block mb-1 mt-2">Order By</Label>
+            <Select items={orderBacklogByItems} bind:value={orderBacklogBy} />
             <Label class="block mb-1 mt-2">Filter Genre</Label>
             <MultiSelect items={data.genres} bind:value={includedGenres} />
             <Label class="block mb-1 mt-2">Exclude Genre</Label>

@@ -1,6 +1,6 @@
 import { ArtifactType } from "$lib/model/Artifact";
 import { AuthorizationStatus } from "$lib/model/AuthorizationStatus";
-import { Backlog, BacklogRankingType } from "$lib/model/Backlog";
+import { Backlog, BacklogOrder, BacklogRankingType } from "$lib/model/Backlog";
 import { BacklogItem } from "$lib/model/BacklogItem";
 import { UserRights, type User } from "$lib/model/User";
 import { db, execQuery } from "../database";
@@ -79,18 +79,24 @@ export class BacklogDB {
         });
     }
 
-    static async getBacklogItems(backlogId: number, artifactType: ArtifactType, rankingType: BacklogRankingType): Promise<BacklogItem[]> {
+    static async getBacklogItems(backlogId: number, artifactType: ArtifactType, rankingType: BacklogRankingType, backlogOrder?: BacklogOrder): Promise<BacklogItem[]> {
+        let finalBacklogOrder = backlogOrder;
+        if (!finalBacklogOrder) {
+            switch (rankingType) {
+                case BacklogRankingType.ELO:
+                    finalBacklogOrder = BacklogOrder.ELO;
+                    break;
+                case BacklogRankingType.RANK:
+                    finalBacklogOrder = BacklogOrder.RANK;
+                    break;
+            }
+        }
+        
         let backlogItems: BacklogItem[] = [];
         if (artifactType === ArtifactType.GAME) {
-            backlogItems = await GameDB.getBacklogItems(backlogId, rankingType);
+            backlogItems = await GameDB.getBacklogItems(backlogId, rankingType, finalBacklogOrder);
         } else if (artifactType === ArtifactType.MOVIE){
-            backlogItems = await MovieDB.getBacklogItems(backlogId, rankingType);
-        }
-        if (rankingType === BacklogRankingType.ELO) {
-            let rank = 1;
-            backlogItems.forEach((backlogItem) => {
-                backlogItem.rank = rank++;
-            })
+            backlogItems = await MovieDB.getBacklogItems(backlogId, rankingType, finalBacklogOrder);
         }
         return backlogItems;
     }
@@ -179,6 +185,7 @@ export class BacklogDB {
         execQuery(`CREATE TABLE IF NOT EXISTS backlog_items (
             backlogId INTEGER NOT NULL,
             artifactId INTEGER NOT NULL,
+            dateAdded TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
             rank INTEGER NOT NULL,
             elo INTERGER NOT NULL DEFAULT 1200,
             PRIMARY KEY (backlogId, artifactId)
