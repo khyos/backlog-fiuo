@@ -32,4 +32,15 @@ export class ArtifactDB {
             releaseDate TEXT
         )`);
     }
+
+    static createUserArtifactTable() {
+        execQuery(`CREATE TABLE IF NOT EXISTS user_artifact (
+            userId INTEGER NOT NULL,
+            artifactId INTEGER NOT NULL,
+            score INTERGER,
+            startDate TIMESTAMP,
+            endDate TIMESTAMP,
+            PRIMARY KEY (userId, artifactId)
+        )`);
+    }
 }

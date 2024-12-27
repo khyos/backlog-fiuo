@@ -1,5 +1,5 @@
 import { ArtifactType } from "$lib/model/Artifact";
-import { BacklogRankingType } from "$lib/model/Backlog";
+import { BacklogOrder, BacklogRankingType } from "$lib/model/Backlog";
 import { BacklogItem } from "$lib/model/BacklogItem";
 import { Genre } from "$lib/model/Genre";
 import { Link } from "$lib/model/Link";
@@ -126,13 +126,21 @@ export class GameDB {
         });
     }
 
-    static async getBacklogItems(backlogId: number, rankingType: BacklogRankingType): Promise<BacklogItem[]> {
-        let sqlOrder = 'rank ASC';
+    static async getBacklogItems(backlogId: number, rankingType: BacklogRankingType, backlogOrder: BacklogOrder): Promise<BacklogItem[]> {
+        let rank = '';
         if (rankingType === BacklogRankingType.ELO) {
-            sqlOrder = 'elo DESC, rank ASC';
+            rank = ', RANK() OVER (ORDER BY elo DESC) AS rank';
+        }
+
+        let sqlOrder = 'rank ASC, dateAdded ASC';
+        if (backlogOrder === BacklogOrder.ELO) {
+            sqlOrder = 'elo DESC, dateAdded ASC';
+        } else if (backlogOrder === BacklogOrder.DATE_ADDED) {
+            sqlOrder = 'dateAdded ASC';
         }
         return await new Promise((resolve, reject) => {
-            db.all(`SELECT * FROM backlog_items
+            db.all(`SELECT *, CAST(strftime('%s', dateAdded) AS INTEGER) AS dateAdded${rank}
+                    FROM backlog_items
                     INNER JOIN artifact ON backlog_items.artifactId = artifact.id
                     WHERE backlogId = ?
                     ORDER BY ${sqlOrder}`, [backlogId], async (error, rows: any[]) => {
@@ -146,7 +154,7 @@ export class GameDB {
                         game.genres = await GameDB.getGenres(row.artifactId);
                         game.ratings = await RatingDB.getRatings(row.artifactId);
                         const tags = await BacklogItemDB.getTags(row.backlogId, 'game', row.artifactId);
-                        return new BacklogItem(row.rank, row.elo, game, tags);
+                        return new BacklogItem(row.rank, row.elo, row.dateAdded, game, tags);
                     }));
                     resolve(backlogItems);
                 }

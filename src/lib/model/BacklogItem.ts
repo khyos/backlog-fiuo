@@ -6,12 +6,14 @@ import { Movie } from "./movie/Movie";
 export class BacklogItem {
     rank: number;
     elo: number;
+    dateAdded: number;
     artifact: Artifact;
     tags: Tag[];
 
-    constructor(rank: number, elo: number, artifact: Artifact, tags: Tag[]) {
+    constructor(rank: number, elo: number, dateAdded: number, artifact: Artifact, tags: Tag[]) {
         this.rank = rank;
         this.elo = elo;
+        this.dateAdded = dateAdded;
         this.artifact = artifact;
         this.tags = tags;
     }
@@ -20,6 +22,7 @@ export class BacklogItem {
         return {
             rank: this.rank,
             elo: this.elo,
+            dateAdded: this.dateAdded,
             artifact: this.artifact.serialize(),
             tags: this.tags.map(tag => tag.serialize()),
         };
@@ -37,6 +40,6 @@ export class BacklogItem {
         const tags = data.tags.map((tagData: any) => {
             return Tag.deserialize(tagData);
         });
-        return new BacklogItem(data.rank, data.elo, artifact, tags);
+        return new BacklogItem(data.rank, data.elo, data.dateAdded, artifact, tags);
     }
 }
