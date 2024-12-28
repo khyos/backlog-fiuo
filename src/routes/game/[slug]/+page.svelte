@@ -68,9 +68,40 @@
             openAddLink = false;
         });
     }
+
+    function handleScoreChange(event: any) {
+        if (event.target.value === '') {
+            updateScore(null);
+        } else {
+            let value = parseInt(event.target.value, 10);
+            if (value < 0) {
+                value = 0;
+            } else if (value > 100) {
+                value = 100;
+            }
+            event.target.value = value;
+            updateScore(value);
+        }
+    }
+
+    function updateScore(score: number | null) {
+        fetch(`/api/artifact/${game.id}/userScore`, {
+            method: "POST",
+            body: JSON.stringify({
+                score: score
+            }),
+        })
+    }
 </script>
 
 <h2 class="text-4xl font-extrabold dark:text-white mb-2">{game.title}</h2>
+
+{#if data.userConnected}
+<Label for="score" class="mb-2"
+    >User Rating</Label
+>
+<Input on:change={handleScoreChange} type="number" id="score" data-input-counter-min="0" max="100" placeholder="Your Rating" class="mb-2" value={data.userInfo?.score}/>
+{/if}
 <Label class="mb-2"
     >Release Date : {game.releaseDate?.toLocaleDateString()}</Label
 >
