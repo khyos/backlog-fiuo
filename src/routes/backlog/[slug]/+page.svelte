@@ -529,7 +529,9 @@
                             {/each}
                         </div>
                     </div>
-                    <Badge class="mr-1">{backlogItem.elo}</Badge>
+                    {#if data.backlog.rankingType === BacklogRankingType.ELO}
+                        <Badge class="mr-1">{backlogItem.elo}</Badge>
+                    {/if}
                     {#if data.canEdit}
                         <Button size="xs"><ChevronDownOutline /></Button>
                         <Dropdown>

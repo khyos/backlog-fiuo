@@ -11,10 +11,10 @@
             message: "Creating movie...",
             color: "blue"
         };
-        const tmdbId = (<HTMLInputElement>document.getElementById("tmdbId"))?.value;
-        const scId = (<HTMLInputElement>document.getElementById("scId"))?.value;
-        const mcId = (<HTMLInputElement>document.getElementById("mcId"))?.value;
-        const rtId = (<HTMLInputElement>document.getElementById("rtId"))?.value;
+        const tmdbId = (document.getElementById("tmdbId") as HTMLInputElement)?.value;
+        const scId = (document.getElementById("scId") as HTMLInputElement)?.value;
+        const mcId = (document.getElementById("mcId") as HTMLInputElement)?.value;
+        const rtId = (document.getElementById("rtId") as HTMLInputElement)?.value;
 
         fetch("/api/movie/create", {
             method: "POST",

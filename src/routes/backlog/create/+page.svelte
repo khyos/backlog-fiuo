@@ -24,7 +24,7 @@
             message: "Creating backlog...",
             color: "blue"
         };
-        const title = (<HTMLInputElement>document.getElementById("title"))
+        const title = (document.getElementById("title") as HTMLInputElement)
             ?.value;
 
         fetch("/api/backlog/create", {

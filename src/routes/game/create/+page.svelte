@@ -11,14 +11,14 @@
             message: "Creating game...",
             color: "blue"
         };
-        const igdbId = (<HTMLInputElement>document.getElementById("igdbId"))
+        const igdbId = (document.getElementById("igdbId") as HTMLInputElement)
             ?.value;
-        const hltbId = (<HTMLInputElement>document.getElementById("hltbId"))
+        const hltbId = (document.getElementById("hltbId") as HTMLInputElement)
             ?.value;
-        const scId = (<HTMLInputElement>document.getElementById("scId"))?.value;
-        const mcId = (<HTMLInputElement>document.getElementById("mcId"))?.value;
-        const ocId = (<HTMLInputElement>document.getElementById("ocId"))?.value;
-        const steamId = (<HTMLInputElement>document.getElementById("steamId"))?.value;
+        const scId = (document.getElementById("scId") as HTMLInputElement)?.value;
+        const mcId = (document.getElementById("mcId") as HTMLInputElement)?.value;
+        const ocId = (document.getElementById("ocId") as HTMLInputElement)?.value;
+        const steamId = (document.getElementById("steamId") as HTMLInputElement)?.value;
 
         fetch("/api/game/create", {
             method: "POST",
