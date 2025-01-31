@@ -15,6 +15,7 @@
     let types = [
         { value: BacklogRankingType.ELO, name: 'Elo' },
         { value: BacklogRankingType.RANK, name: 'Rank' },
+        { value: BacklogRankingType.WISHLIST, name: 'Wishlist' },
     ];
 
     const createBacklog = (e: any) => {

@@ -89,6 +89,9 @@ export class BacklogDB {
                 case BacklogRankingType.RANK:
                     finalBacklogOrder = BacklogOrder.RANK;
                     break;
+                case BacklogRankingType.WISHLIST:
+                    finalBacklogOrder = BacklogOrder.DATE_RELEASE;
+                    break;
             }
         }
         

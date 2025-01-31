@@ -130,6 +130,8 @@ export class GameDB {
         let rank = '';
         if (rankingType === BacklogRankingType.ELO) {
             rank = ', RANK() OVER (ORDER BY elo DESC) AS rank';
+        } else if (rankingType === BacklogRankingType.WISHLIST) {
+            rank = ', RANK() OVER (ORDER BY releaseDate ASC) AS rank';
         }
 
         let sqlOrder = 'rank ASC, dateAdded ASC';
@@ -137,6 +139,8 @@ export class GameDB {
             sqlOrder = 'elo DESC, dateAdded ASC';
         } else if (backlogOrder === BacklogOrder.DATE_ADDED) {
             sqlOrder = 'dateAdded ASC';
+        } else if (backlogOrder === BacklogOrder.DATE_RELEASE) {
+            sqlOrder = 'releaseDate ASC';
         }
         return await new Promise((resolve, reject) => {
             db.all(`SELECT *, CAST(strftime('%s', dateAdded) AS INTEGER) AS dateAdded${rank}
@@ -162,7 +166,7 @@ export class GameDB {
         });
     }
 
-    static async createGame(title: string, releaseDate: Date = new Date(0), duration: number = 0, platformIds: number[], genreIds: number[], links: Link[], ratings: Rating[]): Promise<Game> {
+    static async createGame(title: string, releaseDate: Date = new Date(7258118400000), duration: number = 0, platformIds: number[], genreIds: number[], links: Link[], ratings: Rating[]): Promise<Game> {
         return await new Promise((resolve, reject) => {
             db.run(`INSERT INTO artifact (title, type, releaseDate, duration) VALUES (?, ?, ?, ?)`, [title, ArtifactType.GAME, releaseDate, duration], async function (error) {
                 if (error) {
@@ -187,6 +191,18 @@ export class GameDB {
                     game.links = links;
                     game.ratings = ratings;
                     resolve(game);
+                }
+            });
+        });
+    }
+
+    static async updateDate(gameId: number, releaseDate: Date = new Date(7258118400000)): Promise<void> {
+        return await new Promise((resolve, reject) => {
+            db.run(`UPDATE artifact SET releaseDate = ? WHERE id = ?`, [releaseDate, gameId], async function (error) {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve();
                 }
             });
         });

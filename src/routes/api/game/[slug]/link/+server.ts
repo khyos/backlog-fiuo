@@ -1,4 +1,5 @@
 import { HLTB } from "$lib/hltb/HLTB";
+import { IGDB } from "$lib/igdb/IGDB";
 import { MetaCritic } from "$lib/metacritic/MetaCritic";
 import { LinkType } from "$lib/model/Link";
 import { RatingType } from "$lib/model/Rating";
@@ -59,7 +60,12 @@ export async function PUT({ params, request, locals }: any) {
     for (const type of types) {
         const url = links.find(link => link.type === type)?.url;
         if (url) {
-            if (type === LinkType.HLTB) {
+            if (type === LinkType.IGDB) {
+                const igdbGame = await IGDB.getGame(url);
+                const date = igdbGame.first_release_date ? new Date(igdbGame.first_release_date * 1000) : undefined;
+                await GameDB.updateDate(gameId, date);
+                // TODO update platforms and Genres
+            } else if (type === LinkType.HLTB) {
                 const duration = await HLTB.getGameDuration(url);
                 await GameDB.updateDuration(gameId, duration);
             } else if (type === LinkType.OPENCRITIC) {

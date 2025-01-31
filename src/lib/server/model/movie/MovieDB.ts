@@ -92,6 +92,8 @@ export class MovieDB {
         let rank = '';
                 if (rankingType === BacklogRankingType.ELO) {
                     rank = ', RANK() OVER (ORDER BY elo DESC) AS rank';
+                } else if (rankingType === BacklogRankingType.WISHLIST) {
+                    rank = ', RANK() OVER (ORDER BY releaseDate DESC) AS rank';
                 }
         
                 let sqlOrder = 'rank ASC, dateAdded ASC';
@@ -99,6 +101,8 @@ export class MovieDB {
                     sqlOrder = 'elo DESC, dateAdded ASC';
                 } else if (backlogOrder === BacklogOrder.DATE_ADDED) {
                     sqlOrder = 'dateAdded ASC';
+                } else if (backlogOrder === BacklogOrder.DATE_RELEASE) {
+                    sqlOrder = 'releaseDate ASC';
                 }
         return await new Promise((resolve, reject) => {
             db.all(`SELECT *, CAST(strftime('%s', dateAdded) AS INTEGER) AS dateAdded${rank}

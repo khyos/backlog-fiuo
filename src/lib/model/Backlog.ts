@@ -4,12 +4,14 @@ import { BacklogItem } from "./BacklogItem"
 export enum BacklogRankingType {
     RANK = "rank",
     ELO = "elo",
+    WISHLIST= "wishlist"
 }
 
 export enum BacklogOrder {
     RANK = "rank",
     ELO = "elo",
-    DATE_ADDED = "dateAdded"
+    DATE_ADDED = "dateAdded",
+    DATE_RELEASE = "dateRelease"
 }
 
 export class Backlog {

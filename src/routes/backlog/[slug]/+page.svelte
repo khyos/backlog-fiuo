@@ -78,7 +78,7 @@
 
     let orderBacklogByItems = [
         { value: data.backlog.rankingType, name: data.backlog.rankingType },
-        { value: "dateAdded", name: "Date" }
+        { value: "dateAdded", name: "Date Added in List" }
     ];
     let orderBacklogBy : BacklogOrder;
     switch (data.backlog.rankingType) {
@@ -86,7 +86,10 @@
             orderBacklogBy = BacklogOrder.RANK;
             break;
         case BacklogRankingType.ELO:
-        orderBacklogBy = BacklogOrder.ELO;
+            orderBacklogBy = BacklogOrder.ELO;
+            break;
+        case BacklogRankingType.WISHLIST:
+            orderBacklogBy = BacklogOrder.DATE_RELEASE;
             break;
     }
 
@@ -363,6 +366,20 @@
         }
     };
 
+    const formatDate = (dateString: string | undefined) => {
+        if (!dateString) {
+            return 'TBD';
+        }
+        const date = new Date(dateString);
+        if (date.getDate() === 31 && date.getMonth() === 11) {
+            return date.getFullYear();
+        }
+        if (date.getFullYear() >= 2100) {
+            return 'TBD';
+        }
+        return date.toLocaleDateString();
+    }
+
     const orderByComparison = (artifactId: number) => {
         highestRank = 1;
         lowestRank = data.backlog.backlogItems.length;
@@ -532,13 +549,19 @@
                     {#if data.backlog.rankingType === BacklogRankingType.ELO}
                         <Badge class="mr-1">{backlogItem.elo}</Badge>
                     {/if}
+                    {#if data.backlog.rankingType === BacklogRankingType.WISHLIST}
+                        <Badge class="mr-1">{formatDate(backlogItem.artifact.releaseDate)}</Badge>
+                    {/if}
                     {#if data.canEdit}
                         <Button size="xs"><ChevronDownOutline /></Button>
                         <Dropdown>
                             <DropdownItem on:click={() => openTags(backlogItem.artifact.id)}>Add Tag</DropdownItem>
-                            <DropdownItem on:click={() => moveToRankShow(backlogItem)}>Move to Rank</DropdownItem>
-                            <DropdownItem on:click={() => orderByComparison(backlogItem.artifact.id)}>Order by Comparison</DropdownItem>
-                            <DropdownItem on:click={() => orderByEloPick(backlogItem.artifact.id)}>Order by Elo</DropdownItem>
+                            {#if data.backlog.rankingType === BacklogRankingType.RANK}
+                                <DropdownItem on:click={() => moveToRankShow(backlogItem)}>Move to Rank</DropdownItem>
+                                <DropdownItem on:click={() => orderByComparison(backlogItem.artifact.id)}>Order by Comparison</DropdownItem>
+                            {:else if data.backlog.rankingType === BacklogRankingType.ELO}
+                                <DropdownItem on:click={() => orderByEloPick(backlogItem.artifact.id)}>Order by Elo</DropdownItem>
+                            {/if}
                             <DropdownItem data-id={backlogItem.artifact.id} on:click={deleteBacklogItem}>Delete</DropdownItem>
                         </Dropdown>
                     {/if}

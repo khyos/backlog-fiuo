@@ -69,7 +69,9 @@ export async function POST({ request, locals }: any) {
         }
     }
 
-    const game = await GameDB.createGame(igdbGame.name, new Date(igdbGame.first_release_date * 1000), duration, igdbGame.platforms || [], igdbGame.genres || [], links, ratings);
+    const date = igdbGame.first_release_date ? new Date(igdbGame.first_release_date * 1000) : undefined;
+
+    const game = await GameDB.createGame(igdbGame.name, date, duration, igdbGame.platforms || [], igdbGame.genres || [], links, ratings);
     if (game) {
         return json(game.serialize());
     } else {
