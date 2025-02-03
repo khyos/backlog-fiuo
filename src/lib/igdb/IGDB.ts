@@ -33,6 +33,16 @@ export class IGDB {
         return (await response.json())[0];
     }
 
+    static async searchGame(query: string): Promise<any> {
+        const { access_token } = await this.authenticateIGDB();
+        const response = await fetch("https://api.igdb.com/v4/games", {
+            method: 'POST',
+            headers: IGDB.getHeaders(access_token),
+            body: `fields name,url; search "${query}";`
+        });
+        return (await response.json());
+    }
+
     static async getImageURL(gameId: string) {
         const { access_token } = await this.authenticateIGDB();
         const response = await fetch("https://api.igdb.com/v4/covers", {

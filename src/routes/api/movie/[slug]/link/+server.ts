@@ -57,7 +57,7 @@ export async function PUT({ params, request, locals }: any) {
                 const tmdbMovie = await TMDB.getMovie(url);
                 let releaseDate = await TMDB.getReleaseDate(url, tmdbMovie.origin_country?.[0]);
                 if (!releaseDate) {
-                    releaseDate = new Date(tmdbMovie.release_date);
+                    releaseDate = tmdbMovie.release_date &&tmdbMovie.release_date !== '' ? new Date(tmdbMovie.release_date) : undefined;
                 }
                 let title = await TMDB.getTitle(url, tmdbMovie);
                 if (!title) {

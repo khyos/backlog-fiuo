@@ -93,7 +93,7 @@ export class MovieDB {
                 if (rankingType === BacklogRankingType.ELO) {
                     rank = ', RANK() OVER (ORDER BY elo DESC) AS rank';
                 } else if (rankingType === BacklogRankingType.WISHLIST) {
-                    rank = ', RANK() OVER (ORDER BY releaseDate DESC) AS rank';
+                    rank = ', RANK() OVER (ORDER BY releaseDate ASC) AS rank';
                 }
         
                 let sqlOrder = 'rank ASC, dateAdded ASC';
@@ -127,7 +127,7 @@ export class MovieDB {
         });
     }
 
-    static async createMovie(title: string, releaseDate: Date, duration: number = 0, genreIds: number[], links: Link[], ratings: Rating[]): Promise<Movie> {
+    static async createMovie(title: string, releaseDate: Date = new Date(7258118400000), duration: number = 0, genreIds: number[], links: Link[], ratings: Rating[]): Promise<Movie> {
         return await new Promise((resolve, reject) => {
             db.run(`INSERT INTO artifact (title, type, releaseDate, duration) VALUES (?, ?, ?, ?)`, [title, ArtifactType.MOVIE, releaseDate, duration], async function (error) {
                 if (error) {
@@ -153,7 +153,7 @@ export class MovieDB {
         });
     }
 
-    static async refreshData(id: number, title: string, releaseDate: Date, duration: number = 0) {
+    static async refreshData(id: number, title: string, releaseDate: Date = new Date(7258118400000), duration: number = 0) {
         return await new Promise((resolve, reject) => {
             db.run(`UPDATE artifact SET title = ?, releaseDate = ?, duration = ? WHERE id = ?`, [title, releaseDate, duration, id], async function (error) {
                 if (error) {

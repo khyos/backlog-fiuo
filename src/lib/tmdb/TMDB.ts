@@ -18,6 +18,23 @@ export class TMDB {
         return await response.json();
     }
 
+    static async searchMovie(query: string): Promise<any> {
+        const response = await fetch(`https://api.themoviedb.org/3/search/movie?query=${query}`, {
+            method: 'GET',
+            headers: TMDB.getHeaders()
+        });
+        const responses = await response.json();
+        const results = [];
+        for (const resp of responses.results) {
+            results.push({
+                id: resp.id,
+                name: resp.title,
+                link: `https://www.themoviedb.org/movie/${resp.id}`
+            });
+        }
+        return results;
+    }
+
     static async getReleaseDate(movieId: string, originCountry: string): Promise<Date | null> {
         const response = await fetch(`https://api.themoviedb.org/3/movie/${movieId}/release_dates`, {
             method: 'GET',

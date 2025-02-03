@@ -9,4 +9,20 @@ export class Steam {
         }
         return Math.round((jsonResponse.query_summary.total_positive / jsonResponse.query_summary.total_reviews) * 100);
     }
+
+    static async searchGame(query: string) {
+        const response = await fetch(`https://steamcommunity.com/actions/SearchApps/${query}`, {
+            method: 'GET'
+        });
+        const jsonResponse = await response.json();
+        const results = [];
+        for (const response of jsonResponse) {
+            results.push({
+                id: response.appid,
+                name: response.name,
+                link: `https://store.steampowered.com/app/${response.appid}`
+            })
+        }
+        return results;
+    }
 }

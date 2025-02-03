@@ -1,5 +1,6 @@
 import { got } from 'got';
 import { JSDOM } from 'jsdom';
+import puppeteer from 'puppeteer';
 
 export class HLTB {
     static async getGameDuration(gameId: string): Promise<number> {
@@ -27,5 +28,35 @@ export class HLTB {
             console.error(e);
             return 0;
         }
+    }
+
+    static async searchGame(query: string) {
+        const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+        const page = await browser.newPage();
+
+        await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+
+        await page.goto(`https://howlongtobeat.com/?q=${query}`);
+
+        await page.waitForSelector('#search-results-header>.loading_bar', { hidden: true, timeout: 10000 });
+
+        const results = await page.evaluate(() => {
+            const results = [];
+            const links = document.querySelectorAll('#search-results-header>ul>li h2>a');
+            for (const link of links) {
+                if (link instanceof HTMLAnchorElement) {
+                    results.push({
+                        id: link.href.split('/').pop(),
+                        name: link.innerText,
+                        link: link.href
+                    });
+                }
+            }
+            return results;
+        });
+
+        await browser.close();
+
+        return results;
     }
 }
