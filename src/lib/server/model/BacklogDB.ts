@@ -4,6 +4,7 @@ import { Backlog, BacklogOrder, BacklogRankingType } from "$lib/model/Backlog";
 import { BacklogItem } from "$lib/model/BacklogItem";
 import { UserRights, type User } from "$lib/model/User";
 import { db, execQuery } from "../database";
+import { BacklogItemDB } from "./BacklogItemDB";
 import { GameDB } from "./game/GameDB";
 import { MovieDB } from "./movie/MovieDB";
 
@@ -52,9 +53,15 @@ export class BacklogDB {
         });
     }
 
-    static async getBacklogs(userId: number, page: number, pageSize: number): Promise<Backlog[]> {
+    static async getBacklogs(userId: number, page: number, pageSize: number, artifactType: string | null): Promise<Backlog[]> {
+        let query = 'SELECT * FROM backlog WHERE userId = ? ORDER BY id ASC LIMIT ? OFFSET ?';
+        let params: (string | number)[] = [userId, pageSize, page * pageSize];
+        if (artifactType) {
+            query = 'SELECT * FROM backlog WHERE userId = ? AND artifactType = ? ORDER BY id ASC LIMIT ? OFFSET ?';
+            params = [userId, artifactType, pageSize, page * pageSize];
+        }
         return await new Promise((resolve, reject) => {
-            db.all(`SELECT * FROM backlog WHERE userId = ? ORDER BY id ASC LIMIT ? OFFSET ?`, [userId, pageSize, page * pageSize], async (error, rows: any) => {
+            db.all(query, params, async (error, rows: any) => {
                 if (error) {
                     reject(error);
                 } else if (!rows) {
@@ -104,6 +111,18 @@ export class BacklogDB {
         return backlogItems;
     }
 
+    static async hasBacklogItem(backlogId: number, artifactId: number): Promise<boolean> {
+        return await new Promise((resolve, reject) => {
+            db.get(`SELECT * FROM backlog_items WHERE backlogId = ? AND artifactId = ?`, [backlogId, artifactId], async (error, row: any) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve(row != null);
+                }
+            });
+        });
+    }
+
     static addBacklogItem(backlogId: number, artifactId: number, rank: number): Promise<number> {
         return new Promise((resolve, reject) => {
             db.run(`INSERT INTO backlog_items (backlogId, artifactId, rank) VALUES (?, ?, ?)`, [backlogId, artifactId, rank], function (error) {
@@ -122,6 +141,24 @@ export class BacklogDB {
             db.run(`DELETE FROM backlog_item_tag WHERE backlogId = ? AND artifactId = ?`, [backlogId, artifactId]);
             db.run(`UPDATE backlog_items SET rank = rank - 1 WHERE backlogId = ? AND rank > ?`, [backlogId, row.rank]);
         });
+    }
+
+    static async moveItemToOtherBacklog(fromBacklogId: number, toBacklogId: number, artifactId: number, keepTags: boolean) : Promise<void> {
+        const fromBacklog = await this.getBacklogById(fromBacklogId);
+        const toBacklog = await this.getBacklogById(toBacklogId);
+        if (fromBacklog?.artifactType !== toBacklog?.artifactType) {
+            throw new Error("Backlogs are not of the same type.");
+        }
+        const hasAlreadyArtifact = await this.hasBacklogItem(toBacklogId, artifactId);
+        if (hasAlreadyArtifact) {
+            throw new Error("Artifact already in target Backlog.");
+        }
+        const rank = await BacklogDB.getBacklogMaxRank(toBacklogId);
+        await this.addBacklogItem(toBacklogId, artifactId, rank + 1);
+        if (keepTags) {
+            await BacklogItemDB.moveItemTagsToOtherBacklog(fromBacklogId, toBacklogId, artifactId);
+        }
+        await this.deleteBacklogItem(fromBacklogId, artifactId);
     }
 
     static async moveBacklogItem(backlogId: number, srcRank: number, targetRank: number) {

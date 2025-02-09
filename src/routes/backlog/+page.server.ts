@@ -6,7 +6,7 @@ export async function load({ url, locals }: any) {
 	const { user } = locals;
 	const userInst = User.deserialize(user);
 	const page = url.searchParams.get('page') ?? 0;
-	const backlogs = await BacklogDB.getBacklogs(userInst.id, page, 10);
+	const backlogs = await BacklogDB.getBacklogs(userInst.id, page, 10, null);
 	return {
 		backlogs: backlogs.map(backlog => backlog.serialize()),
 		canEdit: userInst.hasRight(UserRights.EDIT_BACKLOG),

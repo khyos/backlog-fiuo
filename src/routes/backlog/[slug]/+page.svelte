@@ -5,6 +5,7 @@
     import {
         Badge,
         Button,
+        Checkbox,
         CloseButton,
         Drawer,
         Dropdown,
@@ -54,6 +55,10 @@
 
     let selectedTab: string = "filters";
 
+    let selectedBacklogItem: any = null;
+
+    let backlogsForSelect: any[] = [];
+
     let showTagModal: boolean = false;
     let tagArtifactId: number;
 
@@ -66,6 +71,10 @@
         };
     });
     let moveToRankSelected: number;
+
+    let showMoveToBacklog: boolean = false;
+    let keepTagsSelected: boolean = false;
+    let moveToBacklogSelected: any;
 
     let totalTime = data.backlog.backlogItems.reduce((acc, item) => {
         return acc + item.artifact.duration;
@@ -211,6 +220,37 @@
                 });
             });
         });
+    };
+
+    const moveBacklogItemToOtherBacklog = () => {
+        return new Promise<void> (resolve => {
+            fetch(`/api/backlog/move`, {
+                method: "POST",
+                body: JSON.stringify({
+                    fromBacklogId: data.backlog.id,
+                    toBacklogId: moveToBacklogSelected,
+                    artifactId: selectedBacklogItem.artifact.id,
+                    keepTags: keepTagsSelected
+                }),
+            }).then(() => {
+                refreshBacklog().then(() => {
+                    resolve();
+                });
+            });
+        });
+    }
+
+    const fetchBacklogs = () => {
+        fetch(`/api/backlog/list?artifactType=${data.backlog.artifactType}`)
+            .then((res) => res.json())
+            .then((backlogs) => {
+                backlogsForSelect = backlogs.filter(backlog => backlog.id != data.backlog.id).map((backlog: any) => {
+                    return {
+                        value: backlog.id,
+                        name: backlog.title
+                    };
+                });
+            });
     };
 
     const openTags = (artifactId: number) => {
@@ -395,6 +435,12 @@
         moveToRankBacklogItem = backlogItem;
     }
 
+    const moveToBacklogShow = (backlogItem: any) => {
+        selectedBacklogItem = backlogItem;
+        showMoveToBacklog = true;
+        fetchBacklogs();
+    }
+
     const orderByComparisonPickRandom = () => {
         highestRank = 1;
         lowestRank = data.backlog.backlogItems.length;
@@ -562,6 +608,7 @@
                             {:else if data.backlog.rankingType === BacklogRankingType.ELO}
                                 <DropdownItem on:click={() => orderByEloPick(backlogItem.artifact.id)}>Order by Elo</DropdownItem>
                             {/if}
+                            <DropdownItem data-id={backlogItem.artifact.id} on:click={() => moveToBacklogShow(backlogItem)}>Move to other Backlog</DropdownItem>
                             <DropdownItem data-id={backlogItem.artifact.id} on:click={deleteBacklogItem}>Delete</DropdownItem>
                         </Dropdown>
                     {/if}
@@ -601,6 +648,17 @@
     <Button class="mt-2" on:click={() => {
         moveBacklogItem(moveToRankBacklogItem.rank, moveToRankSelected).then(() => {
             showMoveToRank = false;
+        });
+    }}>Move</Button>
+</Modal>
+
+<Modal size="xs" title="Move to Backlog" bind:open={showMoveToBacklog} autoclose>
+    Move <Badge class="mb-2">{selectedBacklogItem.rank} - {selectedBacklogItem.artifact.title}</Badge> to
+    <Select class="mt-2" items={backlogsForSelect} bind:value={moveToBacklogSelected} />
+    <Checkbox bind:checked={keepTagsSelected}>Keep tags</Checkbox>
+    <Button class="mt-2" on:click={() => {
+        moveBacklogItemToOtherBacklog().then(() => {
+            showMoveToBacklog = false;
         });
     }}>Move</Button>
 </Modal>

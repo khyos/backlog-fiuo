@@ -40,4 +40,16 @@ export class BacklogItemDB {
             });
         });
     }
+
+    static async moveItemTagsToOtherBacklog(fromBacklogId: number, toBacklogId: number, artifactId: number) : Promise<void> {
+        return new Promise((resolve, reject) => {
+            db.run(`UPDATE backlog_item_tag SET backlogId = ? WHERE backlogId = ? AND artifactId = ?`, [toBacklogId, fromBacklogId, artifactId], function (error) {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve();
+                }
+            });
+        });
+    }
 }
