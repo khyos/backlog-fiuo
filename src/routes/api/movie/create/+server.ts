@@ -19,12 +19,10 @@ export async function POST({ request, locals }: any) {
     if (!tmdbId) {
         error(500, 'No TMDB ID provided');
     }
-    /*
     const alreadyExists = await LinkDB.exists(LinkType.TMDB, tmdbId);
     if (alreadyExists) {
         error(500, 'Movie already exists in list');
     }
-        */
     const tmdbMovie = await TMDB.getMovie(tmdbId);
     let releaseDate = await TMDB.getReleaseDate(tmdbId, tmdbMovie.origin_country?.[0]);
     if (!releaseDate) {

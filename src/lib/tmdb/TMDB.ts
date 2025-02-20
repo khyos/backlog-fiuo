@@ -1,6 +1,18 @@
 import { TMDB_READ_ACCESS_TOKEN } from "$env/static/private";
 import { MovieDB } from "$lib/server/model/movie/MovieDB";
 
+
+class ReleaseDates {
+    theatricalNoNote?: string
+    theatricalWithNote?: string
+    digital?: string
+    fallbackDate?: string
+
+    getMostRelevant() {
+        return this.theatricalNoNote || this.digital || this.fallbackDate || this.theatricalWithNote;
+    }
+}
+
 export class TMDB {
 
     static getHeaders(): any {
@@ -35,46 +47,47 @@ export class TMDB {
         return results;
     }
 
-    static async getReleaseDate(movieId: string, originCountry: string): Promise<Date | null> {
+    static async getReleaseDate(movieId: string, originCountry: string): Promise<Date | undefined> {
         const response = await fetch(`https://api.themoviedb.org/3/movie/${movieId}/release_dates`, {
             method: 'GET',
             headers: TMDB.getHeaders()
         });
         const releaseDatesByCountries = (await response.json()).results;
 
-        let frDate = null;
-        let usDate = null;
-        let originCountryDate = null;
-        let defaultDate = null;
+        let frDates: ReleaseDates = new ReleaseDates();
+        let usDates: ReleaseDates = new ReleaseDates();
+        let originCountryDates: ReleaseDates = new ReleaseDates();
+        let defaultDates: ReleaseDates = new ReleaseDates();
     
         for (const releaseDatesForCountry of releaseDatesByCountries) {
-            let theatricalNoNote = null;
-            let theatricalWithNote = null;
-            let notTheatricalDate = null;
+            const countryDates: ReleaseDates = new ReleaseDates();
             for (const releaseDate of releaseDatesForCountry.release_dates) {
-                if (!theatricalNoNote && releaseDate.type === 3 && (!releaseDate.note || releaseDate.note === '')) {
-                    theatricalNoNote = releaseDate.release_date;
-                } else if (releaseDate.type === 3) {
-                    theatricalWithNote = releaseDate.release_date;
+                if (!countryDates.theatricalNoNote && releaseDate.type === 3 && (!releaseDate.note || releaseDate.note === '')) {
+                    countryDates.theatricalNoNote = releaseDate.release_date;
+                } else if (releaseDate.type === 3 || releaseDate.type === 1) {
+                    countryDates.theatricalWithNote = releaseDate.release_date;
+                } else if (releaseDate.type === 4) {
+                    countryDates.digital = releaseDate.release_date;
                 } else {
-                    notTheatricalDate = releaseDate.release_date;
+                    countryDates.fallbackDate = releaseDate.release_date;
                 }
             }
-            const finalDate = new Date(theatricalNoNote || theatricalWithNote || notTheatricalDate);
             if (releaseDatesForCountry.iso_3166_1 === 'FR') {
-                frDate = finalDate;
+                frDates = countryDates;
             } else if (releaseDatesForCountry.iso_3166_1 === 'US') {
-                usDate = finalDate;
+                usDates = countryDates;
             } else if (releaseDatesForCountry.iso_3166_1.toLowerCase() === originCountry?.toLowerCase()) {
-                originCountryDate = finalDate;
+                originCountryDates = countryDates;
             } else {
-                defaultDate = finalDate;
+                defaultDates = countryDates;
             }
         }
-        let releaseDate = originCountryDate;
+        let releaseDate = originCountryDates.theatricalNoNote || originCountryDates.fallbackDate;
         if (!releaseDate) {
+            const frDate = frDates.getMostRelevant();
+            const usDate = usDates.getMostRelevant();
             if (frDate && usDate) {
-                if (frDate.getTime() > usDate.getTime()) {
+                if (new Date(frDate).getTime() > new Date(usDate).getTime()) {
                     releaseDate = usDate;
                 } else {
                     releaseDate = frDate;
@@ -84,9 +97,9 @@ export class TMDB {
             }
         }
         if (!releaseDate) {
-            releaseDate = defaultDate;
+            releaseDate = defaultDates.getMostRelevant();
         }
-        return releaseDate;
+        return releaseDate ? new Date(releaseDate) : undefined;
     }
 
     static async getTitle(movieId: string, tmdbMovie: any): Promise<string> {
