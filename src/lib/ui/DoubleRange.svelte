@@ -25,6 +25,6 @@
 </script>
 
 <div class='doubleRangeWrap'>
-    <Range class='minRange' bind:size={size} bind:min={min} bind:max={max} bind:step={step} bind:value={minValue} />
-    <Range class='maxRange' bind:size={size} bind:min={min} bind:max={max} bind:step={step} bind:value={maxValue} />
+    <Range class='minRange appearance-auto' bind:size={size} bind:min={min} bind:max={max} bind:step={step} bind:value={minValue} />
+    <Range class='maxRange appearance-auto' bind:size={size} bind:min={min} bind:max={max} bind:step={step} bind:value={maxValue} />
 </div>

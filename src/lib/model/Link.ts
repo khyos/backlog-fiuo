@@ -3,6 +3,7 @@ import { ArtifactType } from "./Artifact";
 export enum LinkType {
     HLTB = 'HLTB',
     IGDB = 'IGDB',
+    ITAD = 'ITAD',
     METACRITIC = 'METACRITIC',
     OPENCRITIC = 'OPENCRITIC',
     ROTTEN_TOMATOES =  'ROTTEN_TOMATOES',
@@ -18,6 +19,8 @@ export namespace LinkType {
                 return 'HowLongToBeat';
             case LinkType.IGDB:
                 return 'IGDB';
+            case LinkType.ITAD:
+                return 'ITAD';
             case LinkType.METACRITIC:
                 return 'Metacritic';
             case LinkType.OPENCRITIC:
@@ -45,7 +48,7 @@ export namespace LinkType {
     }
 
     export function getGameLinkTypes() {
-        return [LinkType.IGDB, LinkType.HLTB, LinkType.SENSCRITIQUE, LinkType.METACRITIC, LinkType.OPENCRITIC, LinkType.STEAM];
+        return [LinkType.IGDB, LinkType.HLTB, LinkType.SENSCRITIQUE, LinkType.METACRITIC, LinkType.OPENCRITIC, LinkType.STEAM, LinkType.ITAD];
     }
 
     export function getMovieLinkTypes() {
@@ -79,6 +82,8 @@ export class Link {
                 return `https://howlongtobeat.com/game?id=${url}`;
             case LinkType.IGDB:
                 return `https://www.igdb.com/games/${url}`;
+            case LinkType.ITAD:
+                return `https://isthereanydeal.com/game/${url}`;
             case LinkType.METACRITIC:
                 if (artifactType === ArtifactType.GAME) {
                     return `https://www.metacritic.com/game/${url}`;

@@ -1,5 +1,6 @@
 import { HLTB } from "$lib/hltb/HLTB";
 import { IGDB } from "$lib/igdb/IGDB";
+import { ITAD } from "$lib/itad/ITAD";
 import { MetaCritic } from "$lib/metacritic/MetaCritic";
 import { User, UserRights } from "$lib/model/User";
 import { OpenCritic } from "$lib/opencritic/OpenCritic";
@@ -51,6 +52,12 @@ export async function GET({ url, locals }: any) {
     } catch (e) {
         return error(500, "FAILED TMDB: " + e.toString());
     }
+    let itadResults;
+    try {
+        itadResults = await ITAD.searchGame(query);
+    } catch (e) {
+        return error(500, "FAILED ITAD: " + e.toString());
+    }
 
     const results = {
         igdb: igdbResults,
@@ -58,7 +65,8 @@ export async function GET({ url, locals }: any) {
         sc: scResults,
         mc: mcResults,
         oc: ocResults,
-        steam: steamResults
+        steam: steamResults,
+        itad: itadResults
     }
 
     return json(results);

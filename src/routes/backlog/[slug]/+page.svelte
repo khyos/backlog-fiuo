@@ -305,6 +305,29 @@
         });
     };
 
+    let prices;
+    const fetchPrices = () => {
+        fetch(`/api/game/prices`, {
+            method: "POST",
+            body: JSON.stringify({
+                artifactIds: data.backlog.backlogItems.map(bi => bi.artifact.id)
+            })
+        }).then((res) => res.json())
+        .then((response) => {
+            prices = response;
+            invalidate("prices");
+        });
+    }
+
+    const openPriceLink = async (priceId: string) => {
+        fetch(`/api/link/getUrl?artifactType=${data.backlog.artifactType}&linkType=ITAD&linkUrl=${priceId}`, {
+            method: "GET",
+        }).then((res) => res.text())
+        .then((response) => {
+            window.open(response, "blank_");
+        });
+    }
+
     const refreshBacklog = () => {
         return fetch(`/api/backlog/${data.backlog.id}`)
             .then((res) => res.json())
@@ -592,6 +615,11 @@
                             {/each}
                         </div>
                     </div>
+                    {#if prices?.[backlogItem.artifact.id]}
+                        <Badge class="mr-1"><button on:click={() => openPriceLink(prices[backlogItem.artifact.id].id)}>
+                            {prices[backlogItem.artifact.id].current}€ / {prices[backlogItem.artifact.id].historyLow}€
+                        </button></Badge>
+                    {/if}
                     {#if data.backlog.rankingType === BacklogRankingType.ELO}
                         <Badge class="mr-1">{backlogItem.elo}</Badge>
                     {/if}
@@ -678,6 +706,9 @@
         style="align-items: center"
     >
         <TabItem open={selectedTab == 'filters'} title="Filters" class="w-full">
+            {#if data.backlog.artifactType === ArtifactType.GAME}
+                <Button on:click={fetchPrices}>Fetch Prices</Button>
+            {/if}
             <Label class="block mb-1 mt-2">Order By</Label>
             <Select items={orderBacklogByItems} bind:value={orderBacklogBy} />
             <Label class="block mb-1 mt-2">Filter Genre</Label>
@@ -701,9 +732,9 @@
             <Label class="block mb-1 mt-2"
                 >Max Duration: {formatDuration(currentMaxDuration)}</Label
             >
-            <Range min="0" max="200" step="1" bind:value={currentMaxDuration} />
+            <Range class="appearance-auto" min="0" max="200" step="1" bind:value={currentMaxDuration} />
             <Label class="block mb-1 mt-2">Min Rating: {ratingValue}</Label>
-            <Range min="0" max="100" step="1" bind:value={ratingValue} />
+            <Range class="appearance-auto" min="0" max="100" step="1" bind:value={ratingValue} />
             {#if data.backlog.artifactType === ArtifactType.GAME}
                 <Label class="block mb-1 mt-2">Platform</Label>
                 <MultiSelect

@@ -1,5 +1,6 @@
 import { HLTB } from "$lib/hltb/HLTB";
 import { IGDB } from "$lib/igdb/IGDB";
+import { ITAD } from "$lib/itad/ITAD";
 import { MetaCritic } from "$lib/metacritic/MetaCritic";
 import { Link, LinkType } from "$lib/model/Link";
 import { Rating, RatingType } from "$lib/model/Rating";
@@ -17,7 +18,7 @@ export async function POST({ request, locals }: any) {
     if (!userInst.hasRight(UserRights.CREATE_ARTIFACT)) {
         return error(403, "Forbidden");
     }
-    const { igdbId, hltbId, scId, ocId, mcId, steamId } = await request.json();
+    const { igdbId, hltbId, scId, ocId, mcId, steamId, itadId } = await request.json();
     if (!igdbId) {
         error(500, 'No IGDB ID provided');
     }
@@ -66,6 +67,13 @@ export async function POST({ request, locals }: any) {
         const steamRating = await Steam.getGameRating(steamId);
         if (steamRating) {
             ratings.push(new Rating(RatingType.STEAM, steamRating));
+        }
+    }
+
+    if (itadId) {
+        const itadFinalId = await ITAD.getIdFromSlug(itadId);
+        if (itadFinalId) {
+            links.push(new Link(LinkType.ITAD, itadFinalId));
         }
     }
 

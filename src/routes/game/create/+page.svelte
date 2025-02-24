@@ -30,6 +30,8 @@
                     searchOCSelected = searchResults.oc[0].id;
                 if (searchResults.steam[0])
                     searchSteamSelected = searchResults.steam[0].id;
+                if (searchResults.itad[0])
+                    searchITADSelected = searchResults.itad[0].id;
                 updateLinkAndId();
             });
     }
@@ -46,6 +48,8 @@
     let ocSelected;
     let searchSteamSelected = null;
     let steamSelected;
+    let searchITADSelected = null;
+    let itadSelected;
     const updateLinkAndId = () => {
         igdbSelected = searchResults.igdb.find(r => r.id == searchIGDBSelected);
         (document.getElementById("igdbId") as HTMLInputElement).value = searchIGDBSelected;
@@ -64,6 +68,9 @@
 
         steamSelected = searchResults.steam.find(r => r.id == searchSteamSelected);
         (document.getElementById("steamId") as HTMLInputElement).value = searchSteamSelected;
+
+        itadSelected = searchResults.itad.find(r => r.id == searchITADSelected);
+        (document.getElementById("itadId") as HTMLInputElement).value = searchITADSelected;
     }
 
     let creationMessage: any = null;
@@ -83,6 +90,7 @@
         const mcId = (document.getElementById("mcId") as HTMLInputElement)?.value;
         const ocId = (document.getElementById("ocId") as HTMLInputElement)?.value;
         const steamId = (document.getElementById("steamId") as HTMLInputElement)?.value;
+        const itadId = (document.getElementById("itadId") as HTMLInputElement)?.value;
 
         fetch("/api/game/create", {
             method: "POST",
@@ -92,7 +100,8 @@
                 scId,
                 mcId,
                 ocId,
-                steamId
+                steamId,
+                itadId
             }),
         }).then(async (response) => {
             document.getElementById("createButton")?.removeAttribute("disabled");
@@ -235,6 +244,25 @@
             {/if}
         </div>
         <Input type="text" id="steamId" name="steamId" />
+    </div>
+    <div class="mb-6">
+        <div style="display: inline-flex; align-items: center;" class="mb-1">
+            <Label class="m-1" for="itadId" style="white-space: nowrap;">ITAD ID:</Label>
+            <Button class="p-1 mr-1" size="xs" id="itadHelpId"><QuestionCircleOutline /></Button>
+            <Popover class="text-sm" triggeredBy="#itadHelpId">
+                <p>Go to <a href="https://isthereanydeal.com/" style="text-decoration: underline" target="_blank">ITAD</a></p>
+                <p>Search for the game you want to add</p>
+                <p>Copy the numeric ID from the URL of the page</p>
+                <p>Example: https://isthereanydeal.com/game/<span style="color: red; font-weight: bold">avatar-frontiers-of-pandora</span>/info</p>
+            </Popover>
+            {#if searchStatus === 'finished'}
+                <Select items={searchResults.itad} bind:value={searchITADSelected} on:change={updateLinkAndId}></Select>
+                {#if itadSelected != null}
+                    <A bind:href={itadSelected.link} target="_blank" class="m-1" style="white-space: nowrap;">{itadSelected.link}</A>
+                {/if}
+            {/if}
+        </div>
+        <Input type="text" id="itadId" name="itadId" />
     </div>
     <div style="display: flex; align-items: center;">
         <Button id="createButton" type="submit">Create</Button>

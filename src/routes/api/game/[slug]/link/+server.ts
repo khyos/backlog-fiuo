@@ -1,5 +1,6 @@
 import { HLTB } from "$lib/hltb/HLTB";
 import { IGDB } from "$lib/igdb/IGDB";
+import { ITAD } from "$lib/itad/ITAD";
 import { MetaCritic } from "$lib/metacritic/MetaCritic";
 import { LinkType } from "$lib/model/Link";
 import { RatingType } from "$lib/model/Rating";
@@ -20,6 +21,7 @@ export async function POST({ params, request, locals }: any) {
     }
     const gameId = parseInt(params.slug);
     const { type, url } = await request.json();
+    let finalUrl = url;
     if (type === LinkType.HLTB) {
         const duration = await HLTB.getGameDuration(url);
         await GameDB.updateDuration(gameId, duration);
@@ -43,9 +45,14 @@ export async function POST({ params, request, locals }: any) {
         if (steamRating) {
             RatingDB.addRating(gameId, RatingType.STEAM, steamRating);
         }
+    } else if (type === LinkType.ITAD) {
+        finalUrl = await ITAD.getIdFromSlug(url);
     }
-    LinkDB.addLink(gameId, type, url);
-    return json({ success: true });
+    if (finalUrl) {
+        LinkDB.addLink(gameId, type, finalUrl);
+        return json({ success: true });
+    }
+    return error(404, "Not Valid URL");
 }
 
 export async function PUT({ params, request, locals }: any) {
@@ -83,7 +90,7 @@ export async function PUT({ params, request, locals }: any) {
                 if (mcRating) {
                     await RatingDB.updateRating(gameId, RatingType.METACRITIC, mcRating);
                 }
-            }else if (type === LinkType.STEAM) {
+            } else if (type === LinkType.STEAM) {
                 const steamRating = await Steam.getGameRating(url);
                 if (steamRating) {
                     await RatingDB.updateRating(gameId, RatingType.STEAM, steamRating);
