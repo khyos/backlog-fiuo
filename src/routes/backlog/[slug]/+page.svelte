@@ -36,6 +36,8 @@
     import "./page.pcss";
     import type { Platform } from "$lib/model/game/Platform";
     import { BacklogOrder, BacklogRankingType } from "$lib/model/Backlog";
+    import { getPosterURL } from "$lib/api/artifact";
+    import { addBacklogItem, deleteBacklogItem, fetchBacklog, fetchBacklogs } from "$lib/api/backlog";
 
     export let data: PageData;
 
@@ -167,40 +169,16 @@
             });
     };
 
-    const getPosterURL = async (artifactId: string) => {
-        let url = "";
-        if (data.backlog.artifactType === ArtifactType.GAME) {
-            const response = await fetch(`/api/game/${artifactId}/poster`);
-            url = await response.text();
-        } else if (data.backlog.artifactType === ArtifactType.MOVIE) {
-            const response = await fetch(`/api/movie/${artifactId}/poster`);
-            url = await response.text();
-        }
-        return url;
-    }
-
-    const addBacklogItem = (e: any) => {
+    const addBacklogItemCb = (e: any) => {
         const artifactId = e.currentTarget.getAttribute("data-id");
-        const rank = data.backlog.backlogItems.length + 1;
-        fetch(`/api/backlog/${data.backlog.id}/add`, {
-            method: "POST",
-            body: JSON.stringify({
-                artifactId: artifactId,
-                rank: rank,
-            }),
-        }).then(() => {
+        addBacklogItem(data.backlog.id, artifactId).then(() => {
             refreshBacklog();
         });
     };
 
-    const deleteBacklogItem = (e: any) => {
+    const deleteBacklogItemCb = (e: any) => {
         const artifactId = e.target.getAttribute("data-id");
-        fetch(`/api/backlog/${data.backlog.id}/delete`, {
-            method: "POST",
-            body: JSON.stringify({
-                artifactId: artifactId,
-            }),
-        }).then(() => {
+        deleteBacklogItem(data.backlog.id, artifactId).then(() => {
             refreshBacklog();
         });
     };
@@ -239,19 +217,6 @@
             });
         });
     }
-
-    const fetchBacklogs = () => {
-        fetch(`/api/backlog/list?artifactType=${data.backlog.artifactType}`)
-            .then((res) => res.json())
-            .then((backlogs) => {
-                backlogsForSelect = backlogs.filter(backlog => backlog.id != data.backlog.id).map((backlog: any) => {
-                    return {
-                        value: backlog.id,
-                        name: backlog.title
-                    };
-                });
-            });
-    };
 
     const openTags = (artifactId: number) => {
         showTagModal = true;
@@ -329,14 +294,12 @@
     }
 
     const refreshBacklog = () => {
-        return fetch(`/api/backlog/${data.backlog.id}`)
-            .then((res) => res.json())
-            .then((backlog) => {
-                data.backlog = backlog;
-                invalidate("data.backlog");
-                invalidate("totalTime");
-                applyFilters();
-            });
+        fetchBacklog(data.backlog.id).then((backlog) => {
+            data.backlog = backlog;
+            invalidate("data.backlog");
+            invalidate("totalTime");
+            applyFilters();
+        });
     };
 
     const applyFilters = () => {
@@ -458,10 +421,16 @@
         moveToRankBacklogItem = backlogItem;
     }
 
-    const moveToBacklogShow = (backlogItem: any) => {
+    const moveToBacklogShow = async (backlogItem: any) => {
         selectedBacklogItem = backlogItem;
         showMoveToBacklog = true;
-        fetchBacklogs();
+        const backlogs = await fetchBacklogs(data.backlog.artifactType);
+        backlogsForSelect = backlogs.filter(backlog => backlog.id != data.backlog.id).map((backlog) => {
+            return {
+                value: backlog.id,
+                name: backlog.title
+            };
+        });
     }
 
     const orderByComparisonPickRandom = () => {
@@ -519,8 +488,8 @@
             randomIndexB = OrderUtil.getRandomIntegerBetween(0, data.backlog.backlogItems.length - 1);
         }
         orderByEloItemB = data.backlog.backlogItems[randomIndexB];
-        orderbyEloItemAPoster = await getPosterURL(orderByEloItemA.artifact.id);
-        orderbyEloItemBPoster = await getPosterURL(orderByEloItemB.artifact.id);
+        orderbyEloItemAPoster = await getPosterURL(data.backlog.artifactType, orderByEloItemA.artifact.id);
+        orderbyEloItemBPoster = await getPosterURL(data.backlog.artifactType, orderByEloItemB.artifact.id);
     }
 
     const orderByEloPick = async (artifactId: number) => {
@@ -539,8 +508,8 @@
             randomIndexB = OrderUtil.getRandomIntegerBetween(0, data.backlog.backlogItems.length - 1);
             orderByEloItemB = data.backlog.backlogItems[randomIndexB];
         }
-        orderbyEloItemAPoster = await getPosterURL(orderByEloItemA.artifact.id);
-        orderbyEloItemBPoster = await getPosterURL(orderByEloItemB.artifact.id);
+        orderbyEloItemAPoster = await getPosterURL(data.backlog.artifactType, orderByEloItemA.artifact.id);
+        orderbyEloItemBPoster = await getPosterURL(data.backlog.artifactType, orderByEloItemB.artifact.id);
     }
 
     const orderByEloFight = (winner: string) => {
@@ -637,7 +606,7 @@
                                 <DropdownItem on:click={() => orderByEloPick(backlogItem.artifact.id)}>Order by Elo</DropdownItem>
                             {/if}
                             <DropdownItem data-id={backlogItem.artifact.id} on:click={() => moveToBacklogShow(backlogItem)}>Move to other Backlog</DropdownItem>
-                            <DropdownItem data-id={backlogItem.artifact.id} on:click={deleteBacklogItem}>Delete</DropdownItem>
+                            <DropdownItem data-id={backlogItem.artifact.id} on:click={deleteBacklogItemCb}>Delete</DropdownItem>
                         </Dropdown>
                     {/if}
                 </div>
@@ -768,7 +737,7 @@
                                 <Button
                                     size="xs"
                                     data-id={artifact.id}
-                                    on:click={addBacklogItem}
+                                    on:click={addBacklogItemCb}
                                 >
                                     <PlusOutline size="xs" />
                                 </Button>
