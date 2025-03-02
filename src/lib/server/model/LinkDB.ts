@@ -36,7 +36,7 @@ export class LinkDB {
         });
     }
 
-    static async getLinksMultiple(type: LinkType, artifactIds: string[]): Promise<Record<string, string>> {
+    static async getLinksMultiple(type: LinkType, artifactIds: number[]): Promise<Record<string, string>> {
         return await new Promise((resolve, reject) => {
             const questionMarks = new Array(artifactIds.length).fill('?').join(',');
             db.all(`SELECT * FROM link
@@ -44,7 +44,7 @@ export class LinkDB {
                 if (error) {
                     reject(error);
                 } else {
-                    const links: Record<string, string> = {};
+                    const links: Record<number, string> = {};
                     for (const row of rows) {
                         links[row.artifactId] = row.url;
                     }

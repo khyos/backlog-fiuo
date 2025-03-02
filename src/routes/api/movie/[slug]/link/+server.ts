@@ -9,8 +9,9 @@ import { RatingDB } from "$lib/server/model/RatingDB";
 import { MovieDB } from "$lib/server/model/movie/MovieDB";
 import { TMDB } from "$lib/tmdb/TMDB";
 import { error, json } from "@sveltejs/kit";
+import type { RequestEvent } from "./$types";
 
-export async function POST({ params, request, locals }: any) {
+export async function POST({ params, request, locals }: RequestEvent) {
     const { user } = locals;
     const userInst = User.deserialize(user);
     if (!userInst.hasRight(UserRights.EDIT_ARTIFACT)) {
@@ -41,7 +42,7 @@ export async function POST({ params, request, locals }: any) {
     json({ success: true });
 }
 
-export async function PUT({ params, request, locals }: any) {
+export async function PUT({ params, request, locals }: RequestEvent) {
     const { user } = locals;
     const userInst = User.deserialize(user);
     if (!userInst.hasRight(UserRights.EDIT_ARTIFACT)) {

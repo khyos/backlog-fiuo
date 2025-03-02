@@ -53,13 +53,24 @@ export class BacklogDB {
         });
     }
 
-    static async getBacklogs(userId: number, page: number, pageSize: number, artifactType: string | null): Promise<Backlog[]> {
-        let query = 'SELECT * FROM backlog WHERE userId = ? ORDER BY id ASC LIMIT ? OFFSET ?';
-        let params: (string | number)[] = [userId, pageSize, page * pageSize];
-        if (artifactType) {
-            query = 'SELECT * FROM backlog WHERE userId = ? AND artifactType = ? ORDER BY id ASC LIMIT ? OFFSET ?';
-            params = [userId, artifactType, pageSize, page * pageSize];
-        }
+    static async getBacklogs(userId: number, page: number, pageSize: number, artifactType: string | null, search: string = ''): Promise<Backlog[]> {
+        const baseQuery = `SELECT * FROM backlog WHERE userId = ?`;
+        const searchQuery = search ? ` AND LOWER(title) LIKE ?` : "";
+        const artifactQuery = artifactType ? ` AND artifactType = ?` : "";
+        const orderQuery = search
+            ? ` ORDER BY (LOWER(title) = ?) DESC, length(title) ASC`
+            : ` ORDER BY id ASC`;
+        const limitOffsetQuery = ` LIMIT ? OFFSET ?`;
+        const query = baseQuery + searchQuery + artifactQuery + orderQuery + limitOffsetQuery;
+
+        const params = [
+            userId,
+            ...(search ? [`%${search.toLowerCase()}%`] : []),
+            ...(artifactType ? [artifactType] : []),
+            ...(search ? [search.toLowerCase()] : []),
+            pageSize,
+            page * pageSize
+        ];
         return await new Promise((resolve, reject) => {
             db.all(query, params, async (error, rows: any) => {
                 if (error) {

@@ -1,8 +1,9 @@
+import type { ArtifactType } from "$lib/model/Artifact";
 import { Tag, TagType } from "$lib/model/Tag";
 import { db, execQuery } from "../database";
 
 export class TagDB {
-    static getTags(artifactType: string, page: number, pageSize: number, query: string) {
+    static getTags(artifactType: ArtifactType, page: number, pageSize: number, query: string) {
         return new Promise<Tag[]>((resolve, reject) => {
             db.all(`SELECT * FROM tag WHERE artifactType = ? AND id LIKE ? ORDER BY id LIMIT ? OFFSET ?`, [artifactType, `%${query}%`, pageSize, page * pageSize], (err, rows) => {
                 if (err) {
@@ -14,7 +15,7 @@ export class TagDB {
         });
     }
 
-    static async createTag(tagId: string, artifactType: string, type: TagType): Promise<Tag> {
+    static async createTag(tagId: string, artifactType: ArtifactType, type: TagType): Promise<Tag> {
         return await new Promise((resolve, reject) => {
             db.run(`INSERT INTO tag (id, artifactType, type) VALUES (?, ?, ?)`, [tagId, artifactType, type], async function (error) {
                 if (error) {

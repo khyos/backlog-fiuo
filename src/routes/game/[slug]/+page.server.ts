@@ -1,11 +1,11 @@
-import { GameDB } from '$lib/server/model/game/GameDB';
 import { error } from '@sveltejs/kit';
+import type { PageServerLoad } from './$types';
 import { User, UserRights } from '$lib/model/User';
+import { GameDB } from '$lib/server/model/game/GameDB';
 import { ArtifactDB } from '$lib/server/model/ArtifactDB';
 
-export async function load({ params, locals }) {
-	const { user } = locals;
-	const userInst = User.deserialize(user);
+export const load: PageServerLoad = async ({ params, locals }) => {
+	const userInst = User.deserialize(locals.user);
 	const gameId = parseInt(params.slug);
 	const game = await GameDB.getById(gameId);
 	if (game) {

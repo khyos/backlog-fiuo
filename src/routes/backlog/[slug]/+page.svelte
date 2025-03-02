@@ -34,17 +34,14 @@
     import type { PageData } from "./$types";
     import { OrderUtil } from "$lib/util/OrderUtil";
     import "./page.pcss";
-    import type { Platform } from "$lib/model/game/Platform";
-    import { BacklogOrder, BacklogRankingType } from "$lib/model/Backlog";
+    import { BacklogRankingType } from "$lib/model/Backlog";
+    import { getPosterURL } from "$lib/services/ArtifactService";
+    import { addBacklogItem, deleteBacklogItem, fetchBacklog, fetchBacklogs } from "$lib/services/BacklogService";
+    import { fetchPrices } from "$lib/services/PricesService";
+    import type { Price } from "$lib/types/Price";
+    import { createBacklogFilters, filterBacklogItems, type BacklogFilters } from "./BacklogFilters";
 
     export let data: PageData;
-
-    const GAME_RELEASE_DATE_MIN = 1970;
-    const GAME_RELEASE_DATE_MAX = 2025;
-    const MOVIE_RELEASE_DATE_MIN = 1895;
-    const MOVIE_RELEASE_DATE_MAX = 2025;
-    const GAME_MAX_DURATION = 200;
-    const MOVIE_MAX_DURATION = 240;
 
     let hiddenDrawer: boolean = true;
     let transitionDrawerParams = {
@@ -85,55 +82,14 @@
     let searchTagTerm = "";
     let searchedTags: Tag[] = [];
 
+    let filteredBacklogItems = data.backlog.backlogItems;
+    let backlogFilters: BacklogFilters = createBacklogFilters(data.backlog.artifactType, data.backlog.rankingType);
+
     let orderBacklogByItems = [
-        { value: data.backlog.rankingType, name: data.backlog.rankingType },
+        { value: backlogFilters.orderBy.type, name: backlogFilters.orderBy.type },
         { value: "dateAdded", name: "Date Added in List" }
     ];
-    let orderBacklogBy : BacklogOrder;
-    switch (data.backlog.rankingType) {
-        case BacklogRankingType.RANK:
-            orderBacklogBy = BacklogOrder.RANK;
-            break;
-        case BacklogRankingType.ELO:
-            orderBacklogBy = BacklogOrder.ELO;
-            break;
-        case BacklogRankingType.WISHLIST:
-            orderBacklogBy = BacklogOrder.DATE_RELEASE;
-            break;
-    }
-
-    let filteredBacklogItems = data.backlog.backlogItems;
-    let includedGenres: string[] = [];
-    let excludedGenres: string[] = [];
-    let includedTags: string[] = [];
-    let excludedTags: string[] = [];
-    let releaseDateMin: number;
-    let releaseDateMax: number;
-    let currentReleaseDateMin: number;
-    let currentReleaseDateMax: number;
-    if (data.backlog.artifactType === ArtifactType.GAME) {
-        releaseDateMin = GAME_RELEASE_DATE_MIN;
-        releaseDateMax = GAME_RELEASE_DATE_MAX;
-        currentReleaseDateMin = GAME_RELEASE_DATE_MIN;
-        currentReleaseDateMax = GAME_RELEASE_DATE_MAX;
-    } else if (data.backlog.artifactType === ArtifactType.MOVIE) {
-        releaseDateMin = MOVIE_RELEASE_DATE_MIN;
-        releaseDateMax = MOVIE_RELEASE_DATE_MAX;
-        currentReleaseDateMin = MOVIE_RELEASE_DATE_MIN;
-        currentReleaseDateMax = MOVIE_RELEASE_DATE_MAX;
-    }
-    let ratingValue = 0;
-    let currentMaxDuration: number;
-    let maxDuration: number;
-    if (data.backlog.artifactType === ArtifactType.GAME) {
-        maxDuration = GAME_MAX_DURATION;
-        currentMaxDuration = GAME_MAX_DURATION;
-    } else if (data.backlog.artifactType === ArtifactType.MOVIE) {
-        maxDuration = MOVIE_MAX_DURATION;
-        currentMaxDuration = MOVIE_MAX_DURATION;
-    }
-    let includedPlatforms: any[] = [];
-
+   
     let orderByComparisonItemA: any = null;
     let orderByComparisonItemB: any = null;
     let highestRank: number;
@@ -144,16 +100,7 @@
     let orderbyEloItemAPoster: string | null = null;
     let orderbyEloItemBPoster: string | null = null;
 
-    $: orderBacklogBy,
-        includedGenres,
-        excludedGenres,
-        includedTags,
-        excludedTags,
-        currentReleaseDateMin,
-        currentReleaseDateMax,
-        currentMaxDuration,
-        ratingValue,
-        includedPlatforms,
+    $: backlogFilters,
         applyFilters();
 
     const fetchArtifacts = () => {
@@ -167,42 +114,16 @@
             });
     };
 
-    const getPosterURL = async (artifactId: string) => {
-        let url = "";
-        if (data.backlog.artifactType === ArtifactType.GAME) {
-            const response = await fetch(`/api/game/${artifactId}/poster`);
-            url = await response.text();
-        } else if (data.backlog.artifactType === ArtifactType.MOVIE) {
-            const response = await fetch(`/api/movie/${artifactId}/poster`);
-            url = await response.text();
-        }
-        return url;
-    }
-
-    const addBacklogItem = (e: any) => {
+    const addBacklogItemCb = async (e: any) => {
         const artifactId = e.currentTarget.getAttribute("data-id");
-        const rank = data.backlog.backlogItems.length + 1;
-        fetch(`/api/backlog/${data.backlog.id}/add`, {
-            method: "POST",
-            body: JSON.stringify({
-                artifactId: artifactId,
-                rank: rank,
-            }),
-        }).then(() => {
-            refreshBacklog();
-        });
+        await addBacklogItem(data.backlog.id, artifactId);
+        refreshBacklog();
     };
 
-    const deleteBacklogItem = (e: any) => {
+    const deleteBacklogItemCb = async (e: any) => {
         const artifactId = e.target.getAttribute("data-id");
-        fetch(`/api/backlog/${data.backlog.id}/delete`, {
-            method: "POST",
-            body: JSON.stringify({
-                artifactId: artifactId,
-            }),
-        }).then(() => {
-            refreshBacklog();
-        });
+        await deleteBacklogItem(data.backlog.id, artifactId);
+        refreshBacklog();
     };
 
     const moveBacklogItem = (srcRank: number, targetRank: number) => {
@@ -239,19 +160,6 @@
             });
         });
     }
-
-    const fetchBacklogs = () => {
-        fetch(`/api/backlog/list?artifactType=${data.backlog.artifactType}`)
-            .then((res) => res.json())
-            .then((backlogs) => {
-                backlogsForSelect = backlogs.filter(backlog => backlog.id != data.backlog.id).map((backlog: any) => {
-                    return {
-                        value: backlog.id,
-                        name: backlog.title
-                    };
-                });
-            });
-    };
 
     const openTags = (artifactId: number) => {
         showTagModal = true;
@@ -305,18 +213,10 @@
         });
     };
 
-    let prices;
-    const fetchPrices = () => {
-        fetch(`/api/game/prices`, {
-            method: "POST",
-            body: JSON.stringify({
-                artifactIds: data.backlog.backlogItems.map(bi => bi.artifact.id)
-            })
-        }).then((res) => res.json())
-        .then((response) => {
-            prices = response;
-            invalidate("prices");
-        });
+    let prices: Record<string, Price>;
+    const fetchPricesCb = async () => {
+        const artifactIds =  data.backlog.backlogItems.map(bi => bi.artifact.id);
+        prices = await fetchPrices(data.backlog.artifactType, artifactIds);  
     }
 
     const openPriceLink = async (priceId: string) => {
@@ -328,101 +228,25 @@
         });
     }
 
-    const refreshBacklog = () => {
-        return fetch(`/api/backlog/${data.backlog.id}`)
-            .then((res) => res.json())
-            .then((backlog) => {
-                data.backlog = backlog;
-                invalidate("data.backlog");
-                invalidate("totalTime");
-                applyFilters();
-            });
+    const refreshBacklog = async () => {
+        return fetchBacklog(data.backlog.id).then((backlog) => {
+            data.backlog = backlog;
+            invalidate("data.backlog");
+            invalidate("totalTime");
+            applyFilters();
+        });
     };
 
     const applyFilters = () => {
-        filteredBacklogItems = data.backlog.backlogItems;
-        if (orderBacklogBy === BacklogOrder.DATE_ADDED) {
-            filteredBacklogItems.sort((a, b) => {
-                return a.dateAdded - b.dateAdded;
-            })
-        }
-        if (includedGenres.length > 0) {
-            filteredBacklogItems = filteredBacklogItems.filter((item: any) => {
-                return item.artifact.genres.some((genre: any) => {
-                    return includedGenres.includes(genre.id);
-                });
-            });
-        }
-        if (excludedGenres.length > 0) {
-            filteredBacklogItems = filteredBacklogItems.filter((item: any) => {
-                return !item.artifact.genres.some((genre: any) => {
-                    return excludedGenres.includes(genre.id);
-                });
-            });
-        }
-        if (includedTags.length > 0) {
-            filteredBacklogItems = filteredBacklogItems.filter((item: any) => {
-                return item.tags.some((tag: any) => {
-                    return includedTags.includes(tag.id);
-                });
-            });
-        }
-        if (excludedTags.length > 0) {
-            filteredBacklogItems = filteredBacklogItems.filter((item: any) => {
-                return !item.tags.some((tag: any) => {
-                    return excludedTags.includes(tag.id);
-                });
-            });
-        }
-        if (currentReleaseDateMin > releaseDateMin || currentReleaseDateMax < releaseDateMax) {
-            filteredBacklogItems = filteredBacklogItems.filter((item) => {
-                const artifactYearString = item.artifact.releaseDate;
-                let artifactYear: number | null = null;
-                if (artifactYearString) {
-                    artifactYear = new Date(artifactYearString).getFullYear();
-                }
-                return (
-                    artifactYear == null ||
-                    (artifactYear >= currentReleaseDateMin &&
-                    artifactYear <= currentReleaseDateMax)
-                );
-            });
-        }
-        if (currentMaxDuration < maxDuration) {
-            let maxDurationInSeconds: number;
-            if (data.backlog.artifactType === ArtifactType.GAME) {
-                maxDurationInSeconds = currentMaxDuration * 3600;
-            } else if (data.backlog.artifactType === ArtifactType.MOVIE) {
-                maxDurationInSeconds = currentMaxDuration * 60;
-            }
-            filteredBacklogItems = filteredBacklogItems.filter((item) => {
-                return item.artifact.duration <= maxDurationInSeconds;
-            });
-        }
-        if (includedPlatforms.length > 0) {
-            filteredBacklogItems = filteredBacklogItems.filter((item) => {
-                const game: any = item;
-                return game.platforms.some((platform: Platform) => {
-                    return includedPlatforms.includes(platform.id);
-                });
-            });
-        }
-        if (ratingValue > 0) {
-            filteredBacklogItems = filteredBacklogItems.filter((item) => {
-                return (
-                    item.artifact.meanRating === null ||
-                    item.artifact.meanRating >= ratingValue
-                );
-            });
-        }
+        filteredBacklogItems = filterBacklogItems(data.backlog.backlogItems, data.backlog.artifactType, backlogFilters);
     };
 
     const formatDuration = (duration: number) => {
         if (data.backlog.artifactType === ArtifactType.GAME) {
-            if (duration === maxDuration) return "No limit";
+            if (duration === backlogFilters.duration.absoluteMax) return "No limit";
             return `${duration}h`;
         } else if (data.backlog.artifactType === ArtifactType.MOVIE) {
-            if (duration === maxDuration) return "No limit";
+            if (duration === backlogFilters.duration.absoluteMax) return "No limit";
             const hours = Math.floor(duration / 60);
             const minutes = duration % 60;
             return `${hours}h ${minutes}m`;
@@ -458,10 +282,16 @@
         moveToRankBacklogItem = backlogItem;
     }
 
-    const moveToBacklogShow = (backlogItem: any) => {
+    const moveToBacklogShow = async (backlogItem: any) => {
         selectedBacklogItem = backlogItem;
         showMoveToBacklog = true;
-        fetchBacklogs();
+        const backlogs = await fetchBacklogs(data.backlog.artifactType);
+        backlogsForSelect = backlogs.filter(backlog => backlog.id != data.backlog.id).map((backlog) => {
+            return {
+                value: backlog.id,
+                name: backlog.title
+            };
+        });
     }
 
     const orderByComparisonPickRandom = () => {
@@ -519,8 +349,8 @@
             randomIndexB = OrderUtil.getRandomIntegerBetween(0, data.backlog.backlogItems.length - 1);
         }
         orderByEloItemB = data.backlog.backlogItems[randomIndexB];
-        orderbyEloItemAPoster = await getPosterURL(orderByEloItemA.artifact.id);
-        orderbyEloItemBPoster = await getPosterURL(orderByEloItemB.artifact.id);
+        orderbyEloItemAPoster = await getPosterURL(data.backlog.artifactType, orderByEloItemA.artifact.id);
+        orderbyEloItemBPoster = await getPosterURL(data.backlog.artifactType, orderByEloItemB.artifact.id);
     }
 
     const orderByEloPick = async (artifactId: number) => {
@@ -539,8 +369,8 @@
             randomIndexB = OrderUtil.getRandomIntegerBetween(0, data.backlog.backlogItems.length - 1);
             orderByEloItemB = data.backlog.backlogItems[randomIndexB];
         }
-        orderbyEloItemAPoster = await getPosterURL(orderByEloItemA.artifact.id);
-        orderbyEloItemBPoster = await getPosterURL(orderByEloItemB.artifact.id);
+        orderbyEloItemAPoster = await getPosterURL(data.backlog.artifactType, orderByEloItemA.artifact.id);
+        orderbyEloItemBPoster = await getPosterURL(data.backlog.artifactType, orderByEloItemB.artifact.id);
     }
 
     const orderByEloFight = (winner: string) => {
@@ -637,7 +467,7 @@
                                 <DropdownItem on:click={() => orderByEloPick(backlogItem.artifact.id)}>Order by Elo</DropdownItem>
                             {/if}
                             <DropdownItem data-id={backlogItem.artifact.id} on:click={() => moveToBacklogShow(backlogItem)}>Move to other Backlog</DropdownItem>
-                            <DropdownItem data-id={backlogItem.artifact.id} on:click={deleteBacklogItem}>Delete</DropdownItem>
+                            <DropdownItem data-id={backlogItem.artifact.id} on:click={deleteBacklogItemCb}>Delete</DropdownItem>
                         </Dropdown>
                     {/if}
                 </div>
@@ -707,39 +537,39 @@
     >
         <TabItem open={selectedTab == 'filters'} title="Filters" class="w-full">
             {#if data.backlog.artifactType === ArtifactType.GAME}
-                <Button on:click={fetchPrices}>Fetch Prices</Button>
+                <Button on:click={fetchPricesCb}>Fetch Prices</Button>
             {/if}
             <Label class="block mb-1 mt-2">Order By</Label>
-            <Select items={orderBacklogByItems} bind:value={orderBacklogBy} />
+            <Select items={orderBacklogByItems} bind:value={backlogFilters.orderBy.type} />
             <Label class="block mb-1 mt-2">Filter Genre</Label>
-            <MultiSelect items={data.genres} bind:value={includedGenres} />
+            <MultiSelect items={data.genres} bind:value={backlogFilters.genres.included} />
             <Label class="block mb-1 mt-2">Exclude Genre</Label>
-            <MultiSelect items={data.genres} bind:value={excludedGenres} />
+            <MultiSelect items={data.genres} bind:value={backlogFilters.genres.excluded} />
             <Label class="block mb-1 mt-2">Filter Tags</Label>
-            <MultiSelect items={data.backlogTags} bind:value={includedTags} />
+            <MultiSelect items={data.backlogTags} bind:value={backlogFilters.tags.included} />
             <Label class="block mb-1 mt-2">Exclude Tags</Label>
-            <MultiSelect items={data.backlogTags} bind:value={excludedTags} />
+            <MultiSelect items={data.backlogTags} bind:value={backlogFilters.tags.excluded} />
             <Label class="block mb-1 mt-2"
-                >Release Date: {currentReleaseDateMin} to {currentReleaseDateMax}</Label
+                >Release Date: {backlogFilters.releaseDate.min} to {backlogFilters.releaseDate.max}</Label
             >
             <DoubleRange
-                min={releaseDateMin}
-                max={releaseDateMax}
+                min={backlogFilters.releaseDate.absoluteMin}
+                max={backlogFilters.releaseDate.absoluteMax}
                 step={1}
-                bind:minValue={currentReleaseDateMin}
-                bind:maxValue={currentReleaseDateMax}
+                bind:minValue={backlogFilters.releaseDate.min}
+                bind:maxValue={backlogFilters.releaseDate.max}
             />
             <Label class="block mb-1 mt-2"
-                >Max Duration: {formatDuration(currentMaxDuration)}</Label
+                >Max Duration: {formatDuration(backlogFilters.duration.max)}</Label
             >
-            <Range class="appearance-auto" min="0" max="200" step="1" bind:value={currentMaxDuration} />
-            <Label class="block mb-1 mt-2">Min Rating: {ratingValue}</Label>
-            <Range class="appearance-auto" min="0" max="100" step="1" bind:value={ratingValue} />
-            {#if data.backlog.artifactType === ArtifactType.GAME}
+            <Range class="appearance-auto" min="0" max="200" step="1" bind:value={backlogFilters.duration.max} />
+            <Label class="block mb-1 mt-2">Min Rating: {backlogFilters.rating.min}</Label>
+            <Range class="appearance-auto" min="0" max="100" step="1" bind:value={backlogFilters.rating.min} />
+            {#if backlogFilters.platforms}
                 <Label class="block mb-1 mt-2">Platform</Label>
                 <MultiSelect
                     items={data.platforms}
-                    bind:value={includedPlatforms}
+                    bind:value={backlogFilters.platforms.included}
                 />
             {/if}
         </TabItem>
@@ -768,7 +598,7 @@
                                 <Button
                                     size="xs"
                                     data-id={artifact.id}
-                                    on:click={addBacklogItem}
+                                    on:click={addBacklogItemCb}
                                 >
                                     <PlusOutline size="xs" />
                                 </Button>

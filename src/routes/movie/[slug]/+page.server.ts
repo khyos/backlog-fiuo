@@ -1,12 +1,11 @@
+import { error } from '@sveltejs/kit';
+import type { PageServerLoad } from './$types';
 import { User, UserRights } from '$lib/model/User';
 import { MovieDB } from '$lib/server/model/movie/MovieDB';
-import { error } from '@sveltejs/kit';
 import { ArtifactDB } from '$lib/server/model/ArtifactDB';
 
-/** @type {import('./$types').PageLoad} */
-export async function load({ params, locals }: any) {
-	const { user } = locals;
-	const userInst = User.deserialize(user);
+export const load: PageServerLoad = async ({ params, locals }) => {
+	const userInst = User.deserialize(locals.user);
 	const movieId = parseInt(params.slug);
 	const movie = await MovieDB.getById(movieId);
 	if (movie) {

@@ -4,8 +4,9 @@ import { RottenTomatoes } from "$lib/rottentomatoes/RottenTomatoes";
 import { SensCritique } from "$lib/senscritique/SensCritique";
 import { TMDB } from "$lib/tmdb/TMDB";
 import { error, json } from "@sveltejs/kit";
+import type { RequestEvent } from "./$types";
 
-export async function GET({ url, locals }: any) {
+export async function GET({ url, locals }: RequestEvent) {
     const { user } = locals;
     const userInst = User.deserialize(user);
     if (!userInst.hasRight(UserRights.CREATE_ARTIFACT)) {
@@ -17,25 +18,33 @@ export async function GET({ url, locals }: any) {
     try {
         tmdbResults = await TMDB.searchMovie(query);
     } catch (e) {
-        return error(500, "FAILED TMDB: " + e.toString());
+        tmdbResults = {
+            error: e instanceof Error ? e.toString() : 'Unknown Error'
+        }
     }
     let scResults;
     try {
         scResults = await SensCritique.searchMovie(query);
     } catch (e) {
-        return error(500, "FAILED SC: " + e.toString());
+        scResults = {
+            error: e instanceof Error ? e.toString() : 'Unknown Error'
+        }
     }
     let mcResults;
     try {
         mcResults = await MetaCritic.searchMovie(query);
     } catch (e) {
-        return error(500, "FAILED MC: " + e.toString());
+        mcResults = {
+            error: e instanceof Error ? e.toString() : 'Unknown Error'
+        }
     }
     let rtResults;
     try {
         rtResults = await RottenTomatoes.searchMovie(query);
     } catch (e) {
-        return error(500, "FAILED RT: " + e.toString());
+        rtResults = {
+            error: e instanceof Error ? e.toString() : 'Unknown Error'
+        }
     }
 
     const results = {

@@ -7,8 +7,9 @@ import { OpenCritic } from "$lib/opencritic/OpenCritic";
 import { SensCritique } from "$lib/senscritique/SensCritique";
 import { Steam } from "$lib/steam/Steam";
 import { error, json } from "@sveltejs/kit";
+import type { RequestEvent } from "./$types";
 
-export async function GET({ url, locals }: any) {
+export async function GET({ url, locals }: RequestEvent) {
     const { user } = locals;
     const userInst = User.deserialize(user);
     if (!userInst.hasRight(UserRights.CREATE_ARTIFACT)) {
@@ -20,43 +21,57 @@ export async function GET({ url, locals }: any) {
     try {
         igdbResults = await IGDB.searchGame(query);
     } catch (e) {
-        return error(500, "FAILED TMDB: " + e.toString());
+        igdbResults = {
+            error: e instanceof Error ? e.toString() : 'Unknown Error'
+        }
     }
     let hltbResults;
     try {
         hltbResults = await HLTB.searchGame(query);
     } catch (e) {
-        return error(500, "FAILED TMDB: " + e.toString());
+        hltbResults = {
+            error: e instanceof Error ? e.toString() : 'Unknown Error'
+        }
     }
     let scResults;
     try {
         scResults = await SensCritique.searchGame(query);
     } catch (e) {
-        return error(500, "FAILED TMDB: " + e.toString());
+        scResults = {
+            error: e instanceof Error ? e.toString() : 'Unknown Error'
+        }
     }
     let mcResults;
     try {
         mcResults = await MetaCritic.searchGame(query);
     } catch (e) {
-        return error(500, "FAILED TMDB: " + e.toString());
+        mcResults = {
+            error: e instanceof Error ? e.toString() : 'Unknown Error'
+        }
     }
     let ocResults;
     try {
         ocResults = await OpenCritic.searchGame(query);
     } catch (e) {
-        return error(500, "FAILED TMDB: " + e.toString());
+        ocResults = {
+            error: e instanceof Error ? e.toString() : 'Unknown Error'
+        }
     }
     let steamResults;
     try {
         steamResults = await Steam.searchGame(query);
     } catch (e) {
-        return error(500, "FAILED TMDB: " + e.toString());
+        steamResults = {
+            error: e instanceof Error ? e.toString() : 'Unknown Error'
+        }
     }
     let itadResults;
     try {
         itadResults = await ITAD.searchGame(query);
     } catch (e) {
-        return error(500, "FAILED ITAD: " + e.toString());
+        itadResults = {
+            error: e instanceof Error ? e.toString() : 'Unknown Error'
+        }
     }
 
     const results = {

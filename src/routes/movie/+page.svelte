@@ -1,54 +1,134 @@
 <script lang="ts">
-    import { invalidate } from '$app/navigation';
     import { Button, Listgroup, ListgroupItem, Search } from 'flowbite-svelte';
-    import { PlusOutline } from 'flowbite-svelte-icons';
+    import { PlusOutline, TrashBinSolid } from 'flowbite-svelte-icons';
+    import type { PageData } from './$types';
 
-	/** @type {import('./$types').PageData} */
-	export let data;
+	export let data: PageData;
     export let searchTerm = '';
+    let isSearching = false;
 
-    const fetchMovies = () => {	
-		fetch(`/api/movie/search?query=${searchTerm}`)
-            .then(res => res.json())
-            .then(movies => {
-                data.movies = movies;
-                invalidate('data.movies');
+    async function searchMovies() {
+        isSearching = true;
+        
+        try {
+            const response = await fetch(`/api/movie/search?query=${encodeURIComponent(searchTerm)}`);
+            
+            if (!response.ok) {
+                throw new Error(`Search failed: ${response.status}`);
+            }
+            
+            const movies = await response.json();
+            data.movies = movies;
+        } catch (error) {
+            console.error('Search error:', error);
+        } finally {
+            isSearching = false;
+        }
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            searchMovies();
+        }
+    }
+
+    async function deleteMovie(movieId: number) {
+        if (!confirm('Are you sure you want to delete this movie?')) {
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/api/movie/${movieId}`, {
+                method: 'DELETE'
             });
-	}
+            
+            if (!response.ok) {
+                throw new Error(`Delete failed: ${response.status}`);
+            }
+            
+            data.movies = data.movies.filter(movie => movie.id !== movieId);
+        } catch (error) {
+            console.error('Delete error:', error);
+        }
+    }
 
-    const deleteMovie = (e: any) => {
-        const id = e.target.getAttribute('data-id');
-        fetch(`/api/movie/${id}`, {
-            method: 'DELETE'
-        }).then(() => {
-            location.reload();
-        });
+    function navigateToMovie(movieId: number) {
+        window.location.href = `/movie/${movieId}`;
+    }
+
+    function navigateToCreateMovie() {
+        window.location.href = '/movie/create';
     }
 </script>
 
-<h1 class="text-2xl font-extrabold dark:text-white mb-4">Movies</h1>
-<Search type="text" 
-    id="search-field" 
-    placeholder="Search" 
-    autocomplete="off"
-    bind:value={searchTerm}
-    on:input={fetchMovies} />
-<Listgroup class="mt-1">
-    {#each data.movies as movie}
-        <ListgroupItem>
-            <div style="display: flex; align-items: center;">
-                <div style="flex-grow: 1;">
-                    <a href={`/movie/${movie.id}`}>{movie.title}</a>
-                </div>
-                {#if data.canDelete}
-                    <div>
-                        <Button size="xs" on:click={deleteMovie} data-id={movie.id}>X</Button>
+<div class="space-y-4">
+    <div class="flex justify-between items-center">
+        <h1 class="text-2xl font-extrabold dark:text-white">Movies</h1>
+        
+        {#if data.permissions.canCreate}
+            <Button size="sm" on:click={navigateToCreateMovie}>
+                <PlusOutline class="mr-2 h-4 w-4" />
+                Add Movie
+            </Button>
+        {/if}
+    </div>
+
+    <div class="search-container">
+        <Search 
+            type="text"
+            id="search-field"
+            placeholder="Search movies..." 
+            autocomplete="off"
+            bind:value={searchTerm}
+            on:keydown={handleKeyDown}
+        />
+        <Button 
+            size="sm"
+            class="ml-2"
+            disabled={isSearching}
+            on:click={searchMovies}
+        >
+            {isSearching ? 'Searching...' : 'Search'}
+        </Button>
+    </div>
+
+    {#if data.movies.length === 0}
+        <div class="p-4 text-center text-gray-500 dark:text-gray-400">
+            No movies found
+        </div>
+    {:else}
+        <Listgroup class="w-full">
+            {#each data.movies as movie (movie.id)}
+                <ListgroupItem>
+                    <div class="flex justify-between items-center w-full">
+                        <button 
+                            class="text-left cursor-pointer hover:underline flex-grow"
+                            on:click={() => navigateToMovie(movie.id)}
+                        >
+                            {movie.title}
+                        </button>
+                        
+                        {#if data.permissions.canDelete}
+                            <Button 
+                                size="xs" 
+                                color="red"
+                                on:click={() => deleteMovie(movie.id)}
+                                class="ml-2"
+                            >
+                                <TrashBinSolid class="h-3 w-3" />
+                            </Button>
+                        {/if}
                     </div>
-                {/if}
-            </div>
-        </ListgroupItem>
-    {/each}
-</Listgroup>
-{#if data.canCreate}
-    <Button size="xs" on:click={() => {location.href="/movie/create"}} class="mt-2"><PlusOutline />Add Movie</Button>
-{/if}
+                </ListgroupItem>
+            {/each}
+        </Listgroup>
+    {/if}
+</div>
+
+<style>
+    .search-container {
+        display: flex;
+        align-items: center;
+    }
+</style>

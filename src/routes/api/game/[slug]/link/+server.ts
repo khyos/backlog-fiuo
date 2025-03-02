@@ -12,8 +12,9 @@ import { RatingDB } from "$lib/server/model/RatingDB";
 import { GameDB } from "$lib/server/model/game/GameDB";
 import { Steam } from "$lib/steam/Steam";
 import { error, json } from "@sveltejs/kit";
+import type { RequestEvent } from "./$types";
 
-export async function POST({ params, request, locals }: any) {
+export async function POST({ params, request, locals }: RequestEvent) {
     const { user } = locals;
     const userInst = User.deserialize(user);
     if (!userInst.hasRight(UserRights.EDIT_ARTIFACT)) {
@@ -55,7 +56,7 @@ export async function POST({ params, request, locals }: any) {
     return error(404, "Not Valid URL");
 }
 
-export async function PUT({ params, request, locals }: any) {
+export async function PUT({ params, request, locals }: RequestEvent) {
     const { user } = locals;
     const userInst = User.deserialize(user);
     if (!userInst.hasRight(UserRights.EDIT_ARTIFACT)) {

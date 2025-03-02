@@ -1,8 +1,9 @@
 import { User } from "$lib/model/User";
 import { ArtifactDB } from "$lib/server/model/ArtifactDB";
 import { error, json } from "@sveltejs/kit";
+import type { RequestEvent } from "./$types";
 
-export async function POST({ params, request, locals }: any) {
+export async function POST({ params, request, locals }: RequestEvent) {
     const { user } = locals;
     const userInst = User.deserialize(user);
     if (userInst.id < 0) {

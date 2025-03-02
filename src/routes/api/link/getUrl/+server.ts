@@ -1,23 +1,35 @@
 import { ITAD } from "$lib/itad/ITAD";
 import { LinkType } from "$lib/model/Link";
-import { text } from "@sveltejs/kit";
+import { error, text } from "@sveltejs/kit";
+import type { RequestEvent } from "./$types";
+import { ArtifactType } from "$lib/model/Artifact";
 
-export async function GET({ url }: any) {
-    const artifactType: string = url.searchParams.get('artifactType');
-    const linkType: LinkType = url.searchParams.get('linkType');
-    const linkUrl: string = url.searchParams.get('linkUrl');
+export async function GET({ url }: RequestEvent) {
+    const artifactType = url.searchParams.get('artifactType') as ArtifactType | null;
+    if (artifactType !== null && !Object.values(ArtifactType).includes(artifactType)) {
+        error(500, 'Invalid artifactType')
+    }
+    const linkType = url.searchParams.get('linkType') as LinkType | null;
+    if (linkType === null) {
+        error(500, 'Missing Link Type')
+    }
+    const linkUrl: string | null = url.searchParams.get('linkUrl');
+    if (linkUrl === null) {
+        error(500, 'Missing Link URL')
+    }
     const result = await getURLFromId(artifactType, linkType, linkUrl);
     return text(result);
 }
 
-const getURLFromId = async function(artifactType: string, type: LinkType, url: string): Promise<string> {
+const getURLFromId = async function(artifactType: ArtifactType | null, type: LinkType, url: string): Promise<string> {
+    let finalUrl = url;
     switch (type) {
         case LinkType.HLTB:
             return `https://howlongtobeat.com/game?id=${url}`;
         case LinkType.IGDB:
             return `https://www.igdb.com/games/${url}`;
         case LinkType.ITAD:
-            const finalUrl = await ITAD.getSlugFromId(url);
+            finalUrl = await ITAD.getSlugFromId(url);
             return `https://isthereanydeal.com/game/${finalUrl}`;
         case LinkType.METACRITIC:
             if (artifactType === ArtifactType.GAME) {

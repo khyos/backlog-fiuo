@@ -2,8 +2,9 @@ import { User } from "$lib/model/User";
 import { BacklogDB } from "$lib/server/model/BacklogDB";
 import { BacklogItemDB } from "$lib/server/model/BacklogItemDB";
 import { error, json } from "@sveltejs/kit";
+import type { RequestEvent } from "./$types";
 
-export async function POST({ params, request, locals }: any) {
+export async function POST({ params, request, locals }: RequestEvent) {
     const { user } = locals;
 	const userInst = User.deserialize(user);
     const backlogId = parseInt(params.slug);
@@ -19,7 +20,7 @@ export async function POST({ params, request, locals }: any) {
     });
 }
 
-export async function DELETE({ params, request, locals }: any) {
+export async function DELETE({ params, request, locals }: RequestEvent) {
     const { user } = locals;
 	const userInst = User.deserialize(user);
     const backlogId = parseInt(params.slug);

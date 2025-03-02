@@ -1,7 +1,21 @@
 import { ITA_APP_ID } from "$env/static/private";
 
+export type ITAD_Price = {
+    id: string,
+    historyLow: {
+        all?: {
+            amount: number
+        }
+    }
+    deals: {
+        price: {
+            amount: number
+        }
+    }[]
+}
+
 export class ITAD {
-    static async getPrices(gameIds: string[]): Promise<any> {
+    static async getPrices(gameIds: string[]): Promise<ITAD_Price[]> {
         const response = await fetch(`https://api.isthereanydeal.com/games/prices/v3?key=${ITA_APP_ID}&country=FR&shops=6,16,28,35,36,37,52,61,62,`, {
             method: 'POST',
             body: JSON.stringify(gameIds)

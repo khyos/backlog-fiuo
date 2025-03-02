@@ -11,8 +11,9 @@ import { LinkDB } from "$lib/server/model/LinkDB";
 import { GameDB } from "$lib/server/model/game/GameDB";
 import { Steam } from "$lib/steam/Steam";
 import { error, json } from "@sveltejs/kit";
+import type { RequestEvent } from "./$types";
 
-export async function POST({ request, locals }: any) {
+export async function POST({ request, locals }: RequestEvent) {
     const { user } = locals;
     const userInst = User.deserialize(user);
     if (!userInst.hasRight(UserRights.CREATE_ARTIFACT)) {

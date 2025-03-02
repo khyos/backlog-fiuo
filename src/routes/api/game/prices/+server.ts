@@ -2,25 +2,26 @@ import { ITAD } from "$lib/itad/ITAD";
 import { LinkType } from "$lib/model/Link";
 import { LinkDB } from "$lib/server/model/LinkDB";
 import { json } from "@sveltejs/kit";
+import type { RequestEvent } from "./$types";
+import type { Price } from "$lib/types/Price";
 
-export async function POST({ request }: any) {
+export async function POST({ request }: RequestEvent) {
     const { artifactIds } = await request.json();
     const idsMapping = await LinkDB.getLinksMultiple(LinkType.ITAD, artifactIds);
     const itadIds = Object.values(idsMapping);
-    let prices = await ITAD.getPrices(itadIds);
-    prices = await Promise.all(
+    const prices = await ITAD.getPrices(itadIds);
+    const pricesResult = await Promise.all(
         prices.map(async price => {
             return {
                 id: price.id,
-                //slug: await ITAD.getSlugFromId(price.id),
                 current: price.deals.reduce((min, deal) => Math.min(min, deal.price.amount), Infinity),
-                historyLow: price.historyLow.all?.amount ?? 0
+                historyLow: price.historyLow.all?.amount ?? undefined
             }
         })
     );
-    const result = {};
+    const result: Record<string, Price | undefined> = {};
     for (const artifactId of artifactIds) {
-        result[artifactId] = prices.find(price => price.id === idsMapping[artifactId]);
+        result[artifactId] = pricesResult.find(price => price.id === idsMapping[artifactId]);
     }
     return json(result);
 }

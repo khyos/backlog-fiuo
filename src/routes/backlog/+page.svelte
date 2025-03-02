@@ -1,47 +1,134 @@
 <script lang="ts">
-    import { invalidate } from "$app/navigation";
     import { Button, Listgroup, ListgroupItem, Search } from "flowbite-svelte";
-    import { PlusOutline } from "flowbite-svelte-icons";
+    import { PlusOutline, TrashBinSolid } from "flowbite-svelte-icons";
+    import type { PageData } from "./$types";
 
-	/** @type {import('./$types').PageData} */
-	export let data;
+	export let data: PageData;
     export let searchTerm = '';
+    let isSearching = false;
 
-    const searchBacklog = () => {	
-		
+    async function searchBacklogs() {	
+        isSearching = true;
+        
+        try {
+            const response = await fetch(`/api/backlog/search?query=${encodeURIComponent(searchTerm)}`);
+            
+            if (!response.ok) {
+                throw new Error(`Search failed: ${response.status}`);
+            }
+            
+            const backlogs = await response.json();
+            data.backlogs = backlogs;
+        } catch (error) {
+            console.error('Search error:', error);
+        } finally {
+            isSearching = false;
+        }
 	}
 
-    const deleteBacklog = (e: any) => {
-        const id = e.target.getAttribute('data-id');
-        fetch(`/api/backlog/${id}`, {
-            method: 'DELETE'
-        }).then(() => {
-            invalidate("data");
-        });
+    function handleKeyDown(event: KeyboardEvent) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            searchBacklogs();
+        }
+    }
+
+    async function deleteBacklog(backlogId: number) {
+        if (!confirm('Are you sure you want to delete this backlog?')) {
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/api/backlog/${backlogId}`, {
+                method: 'DELETE'
+            });
+            
+            if (!response.ok) {
+                throw new Error(`Delete failed: ${response.status}`);
+            }
+            
+            data.backlogs = data.backlogs.filter(backlog => backlog.id !== backlogId);
+        } catch (error) {
+            console.error('Delete error:', error);
+        }
+    }
+
+    function navigateToBacklog(backlogId: number) {
+        window.location.href = `/backlog/${backlogId}`;
+    }
+
+    function navigateToCreateBacklog() {
+        window.location.href = '/backlog/create';
     }
 </script>
 
-<h1 class="text-2xl font-extrabold dark:text-white mb-4">Backlogs</h1>
-<Search type="text" 
-    id="search-field" 
-    placeholder="Search" 
-    autocomplete="off"
-    bind:value={searchTerm}
-    on:input={searchBacklog} />
-<Listgroup class="mt-1">
-    {#each data.backlogs as backlog}
-        <ListgroupItem>
-            <div style="display: flex; align-items: center;">
-                <div style="flex-grow: 1;">
-                    <a href={`/backlog/${backlog.id}`}>{backlog.title}</a>
-                </div>
-                <div>
-                    <Button size="xs" on:click={deleteBacklog} data-id={backlog.id}>X</Button>
-                </div>
-            </div>
-        </ListgroupItem>
-    {/each}
-</Listgroup>
-{#if data.canCreate}
-    <Button size="xs" on:click={() => {location.href="/backlog/create"}} class="mt-2"><PlusOutline />Add Backlog</Button>
-{/if}
+<div class="space-y-4">
+    <div class="flex justify-between items-center">
+        <h1 class="text-2xl font-extrabold dark:text-white">Backlogs</h1>
+        
+        {#if data.permissions.canCreate}
+            <Button size="sm" on:click={navigateToCreateBacklog}>
+                <PlusOutline class="mr-2 h-4 w-4" />
+                Add Backlog
+            </Button>
+        {/if}
+    </div>
+
+    <div class="search-container">
+        <Search 
+            type="text"
+            id="search-field"
+            placeholder="Search backlogs..." 
+            autocomplete="off"
+            bind:value={searchTerm}
+            on:keydown={handleKeyDown}
+        />
+        <Button 
+            size="sm"
+            class="ml-2"
+            disabled={isSearching}
+            on:click={searchBacklogs}
+        >
+            {isSearching ? 'Searching...' : 'Search'}
+        </Button>
+    </div>
+
+    {#if data.backlogs.length === 0}
+        <div class="p-4 text-center text-gray-500 dark:text-gray-400">
+            No backlogs found
+        </div>
+    {:else}
+        <Listgroup class="mt-1">
+            {#each data.backlogs as backlog}
+                <ListgroupItem>
+                    <div style="display: flex; align-items: center;">
+                        <button 
+                            class="text-left cursor-pointer hover:underline flex-grow"
+                            on:click={() => navigateToBacklog(backlog.id)}
+                        >
+                            {backlog.title}
+                        </button>
+
+                        {#if data.permissions.canEdit}
+                            <Button 
+                                size="xs" 
+                                color="red"
+                                on:click={() => deleteBacklog(backlog.id)}
+                                class="ml-2"
+                            >
+                                <TrashBinSolid class="h-3 w-3" />
+                            </Button>
+                        {/if}
+                    </div>
+                </ListgroupItem>
+            {/each}
+        </Listgroup>
+    {/if}
+</div>
+
+<style>
+    .search-container {
+        display: flex;
+        align-items: center;
+    }
+</style>

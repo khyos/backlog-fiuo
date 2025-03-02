@@ -2,8 +2,9 @@ import { LinkType } from "$lib/model/Link";
 import { MovieDB } from "$lib/server/model/movie/MovieDB";
 import { TMDB } from "$lib/tmdb/TMDB";
 import { error, text } from "@sveltejs/kit";
+import type { RequestEvent } from "./$types";
 
-export async function GET({ params }: any) {
+export async function GET({ params }: RequestEvent) {
     const movieId = parseInt(params.slug);
 	const movie = await MovieDB.getById(movieId);
 	if (movie?.links) {
