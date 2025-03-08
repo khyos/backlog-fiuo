@@ -1,6 +1,6 @@
 import { ArtifactType } from "$lib/model/Artifact";
 
-export async function getPosterURL(artifactType: ArtifactType, artifactId: string) {
+export async function getPosterURL(artifactType: ArtifactType, artifactId: number) {
     let url = "";
     if (artifactType === ArtifactType.GAME) {
         const response = await fetch(`/api/game/${artifactId}/poster`);
