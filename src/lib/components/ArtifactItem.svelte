@@ -4,6 +4,7 @@
     import type { Platform } from "$lib/model/game/Platform";
     import { Link, LinkType } from "$lib/model/Link";
     import type { Rating } from "$lib/model/Rating";
+    import { openLink } from "$lib/services/LinkService";
     import { TimeUtil } from "$lib/util/TimeUtil";
     import {
         Label,
@@ -293,13 +294,12 @@
                 <div class="space-y-2 ml-6">
                     {#each links as link}
                         <div class="flex items-center justify-between bg-gray-50 dark:bg-gray-800 p-2 rounded">
-                            <a 
-                                href={Link.getURL(type, link.type, link.url)} 
-                                target="_blank"
-                                class="text-blue-600 hover:underline flex-1 truncate"
+                            <button
+                                on:click={() => openLink(type, link.type, link.url)}
+                                class="text-blue-600 hover:underline flex-1 truncate" style="text-align:left"
                             >
                                 <span class="font-medium">{link.type}:</span> {link.url}
-                            </a>
+                            </button>
                             {#if canEdit}
                                 <Button
                                     size="xs"

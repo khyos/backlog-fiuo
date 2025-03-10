@@ -11,7 +11,7 @@
     import type { PageData } from "../$types";
     import { getRandomItemA, getRandomItemB, orderByFightState, startOrderByFight } from "$lib/stores/OrderByFightStore";
     import { get } from "svelte/store";
-    import { AwardOutline, CalendarMonthSolid, CheckCircleOutline, RefreshOutline, ThumbsDownOutline, ThumbsUpOutline } from "flowbite-svelte-icons";
+    import { AwardOutline, CheckCircleOutline, RefreshOutline, ThumbsDownOutline, ThumbsUpOutline } from "flowbite-svelte-icons";
 
     export let selectedTab: string = "filters";
     export let canEdit: boolean;

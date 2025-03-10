@@ -3,6 +3,7 @@ import { LinkType } from "$lib/model/Link";
 import { error, text } from "@sveltejs/kit";
 import type { RequestEvent } from "./$types";
 import { ArtifactType } from "$lib/model/Artifact";
+import { IGDB } from "$lib/igdb/IGDB";
 
 export async function GET({ url }: RequestEvent) {
     const artifactType = url.searchParams.get('artifactType') as ArtifactType | null;
@@ -27,7 +28,7 @@ const getURLFromId = async function(artifactType: ArtifactType | null, type: Lin
         case LinkType.HLTB:
             return `https://howlongtobeat.com/game?id=${url}`;
         case LinkType.IGDB:
-            return `https://www.igdb.com/games/${url}`;
+            return await IGDB.getUrlFromId(url);
         case LinkType.ITAD:
             finalUrl = await ITAD.getSlugFromId(url);
             return `https://isthereanydeal.com/game/${finalUrl}`;
