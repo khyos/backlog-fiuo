@@ -8,6 +8,8 @@
     import type { BacklogItem } from "$lib/model/BacklogItem";
     import type { ArtifactType } from "$lib/model/Artifact";
     import { backlogPageState } from "../stores/MainStore";
+    import { openLink } from "$lib/services/LinkService";
+    import { LinkType } from "$lib/model/Link";
 
     export let backlog: Backlog;
     export let backlogItem: BacklogItem;
@@ -22,7 +24,6 @@
     export let onMoveToBacklog: (backlogItem: any) => void;
     export let onDeleteBacklogItem: (e: any) => void;
     export let onMoveBacklogItem: (srcRank: number, targetRank: number) => Promise<void>;
-    export let onOpenPriceLink: (priceId: string) => void;
 
     // Helper functions
     const formatDate = (dateString: string | undefined) => {
@@ -87,7 +88,7 @@
         </div>
         {#if prices?.[backlogItem.artifact.id]}
             <Badge class="mr-1">
-                <button on:click={() => onOpenPriceLink(prices[backlogItem.artifact.id].id)}>
+                <button on:click={() => openLink(backlog.artifactType, LinkType.ITAD, prices[backlogItem.artifact.id].id)}>
                     {prices[backlogItem.artifact.id].current}€ / {prices[backlogItem.artifact.id].historyLow}€
                 </button>
             </Badge>

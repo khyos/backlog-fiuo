@@ -162,14 +162,7 @@
         prices = await fetchPrices(data.backlog.artifactType, artifactIds);  
     }
 
-    const openPriceLink = async (priceId: string) => {
-        fetch(`/api/link/getUrl?artifactType=${data.backlog.artifactType}&linkType=ITAD&linkUrl=${priceId}`, {
-            method: "GET",
-        }).then((res) => res.text())
-        .then((response) => {
-            window.open(response, "blank_");
-        });
-    }
+    
 
     const refreshBacklog = async () => {
         return fetchBacklog(data.backlog.id).then((backlog) => {
@@ -226,7 +219,6 @@
                 onMoveToBacklog={moveToBacklogShow}
                 onDeleteBacklogItem={deleteBacklogItemCb}
                 onMoveBacklogItem={moveBacklogItem}
-                onOpenPriceLink={openPriceLink}
             />
         </ListgroupItem>
     {/each}

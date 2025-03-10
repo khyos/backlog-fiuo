@@ -43,6 +43,11 @@ export class IGDB {
         return (await response.json());
     }
 
+    static async getUrlFromId(gameId: string): Promise<string> {
+        const game = await this.getGame(gameId);
+        return game.url;
+    }
+
     static async getImageURL(gameId: string) {
         const { access_token } = await this.authenticateIGDB();
         const response = await fetch("https://api.igdb.com/v4/covers", {
