@@ -14,4 +14,18 @@ export class TimeUtil {
         }
         return formattedDuration;
     }
+
+    static formatDate(dateString: string | Date | null): string {
+        if (!dateString) {
+            return 'TBD';
+        }
+        const date = new Date(dateString);
+        if (date.getDate() === 31 && date.getMonth() === 11) {
+            return date.getFullYear().toString();
+        }
+        if (date.getFullYear() >= 2100) {
+            return 'TBD';
+        }
+        return date.toLocaleDateString();
+    }
 }

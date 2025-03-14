@@ -8,14 +8,7 @@
 </script>
 
 <ArtifactItem
-    id={movie.id}
-    title={movie.title}
-    type={movie.type}
-    releaseDate={movie.releaseDate}
-    duration={movie.duration}
-    genres={movie.genres}
-    ratings={movie.ratings}
-    links={movie.links}
+    artifact={movie}
     userConnected={data.userConnected}
     userScore={data.userInfo?.score}
     canEdit={data.canEdit}

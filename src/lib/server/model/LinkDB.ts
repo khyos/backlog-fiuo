@@ -6,6 +6,10 @@ export class LinkDB {
         db.run(`INSERT INTO link (artifactId, type, url) VALUES (?, ?, ?)`, [artifactId, type, url]);
     }
 
+    static updateLink(artifactId: number, type: string, url: string) {
+        db.run(`UPDATE link SET url = ? WHERE artifactId = ?  AND type = ?`, [url, artifactId, type]);
+    }
+
     static async exists(type: LinkType, url: string): Promise<boolean> {
         return await new Promise((resolve, reject) => {
             db.get(`SELECT * FROM link WHERE type = ? AND url = ?`, [type, url], (error, row) => {

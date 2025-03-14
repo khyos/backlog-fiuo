@@ -135,7 +135,7 @@ export class MovieDB {
                 } else {
                     const movieId = this.lastID;
                     for (const genreId of genreIds) {
-                        db.run(`INSERT INTO movie_movie_genre (artifactId, genreId) VALUES (?, ?)`, [movieId, genreId]);
+                        MovieDB.addGenre(movieId, genreId);
                     }
                     for (const link of links) {
                         await LinkDB.addLink(movieId, link.type, link.url);
@@ -163,6 +163,29 @@ export class MovieDB {
                 }
             });
         });
+    }
+
+    static async updateGenres(gameId: number, genreIds: number[]): Promise<void> {
+        const existingGenres = await this.getGenres(gameId);
+        const existingGenreIds = existingGenres.map(genre => genre.id);
+
+        const genresToRemove = existingGenreIds.filter(id => !genreIds.includes(id));
+        for (const genreId of genresToRemove) {
+            this.deleteGenre(gameId, genreId);
+        }
+
+        const genresToAdd = genreIds.filter(id => !existingGenreIds.includes(id));
+        for (const genreId of genresToAdd) {
+            this.addGenre(gameId, genreId);
+        }
+    }
+
+    static addGenre(movieId: number, genreId: number) {
+        db.run(`INSERT INTO movie_movie_genre (artifactId, genreId) VALUES (?, ?)`, [movieId, genreId]);
+    }
+
+    static deleteGenre(movieId: number, genreId: number) {
+        db.run(`DELETE FROM movie_movie_genre WHERE artifactId = ? AND genreId = ?`, [movieId, genreId]);
     }
 
     static deleteMovie(id: number) {

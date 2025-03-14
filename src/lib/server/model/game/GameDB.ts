@@ -154,8 +154,8 @@ export class GameDB {
                     const backlogItems: BacklogItem[] = await Promise.all(rows.map(async row => {
                         const releaseDate = row.releaseDate ? new Date(parseInt(row.releaseDate, 10)) : null;
                         const game = new Game(row.artifactId, row.title, row.type, releaseDate, row.duration);
-                        game.platforms = await GameDB.getPlatforms(row.artifactId);
                         game.genres = await GameDB.getGenres(row.artifactId);
+                        game.platforms = await GameDB.getPlatforms(row.artifactId);
                         game.ratings = await RatingDB.getRatings(row.artifactId);
                         const tags = await BacklogItemDB.getTags(row.backlogId, 'game', row.artifactId);
                         return new BacklogItem(row.rank, row.elo, row.dateAdded, game, tags);
@@ -173,11 +173,11 @@ export class GameDB {
                     reject(error);
                 } else {
                     const gameId = this.lastID;
-                    for (const platformId of platformIds) {
-                        db.run(`INSERT INTO game_platform (artifactId, platformId) VALUES (?, ?)`, [gameId, platformId]);
-                    }
                     for (const genreId of genreIds) {
-                        db.run(`INSERT INTO game_game_genre (artifactId, genreId) VALUES (?, ?)`, [gameId, genreId]);
+                        GameDB.addGenre(gameId, genreId);
+                    }
+                    for (const platformId of platformIds) {
+                        GameDB.addPlatform(gameId, platformId);
                     }
                     for (const link of links) {
                         await LinkDB.addLink(gameId, link.type, link.url);
@@ -186,8 +186,8 @@ export class GameDB {
                         await RatingDB.addRating(gameId, rating.type, rating.rating);
                     }
                     const game = new Game(gameId, title, ArtifactType.GAME, releaseDate, duration);
-                    game.platforms = await GameDB.getPlatforms(gameId);
                     game.genres = await GameDB.getGenres(gameId);
+                    game.platforms = await GameDB.getPlatforms(gameId);
                     game.links = links;
                     game.ratings = ratings;
                     resolve(game);
@@ -220,8 +220,50 @@ export class GameDB {
         });
     }
 
-    static async refreshData(gameId: number) {
+    static async updateGenres(gameId: number, genreIds: number[]): Promise<void> {
+        const existingGenres = await this.getGenres(gameId);
+        const existingGenreIds = existingGenres.map(genre => genre.id);
 
+        const genresToRemove = existingGenreIds.filter(id => !genreIds.includes(id));
+        for (const genreId of genresToRemove) {
+            this.deleteGenre(gameId, genreId);
+        }
+
+        const genresToAdd = genreIds.filter(id => !existingGenreIds.includes(id));
+        for (const genreId of genresToAdd) {
+            this.addGenre(gameId, genreId);
+        }
+    }
+
+    static addGenre(gameId: number, genreId: number) {
+        db.run(`INSERT INTO game_game_genre (artifactId, genreId) VALUES (?, ?)`, [gameId, genreId]);
+    }
+
+    static deleteGenre(gameId: number, genreId: number) {
+        db.run(`DELETE FROM game_game_genre WHERE artifactId = ? AND genreId = ?`, [gameId, genreId]);
+    }
+
+    static async updatePlatforms(gameId: number, platformIds: number[]): Promise<void> {
+        const existingPlatforms = await GameDB.getPlatforms(gameId);
+        const existingPlatformsIds = existingPlatforms.map(platform => platform.id);
+
+        const platformsToRemove = existingPlatformsIds.filter(id => !platformIds.includes(id));
+        for (const platformId of platformsToRemove) {
+            this.deletePlatform(gameId, platformId);
+        }
+
+        const platformsToAdd = platformIds.filter(id => !existingPlatformsIds.includes(id));
+        for (const platformId of platformsToAdd) {
+            this.addPlatform(gameId, platformId);
+        }
+    }
+
+    static addPlatform(gameId: number, platformId: number) {
+        db.run(`INSERT INTO game_platform (artifactId, platformId) VALUES (?, ?)`, [gameId, platformId]);
+    }
+
+    static deletePlatform(gameId: number, platformId: number) {
+        db.run(`DELETE FROM game_platform WHERE artifactId = ? AND platformId = ?`, [gameId, platformId]);
     }
 
     static deleteGame(id: number) {

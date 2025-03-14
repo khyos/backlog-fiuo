@@ -19,7 +19,36 @@ export async function POST({ params, request, locals }: RequestEvent) {
     }
     const movieId = parseInt(params.slug);
     const { type, url } = await request.json();
-	if (type === LinkType.SENSCRITIQUE) {
+	
+    const finalUrl = await setLinkInfo(movieId, type, url);
+    if (finalUrl) {
+        LinkDB.addLink(movieId, type, url);
+        return json({ success: true });
+    }
+    return error(404, "Not Valid URL");
+}
+
+
+export async function PATCH({ params, request, locals }: RequestEvent) {
+    const { user } = locals;
+    const userInst = User.deserialize(user);
+    if (!userInst.hasRight(UserRights.EDIT_ARTIFACT)) {
+        return error(403, "Forbidden");
+    }
+    const movieId = parseInt(params.slug);
+    const { type, url } = await request.json();
+
+    const finalUrl = await setLinkInfo(movieId, type, url);
+    if (finalUrl) {
+        LinkDB.updateLink(movieId, type, finalUrl);
+        return json({ success: true });
+    }
+    return error(404, "Not Valid URL");
+}
+
+const setLinkInfo = async (movieId: number, type: LinkType, url: string): Promise<string> => {
+    const finalUrl = url;
+    if (type === LinkType.SENSCRITIQUE) {
         const scRating = await SensCritique.getMovieRating(url);
         if (scRating) {
             await RatingDB.addRating(movieId, RatingType.SENSCRITIQUE, scRating);
@@ -38,8 +67,7 @@ export async function POST({ params, request, locals }: RequestEvent) {
             await RatingDB.addRating(movieId, RatingType.ROTTEN_TOMATOES_AUDIENCE, rtRatings.audience);
         }
     }
-    LinkDB.addLink(movieId, type, url);
-    json({ success: true });
+    return finalUrl;
 }
 
 export async function PUT({ params, request, locals }: RequestEvent) {
@@ -55,36 +83,51 @@ export async function PUT({ params, request, locals }: RequestEvent) {
         const url = links.find(link => link.type === type)?.url;
         if (url) {
             if (type === LinkType.TMDB) {     
-                const tmdbMovie = await TMDB.getMovie(url);
-                let releaseDate = await TMDB.getReleaseDate(url, tmdbMovie.origin_country?.[0]);
-                if (!releaseDate) {
-                    releaseDate = tmdbMovie.release_date &&tmdbMovie.release_date !== '' ? new Date(tmdbMovie.release_date) : undefined;
-                }
-                let title = await TMDB.getTitle(url, tmdbMovie);
-                if (!title) {
-                    title = tmdbMovie.title;
-                }
+                try {
+                    const tmdbMovie = await TMDB.getMovie(url);
+                    let releaseDate = await TMDB.getReleaseDate(url, tmdbMovie.origin_country?.[0]);
+                    if (!releaseDate) {
+                        releaseDate = tmdbMovie.release_date &&tmdbMovie.release_date !== '' ? new Date(tmdbMovie.release_date) : undefined;
+                    }
+                    let title = await TMDB.getTitle(url, tmdbMovie);
+                    if (!title) {
+                        title = tmdbMovie.title;
+                    }
 
-                const duration = tmdbMovie.runtime * 60;
-                await MovieDB.refreshData(movieId, title, releaseDate, duration);
-            }
-            if (type === LinkType.SENSCRITIQUE) {
-                const scRating = await SensCritique.getMovieRating(url);
-                if (scRating) {
-                    await RatingDB.updateRating(movieId, RatingType.SENSCRITIQUE, scRating);
+                    const duration = tmdbMovie.runtime * 60;
+                    await MovieDB.refreshData(movieId, title, releaseDate, duration);
+                } catch {
+                    return error(500, "Failed to Update TMDB");
+                }
+            } else if (type === LinkType.SENSCRITIQUE) {
+                try {
+                    const scRating = await SensCritique.getMovieRating(url);
+                    if (scRating) {
+                        await RatingDB.updateRating(movieId, RatingType.SENSCRITIQUE, scRating);
+                    }
+                } catch {
+                    return error(500, "Failed to Update SENSCRITIQUE");
                 }
             } else if (type === LinkType.METACRITIC) {
-                const mcRating = await MetaCritic.getMovieRating(url);
-                if (mcRating) {
-                    await RatingDB.updateRating(movieId, RatingType.METACRITIC, mcRating);
+                try {
+                    const mcRating = await MetaCritic.getMovieRating(url);
+                    if (mcRating) {
+                        await RatingDB.updateRating(movieId, RatingType.METACRITIC, mcRating);
+                    }
+                } catch {
+                    return error(500, "Failed to Update METACRITIC");
                 }
             } else if (type === LinkType.ROTTEN_TOMATOES) {
-                const rtRatings = await RottenTomatoes.getMovieRatings(url);
-                if (rtRatings.critics) {
-                    await RatingDB.updateRating(movieId, RatingType.ROTTEN_TOMATOES_CRITICS, rtRatings.critics);
-                }
-                if (rtRatings.audience) {
-                    await RatingDB.updateRating(movieId, RatingType.ROTTEN_TOMATOES_AUDIENCE, rtRatings.audience);
+                try {
+                    const rtRatings = await RottenTomatoes.getMovieRatings(url);
+                    if (rtRatings.critics) {
+                        await RatingDB.updateRating(movieId, RatingType.ROTTEN_TOMATOES_CRITICS, rtRatings.critics);
+                    }
+                    if (rtRatings.audience) {
+                        await RatingDB.updateRating(movieId, RatingType.ROTTEN_TOMATOES_AUDIENCE, rtRatings.audience);
+                    }
+                } catch {
+                    return error(500, "Failed to Update ROTTEN_TOMATOES");
                 }
             }
         }

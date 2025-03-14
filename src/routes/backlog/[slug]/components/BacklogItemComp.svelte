@@ -1,6 +1,6 @@
 <script lang="ts">
     import { Badge, Button, Dropdown, DropdownItem } from "flowbite-svelte";
-    import { BarsOutline, ChevronDownOutline } from "flowbite-svelte-icons";
+    import { AwardOutline, ChevronDownOutline, TagSolid } from "flowbite-svelte-icons";
     import { draggable, dropzone } from "./dnd";
     import { Backlog, BacklogRankingType } from "$lib/model/Backlog";
     import type { Price } from "$lib/types/Price";
@@ -10,6 +10,7 @@
     import { backlogPageState } from "../stores/MainStore";
     import { openLink } from "$lib/services/LinkService";
     import { LinkType } from "$lib/model/Link";
+    import { TimeUtil } from "$lib/util/TimeUtil";
 
     export let backlog: Backlog;
     export let backlogItem: BacklogItem;
@@ -25,20 +26,11 @@
     export let onDeleteBacklogItem: (e: any) => void;
     export let onMoveBacklogItem: (srcRank: number, targetRank: number) => Promise<void>;
 
-    // Helper functions
-    const formatDate = (dateString: string | undefined) => {
-        if (!dateString) {
-            return 'TBD';
-        }
-        const date = new Date(dateString);
-        if (date.getDate() === 31 && date.getMonth() === 11) {
-            return date.getFullYear();
-        }
-        if (date.getFullYear() >= 2100) {
-            return 'TBD';
-        }
-        return date.toLocaleDateString();
-    }
+    let showFullTags = false;
+
+    const showTags = () => {
+        showFullTags = true;
+    };
 
     const removeTag = (artifactId: number, tagId: string) => {
         fetch(`/api/backlog/${backlog.id}/tag`, {
@@ -66,10 +58,11 @@
 >
     <div class="flexCenter">
         <div style="display: inline-flex; flex-grow: 1; align-items: center;">
-            <BarsOutline class="mr-4" />
-            <Badge class="mr-1">{backlogItem.rank}</Badge>
-            <a href={`/${backlogType}/${backlogItem.artifact.id}`}>{backlogItem.artifact.title}</a>
-            <div>
+            <Badge color="blue" class="font-semibold flex items-center gap-1 mr-2" style="white-space: nowrap;">
+                # {backlogItem.rank}
+            </Badge>
+            <a class='mr-1' href={`/${backlogType}/${backlogItem.artifact.id}`}>{backlogItem.artifact.title}</a>
+            <div class="{showFullTags ? '' : 'hidden md:block'}">
                 {#each backlogItem.tags as tag}
                     <Badge class="ml-1 pr-0">
                         {tag.id}
@@ -86,6 +79,23 @@
                 {/each}
             </div>
         </div>
+        <div id="compactTags" class="{showFullTags ? 'hidden' : 'block md:hidden'}">
+            {#if backlogItem.tags.length > 0}
+                <Badge class="font-semibold flex items-center gap-1 ml-1 mr-1">
+                    <Button
+                        id="showTags"
+                        size="xs"
+                        on:click={() => showTags()}
+                        class="px-0 py-0 flex items-center gap-1 "
+                        style="background-color: transparent; color: var(--tw-text-opacity)"
+                    >
+                        <TagSolid class="w-3 h-3" />
+                        <span>{backlogItem.tags.length}</span>
+                    </Button>
+                    
+                </Badge>
+            {/if}
+        </div>
         {#if prices?.[backlogItem.artifact.id]}
             <Badge class="mr-1">
                 <button on:click={() => openLink(backlog.artifactType, LinkType.ITAD, prices[backlogItem.artifact.id].id)}>
@@ -94,10 +104,13 @@
             </Badge>
         {/if}
         {#if rankingType === BacklogRankingType.ELO}
-            <Badge class="mr-1">{backlogItem.elo}</Badge>
+            <Badge color="purple" class="font-semibold flex items-center gap-1 mr-2">
+                <AwardOutline class="w-3 h-3" />
+                <span>{backlogItem.elo}</span>
+            </Badge>
         {/if}
         {#if rankingType === BacklogRankingType.WISHLIST}
-            <Badge class="mr-1">{formatDate(backlogItem.artifact.releaseDate)}</Badge>
+            <Badge class="mr-1">{TimeUtil.formatDate(backlogItem.artifact.releaseDate)}</Badge>
         {/if}
         {#if canEdit}
             <Button size="xs" color="light" class="!p-1.5">

@@ -23,7 +23,7 @@
     import BacklogDrawer from "./components/BacklogDrawer.svelte";
     import { TimeUtil } from "$lib/util/TimeUtil";
     import BacklogItemComp from "./components/BacklogItemComp.svelte";
-    import { backlogPageState, toggleDrawer } from "./stores/MainStore";
+    import { toggleDrawer } from "./stores/MainStore";
 
     export let data: PageData;
 
@@ -57,8 +57,6 @@
 
     let filteredBacklogItems = data.backlog.backlogItems;
     let backlogFilters: BacklogFilters = createBacklogFilters(data.backlog.artifactType, data.backlog.rankingType);
-
-    $: state = $backlogPageState;
 
     $: backlogFilters,
         applyFilters();
@@ -125,18 +123,6 @@
             method: "POST",
             body: JSON.stringify({
                 artifactId: tagArtifactId,
-                tagId: tagId,
-            }),
-        }).then(() => {
-            refreshBacklog();
-        });
-    };
-
-    const removeTag = (artifactId: number, tagId: string) => {
-        fetch(`/api/backlog/${data.backlog.id}/tag`, {
-            method: "DELETE",
-            body: JSON.stringify({
-                artifactId: artifactId,
                 tagId: tagId,
             }),
         }).then(() => {
