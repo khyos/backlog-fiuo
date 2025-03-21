@@ -1,4 +1,18 @@
-export class Platform {
+import type { ISerializable, Serializable } from "../Serializable"
+
+export const SERIALIZE_TYPE = 'Platform';
+
+export interface IPlatformDB {
+    id: number
+    title: string
+}
+
+export interface IPlatform extends ISerializable {
+    id: number
+    title: string
+}
+
+export class Platform implements Serializable<IPlatform> {
     id: number
     title: string
 
@@ -7,14 +21,18 @@ export class Platform {
         this.title = title;
     }
     
-    serialize() {
+    toJSON() {
         return {
+            __type: SERIALIZE_TYPE,
             id: this.id,
             title: this.title
         }
     }
 
-    static deserialize(data: any) {
-        return new Platform(data.id, data.title);
+    static fromJSON(json: IPlatform) {
+        if (json.__type !== SERIALIZE_TYPE) {
+            throw new Error('Invalid Type');
+        }
+        return new Platform(json.id, json.title);
     }
 }

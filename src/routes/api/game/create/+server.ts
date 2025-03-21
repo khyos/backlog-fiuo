@@ -14,9 +14,8 @@ import { error, json } from "@sveltejs/kit";
 import type { RequestEvent } from "./$types";
 
 export async function POST({ request, locals }: RequestEvent) {
-    const { user } = locals;
-    const userInst = User.deserialize(user);
-    if (!userInst.hasRight(UserRights.CREATE_ARTIFACT)) {
+    const user = User.deserialize(locals.user);
+    if (!user.hasRight(UserRights.CREATE_ARTIFACT)) {
         return error(403, "Forbidden");
     }
     const { igdbId, hltbId, scId, ocId, mcId, steamId, itadId } = await request.json();
@@ -82,7 +81,7 @@ export async function POST({ request, locals }: RequestEvent) {
 
     const game = await GameDB.createGame(igdbGame.name, date, duration, igdbGame.platforms || [], igdbGame.genres || [], links, ratings);
     if (game) {
-        return json(game.serialize());
+        return json(game.toJSON());
     } else {
         return error(500, 'Failed to create Game');
     }

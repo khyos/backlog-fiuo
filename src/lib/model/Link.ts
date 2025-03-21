@@ -1,4 +1,5 @@
 import { ArtifactType } from "./Artifact";
+import type { ISerializable, Serializable } from "./Serializable";
 
 export enum LinkType {
     HLTB = 'HLTB',
@@ -54,7 +55,19 @@ export function getMovieLinkTypes() {
     return [LinkType.TMDB, LinkType.SENSCRITIQUE, LinkType.METACRITIC, LinkType.ROTTEN_TOMATOES];
 }
 
-export class Link {
+export const SERIALIZE_TYPE = 'Link';
+
+export interface ILinkDB {
+    type: LinkType
+    url: string
+}
+
+export interface ILink extends ISerializable {
+    type: LinkType
+    url: string
+}
+
+export class Link implements Serializable<ILink> {
     type: LinkType
     url: string
 
@@ -63,14 +76,18 @@ export class Link {
         this.url = url;
     }
 
-    serialize() {
+    toJSON(): ILink {
         return {
+            __type: SERIALIZE_TYPE,
             type: this.type,
             url: this.url
         }
     }
 
-    static deserialize(data: any) {
-        return new Link(data.type, data.url);
+    static fromJSON(json: ILink) {
+        if (json.__type !== SERIALIZE_TYPE) {
+            throw new Error('Invalid Type');
+        }
+        return new Link(json.type, json.url);
     }
 }

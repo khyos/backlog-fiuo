@@ -14,6 +14,6 @@ export async function GET({ url }: RequestEvent) {
     const pageSize : number = parseInt(url.searchParams.get('pageSize') ?? '10', 10);
     const query : string = url.searchParams.get('query') ?? '';
     const tags = await TagDB.getTags(artifactType, page, pageSize, query);
-    const serializedTags = tags.map((tag) => tag.serialize());
+    const serializedTags = tags.map((tag) => tag.toJSON());
     return json(serializedTags);
 }

@@ -1,4 +1,4 @@
-import { ArtifactType } from "$lib/model/Artifact";
+import { ArtifactType, type IArtifactDB } from "$lib/model/Artifact";
 import { BacklogOrder, BacklogRankingType } from "$lib/model/Backlog";
 import { BacklogItem } from "$lib/model/BacklogItem";
 import { Genre } from "$lib/model/Genre";
@@ -14,7 +14,7 @@ import { RatingDB } from "../RatingDB";
 export class MovieDB {
     static async getById(id: number): Promise<Movie | null> {
         return await new Promise((resolve, reject) => {
-            db.get(`SELECT * FROM artifact WHERE id = ?`, [id], async (error, row: any) => {
+            db.get(`SELECT * FROM artifact WHERE id = ?`, [id], async (error, row: IArtifactDB) => {
                 if (error) {
                     reject(error);
                 } else if (!row) {
@@ -32,8 +32,8 @@ export class MovieDB {
     }
 
     static async getMovies(page: number, pageSize: number, search: string = ''): Promise<Movie[]> {
-        return await ArtifactDB.getArtifacts(ArtifactType.MOVIE, page, pageSize, search).then((rows: any[]) => {
-            const movies: Movie[] = rows.map((row: any) => {
+        return await ArtifactDB.getArtifacts(ArtifactType.MOVIE, page, pageSize, search).then((rows: IArtifactDB[]) => {
+            const movies: Movie[] = rows.map((row: IArtifactDB) => {
                 const releaseDate = row.releaseDate ? new Date(parseInt(row.releaseDate, 10)) : null;
                 return new Movie(row.id, row.title, row.type, releaseDate, row.duration)
             });

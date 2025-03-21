@@ -10,7 +10,7 @@ export async function POST({ request }: RequestEvent) {
     }
     try {
         const tag = await TagDB.createTag(id, artifactType, TagType.DEFAULT);
-        return json(tag.serialize());
+        return json(tag.toJSON());
     } catch (e) {
         return error(500, e instanceof Error ? e.message : 'Unknown Error');
     }

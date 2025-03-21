@@ -1,6 +1,7 @@
 import { ArtifactType } from "$lib/model/Artifact"
 import { BacklogOrder, BacklogRankingType } from "$lib/model/Backlog"
-import type { PageData } from './$types';
+import type { BacklogItem } from "$lib/model/BacklogItem";
+import type { Game } from "$lib/model/game/Game";
 
 const GAME_RELEASE_DATE_MIN = 1970;
 const GAME_RELEASE_DATE_MAX = 2025;
@@ -47,11 +48,11 @@ export function createBacklogFilters(artifactType: ArtifactType, rankingType: Ba
     switch (rankingType) {
         case BacklogRankingType.RANK:
             orderType = BacklogOrder.RANK;
-            orderDirection = 'asc'; 
+            orderDirection = 'asc';
             break;
         case BacklogRankingType.ELO:
             orderType = BacklogOrder.ELO;
-            orderDirection = 'desc'; 
+            orderDirection = 'desc';
             break;
         case BacklogRankingType.WISHLIST:
             orderType = BacklogOrder.DATE_RELEASE;
@@ -112,7 +113,7 @@ export function createBacklogFilters(artifactType: ArtifactType, rankingType: Ba
     return filters;
 }
 
-export function filterBacklogItems(items: PageData['backlog']['backlogItems'], artifactType: ArtifactType, filters: BacklogFilters) {
+export function filterBacklogItems(items: BacklogItem[], artifactType: ArtifactType, filters: BacklogFilters) {
     if (filters.orderBy.type === BacklogOrder.DATE_ADDED) {
         items.sort((a, b) => {
             return b.dateAdded - a.dateAdded;
@@ -189,19 +190,17 @@ export function filterBacklogItems(items: PageData['backlog']['backlogItems'], a
             return item.artifact.duration <= maxDurationInSeconds;
         });
     }
-    if (filters.platforms && filters.platforms.included.length > 0) {
+    if (artifactType === ArtifactType.GAME && filters.platforms && filters.platforms.included.length > 0) {
         items = items.filter((item) => {
-            return item.platforms.some((platform) => {
+            return (item.artifact as Game).platforms.some((platform) => {
                 return filters.platforms?.included.includes(platform.id);
             });
         });
     }
     if (filters.rating.min > 0) {
         items = items.filter((item) => {
-            return (
-                item.artifact.meanRating === null ||
-                item.artifact.meanRating >= filters.rating.min
-            );
+            const meanRating = item.artifact.meanRating;
+            return meanRating === null || meanRating >= filters.rating.min;
         });
     }
     return items;

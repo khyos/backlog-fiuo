@@ -24,8 +24,17 @@
     import { TimeUtil } from "$lib/util/TimeUtil";
     import BacklogItemComp from "./components/BacklogItemComp.svelte";
     import { toggleDrawer } from "./stores/MainStore";
+    import { Backlog } from "$lib/model/Backlog";
+    import { Genre } from "$lib/model/Genre";
+    import { Platform } from "$lib/model/game/Platform";
 
     export let data: PageData;
+
+    $: backlog = Backlog.fromJSON(data.backlog);
+    $: filteredBacklogItems = backlog.backlogItems;
+    let backlogTags = data.backlogTags.map(backlogTag => Tag.fromJSON(backlogTag));
+    let genres = data.genres.map(genre => Genre.fromJSON(genre));
+    let platforms = data.platforms.map(platform => Platform.fromJSON(platform));
 
     let selectedBacklogItem: any = null;
 
@@ -55,7 +64,6 @@
     let searchTagTerm = "";
     let searchedTags: Tag[] = [];
 
-    let filteredBacklogItems = data.backlog.backlogItems;
     let backlogFilters: BacklogFilters = createBacklogFilters(data.backlog.artifactType, data.backlog.rankingType);
 
     $: backlogFilters,
@@ -113,7 +121,7 @@
         fetch(`/api/tag/search?artifactType=${data.backlog.artifactType}&query=${searchTagTerm}`)
             .then((res) => res.json())
             .then((tags) => {
-                searchedTags = tags.map( (tag: any) => Tag.deserialize(tag) );
+                searchedTags = tags.map( (tag: any) => Tag.fromJSON(tag) );
                 invalidate("tags");
             });
     };
@@ -160,7 +168,7 @@
     };
 
     const applyFilters = () => {
-        filteredBacklogItems = filterBacklogItems(data.backlog.backlogItems, data.backlog.artifactType, backlogFilters);
+        filteredBacklogItems = filterBacklogItems(backlog.backlogItems, backlog.artifactType, backlogFilters);
     };
 
     const moveToRankShow = (backlogItem: any) => {
@@ -194,7 +202,7 @@
     {#each filteredBacklogItems as backlogItem}
         <ListgroupItem>
             <BacklogItemComp
-                backlog={data.backlog}
+                {backlog}
                 {backlogItem}
                 canEdit={data.canEdit}
                 backlogType={data.backlog.artifactType}
@@ -213,11 +221,11 @@
 <!-- Use the extracted drawer component -->
 <BacklogDrawer 
     canEdit={data.canEdit}
-    backlog={data.backlog}
+    {backlog}
     bind:backlogFilters={backlogFilters}
-    genres={data.genres}
-    backlogTags={data.backlogTags}
-    platforms={data.platforms}
+    {genres}
+    {backlogTags}
+    {platforms}
     onMoveBacklogItem={moveBacklogItem}
     onFetchPrices={fetchPricesCb}
     {refreshBacklog}

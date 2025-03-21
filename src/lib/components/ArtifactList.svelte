@@ -1,9 +1,9 @@
 <script lang="ts">
-    import type { Artifact, ArtifactType } from '$lib/model/Artifact';
+    import type { IArtifact, ArtifactType } from '$lib/model/Artifact';
     import { Button, Listgroup, ListgroupItem, Search } from 'flowbite-svelte';
     import { PlusOutline, TrashBinSolid } from 'flowbite-svelte-icons';
     
-    export let artifacts: Artifact[] = [];
+    export let artifacts: IArtifact[] = [];
     export let artifactType: ArtifactType; // 'movie' or 'game'
     export let permissions: { canCreate: boolean, canDelete: boolean };
     export let title: string;

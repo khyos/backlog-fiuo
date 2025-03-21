@@ -1,15 +1,15 @@
 import type { ArtifactType } from "$lib/model/Artifact";
-import { Tag, TagType } from "$lib/model/Tag";
+import { Tag, TagType, type ITagDB } from "$lib/model/Tag";
 import { db, execQuery } from "../database";
 
 export class TagDB {
     static getTags(artifactType: ArtifactType, page: number, pageSize: number, query: string) {
         return new Promise<Tag[]>((resolve, reject) => {
-            db.all(`SELECT * FROM tag WHERE artifactType = ? AND id LIKE ? ORDER BY id LIMIT ? OFFSET ?`, [artifactType, `%${query}%`, pageSize, page * pageSize], (err, rows) => {
+            db.all(`SELECT * FROM tag WHERE artifactType = ? AND id LIKE ? ORDER BY id LIMIT ? OFFSET ?`, [artifactType, `%${query}%`, pageSize, page * pageSize], (err, rows: ITagDB[]) => {
                 if (err) {
                     reject(err);
                 } else {
-                    resolve(rows.map((row: any) => new Tag(row.id, row.type)));
+                    resolve(rows.map((row) => new Tag(row.id, row.type)));
                 }
             });
         });

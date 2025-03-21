@@ -7,15 +7,14 @@ export async function GET({ params }: RequestEvent) {
   	const gameId = parseInt(params.slug);
 	const game = await GameDB.getById(gameId);
 	if (game) {
-	  	return json(game.serialize());
+	  	return json(game.toJSON());
 	}
 	error(404, 'Not found');
 }
 
 export async function DELETE({ params, locals }: RequestEvent) {
-	const { user } = locals;
-    const userInst = User.deserialize(user);
-    if (!userInst.hasRight(UserRights.DELETE_ARTIFACT)) {
+    const user = User.deserialize(locals.user);
+    if (!user.hasRight(UserRights.DELETE_ARTIFACT)) {
         return error(403, "Forbidden");
     }
 	const gameId = parseInt(params.slug);

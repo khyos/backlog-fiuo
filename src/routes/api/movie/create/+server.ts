@@ -11,9 +11,8 @@ import { error, json } from "@sveltejs/kit";
 import type { RequestEvent } from "./$types";
 
 export async function POST({ request, locals }: RequestEvent) {
-    const { user } = locals;
-    const userInst = User.deserialize(user);
-    if (!userInst.hasRight(UserRights.CREATE_ARTIFACT)) {
+    const user = User.deserialize(locals.user);
+    if (!user.hasRight(UserRights.CREATE_ARTIFACT)) {
         return error(403, "Forbidden");
     }
     const { tmdbId, scId, mcId, rtId } = await request.json();
@@ -70,7 +69,7 @@ export async function POST({ request, locals }: RequestEvent) {
     const genres = tmdbMovie.genres.map((genre: any) => genre.id);
     const movie = await MovieDB.createMovie(title, releaseDate, duration, genres, links, ratings);
     if (movie) {
-        return json(movie.serialize());
+        return json(movie.toJSON());
     } else {
         return error(500, 'Failed to create Movie');
     }

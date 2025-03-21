@@ -5,16 +5,16 @@ import { MovieDB } from '$lib/server/model/movie/MovieDB';
 import { ArtifactDB } from '$lib/server/model/ArtifactDB';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
-	const userInst = User.deserialize(locals.user);
+	const user = User.deserialize(locals.user);
 	const movieId = parseInt(params.slug);
 	const movie = await MovieDB.getById(movieId);
 	if (movie) {
-		const userInfo = await ArtifactDB.getUserInfo(userInst.id, movieId);
+		const userInfo = await ArtifactDB.getUserInfo(user.id, movieId);
 		return {
-			canEdit: userInst.hasRight(UserRights.EDIT_ARTIFACT),
-			movie: movie.serialize(),
-			userConnected: userInst.id >= 0,
-			userInfo: userInfo ? userInfo.serialize() : null
+			canEdit: user.hasRight(UserRights.EDIT_ARTIFACT),
+			movie: movie.toJSON(),
+			userConnected: user.id >= 0,
+			userInfo: userInfo ? userInfo.toJSON() : null
 		};
 	}
 	error(404, 'Not found');

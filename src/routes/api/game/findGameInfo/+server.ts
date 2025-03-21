@@ -10,9 +10,8 @@ import { error, json } from "@sveltejs/kit";
 import type { RequestEvent } from "./$types";
 
 export async function GET({ url, locals }: RequestEvent) {
-    const { user } = locals;
-    const userInst = User.deserialize(user);
-    if (!userInst.hasRight(UserRights.CREATE_ARTIFACT)) {
+    const user = User.deserialize(locals.user);
+    if (!user.hasRight(UserRights.CREATE_ARTIFACT)) {
         return error(403, "Forbidden");
     }
     const query : string = url.searchParams.get('query') ?? '';

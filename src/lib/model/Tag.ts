@@ -1,9 +1,23 @@
+import type { ISerializable, Serializable } from "./Serializable";
+
 export enum TagType {
     DEFAULT = 'DEFAULT',
     TRIGGER_WARNING = 'TRIGGER_WARNING'
 }
 
-export class Tag {
+export const SERIALIZE_TYPE = 'Tag';
+
+export interface ITagDB {
+    id: string
+    type: TagType
+}
+
+export interface ITag extends ISerializable {
+    id: string
+    type: TagType
+}
+
+export class Tag implements Serializable<ITag> {
     id: string
     type: TagType
 
@@ -12,14 +26,18 @@ export class Tag {
         this.type = type;
     }
 
-    serialize() {
+    toJSON() {
         return {
+            __type: SERIALIZE_TYPE,
             id: this.id,
             type: this.type
         }
     }
 
-    static deserialize(data: any) {
-        return new Tag(data.id, data.type);
+    static fromJSON(json: ITag) {
+        if (json.__type !== SERIALIZE_TYPE) {
+            throw new Error('Invalid Type');
+        }
+        return new Tag(json.id, json.type);
     }
 }

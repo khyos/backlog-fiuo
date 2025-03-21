@@ -5,10 +5,9 @@ import { error, json } from "@sveltejs/kit";
 import type { RequestEvent } from "./$types";
 
 export async function POST({ params, request, locals }: RequestEvent) {
-    const { user } = locals;
-	const userInst = User.deserialize(user);
+	const user = User.deserialize(locals.user);
     const backlogId = parseInt(params.slug);
-    const authorization = await BacklogDB.canEditBacklog(userInst, backlogId);
+    const authorization = await BacklogDB.canEditBacklog(user, backlogId);
     if (authorization.status !== 200) {
         return error(authorization.status, authorization.message);
     }
@@ -21,8 +20,7 @@ export async function POST({ params, request, locals }: RequestEvent) {
 }
 
 export async function DELETE({ params, request, locals }: RequestEvent) {
-    const { user } = locals;
-	const userInst = User.deserialize(user);
+	const user = User.deserialize(locals.user);
     const backlogId = parseInt(params.slug);
     const backlog = await BacklogDB.getBacklogById(backlogId);
     if (!backlog) {
@@ -31,7 +29,7 @@ export async function DELETE({ params, request, locals }: RequestEvent) {
             body: { error: "Backlog not found" }
         });
     }
-    if (backlog.userId !== userInst.id) {
+    if (backlog.userId !== user.id) {
         return json({
             status: 403,
             body: { error: "Not authorized" }

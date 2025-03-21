@@ -7,22 +7,21 @@
         Heading,
         P
     } from "flowbite-svelte";
-    import { BacklogRankingType } from "$lib/model/Backlog";
-    import type { PageData } from "../$types";
+    import { Backlog, BacklogRankingType } from "$lib/model/Backlog";
     import { getRandomItemA, getRandomItemB, orderByFightState, startOrderByFight } from "$lib/stores/OrderByFightStore";
     import { get } from "svelte/store";
     import { AwardOutline, CheckCircleOutline, RefreshOutline, ThumbsDownOutline, ThumbsUpOutline } from "flowbite-svelte-icons";
+    import type { BacklogItem } from "$lib/model/BacklogItem";
 
     export let selectedTab: string = "filters";
     export let canEdit: boolean;
-    export let backlog: PageData['backlog'];
+    export let backlog: Backlog;
 
     // Event Callbacks
     export let refreshBacklog: () => Promise<void>;
     export let onMoveBacklogItem: (srcRank: number, targetRank: number) => Promise<void>;
 
     $: state = $orderByFightState;
-    $: hasItems = state.itemA && state.itemB;
 
     // Loading states
     let isLoading = false;
@@ -30,8 +29,11 @@
     const orderByEloFight = async (winner: string) => {
         isLoading = true;
         let state = get(orderByFightState);
-        let winnerItem;
-        let loserItem;
+        if (!state.itemA || !state.itemB) {
+            return;
+        }
+        let winnerItem: BacklogItem;
+        let loserItem: BacklogItem;
         if (winner === "A") {
             winnerItem = state.itemA;
             loserItem = state.itemB;
@@ -65,6 +67,9 @@
         isLoading = true;
         try {
             let state = get(orderByFightState);
+            if (!state.itemA || !state.itemB) {
+                return;
+            }
 
             orderByFightState.update(s => ({
                 ...s,
@@ -91,6 +96,9 @@
         isLoading = true;
         try {
             let state = get(orderByFightState);
+            if (!state.itemA || !state.itemB) {
+                return;
+            }
 
             orderByFightState.update(s => ({
                 ...s,
@@ -131,7 +139,7 @@
 
 <TabItem open={selectedTab == 'order'} title="Order" class="w-full" disabled={!canEdit}>
     <div class="p-4 bg-gray-50 rounded-lg">
-        {#if !hasItems}
+        {#if !state.itemA || !state.itemB}
             <Card class="text-center mb-4">
                 <Heading tag="h4" class="mb-2">Backlog Ordering</Heading>
                 <P class="mb-4">

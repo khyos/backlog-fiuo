@@ -1,4 +1,4 @@
-import { Link, LinkType } from "$lib/model/Link";
+import { Link, LinkType, type ILinkDB } from "$lib/model/Link";
 import { db, execQuery } from "$lib/server/database";
 
 export class LinkDB {
@@ -25,7 +25,7 @@ export class LinkDB {
     static async getLinks(artifactId: number): Promise<Link[]> {
         return await new Promise((resolve, reject) => {
             db.all(`SELECT * FROM link
-                    WHERE artifactId = ?`, [artifactId], async (error, rows: any[]) => {
+                    WHERE artifactId = ?`, [artifactId], async (error, rows: ILinkDB[]) => {
                 if (error) {
                     reject(error);
                 } else {

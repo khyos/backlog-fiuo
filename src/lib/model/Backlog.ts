@@ -1,5 +1,6 @@
 import { ArtifactType } from "./Artifact"
-import { BacklogItem } from "./BacklogItem"
+import { BacklogItem, type IBacklogItem } from "./BacklogItem"
+import type { ISerializable, Serializable } from "./Serializable";
 
 export enum BacklogRankingType {
     RANK = "rank",
@@ -14,7 +15,24 @@ export enum BacklogOrder {
     DATE_RELEASE = "dateRelease"
 }
 
-export class Backlog {
+
+export const SERIALIZE_TYPE = 'Backlog';
+
+export interface IBacklogDB {
+    id: number
+    title: string
+}
+
+export interface IBacklog extends ISerializable {
+    id: number
+    userId: number
+    rankingType: BacklogRankingType
+    backlogItems: IBacklogItem[]
+    artifactType: ArtifactType
+    title: string
+}
+
+export class Backlog implements Serializable<IBacklog> {
     id: number
     userId: number
     rankingType: BacklogRankingType
@@ -31,20 +49,25 @@ export class Backlog {
         this.backlogItems = [];
     }
 
-    serialize() {
+    toJSON() {
         return {
+            __type: SERIALIZE_TYPE,
             id: this.id,
+            userId: this.userId,
             rankingType: this.rankingType,
             title: this.title,
             artifactType: this.artifactType,
-            backlogItems: this.backlogItems.map(backlogItem => backlogItem.serialize()),
+            backlogItems: this.backlogItems.map(backlogItem => backlogItem.toJSON()),
         }
     }
 
-    static deserialize(data: any) {
-        const backlog = new Backlog(data.id, data.userId, data.type, data.title, data.artifactType);
-        backlog.backlogItems = data.backlogItems.map((backlogItemData: any) => {
-            return BacklogItem.deserialize(backlogItemData);
+    static fromJSON(json: IBacklog) {
+        if (json.__type !== SERIALIZE_TYPE) {
+            throw new Error('Invalid Type');
+        }
+        const backlog = new Backlog(json.id, json.userId, json.rankingType, json.title, json.artifactType);
+        backlog.backlogItems = json.backlogItems.map((backlogItemData) => {
+            return BacklogItem.fromJSON(backlogItemData);
         });
         return backlog;
     }

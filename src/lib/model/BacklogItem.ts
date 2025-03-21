@@ -1,9 +1,25 @@
-import { Artifact, ArtifactType } from "./Artifact";
-import { Tag } from "./Tag";
-import { Game } from "./game/Game";
+import { Artifact, ArtifactType, type IArtifact } from "./Artifact";
+import type { ISerializable, Serializable } from "./Serializable";
+import { Tag, type ITag } from "./Tag";
+import { Game, type IGame } from "./game/Game";
 import { Movie } from "./movie/Movie";
 
-export class BacklogItem {
+export const SERIALIZE_TYPE = 'BacklogItem';
+
+export interface IBacklogItemDB {
+    id: number
+    title: string
+}
+
+export interface IBacklogItem extends ISerializable {
+    rank: number;
+    elo: number;
+    dateAdded: number;
+    artifact: IArtifact;
+    tags: ITag[];
+}
+
+export class BacklogItem implements Serializable<IBacklogItem> {
     rank: number;
     elo: number;
     dateAdded: number;
@@ -18,28 +34,32 @@ export class BacklogItem {
         this.tags = tags;
     }
 
-    serialize() {
+    toJSON() {
         return {
+            __type: SERIALIZE_TYPE,
             rank: this.rank,
             elo: this.elo,
             dateAdded: this.dateAdded,
-            artifact: this.artifact.serialize(),
-            tags: this.tags.map(tag => tag.serialize()),
+            artifact: this.artifact.toJSON(),
+            tags: this.tags.map(tag => tag.toJSON()),
         };
     }
 
-    static deserialize(data: any): BacklogItem {
-        let artifact: Artifact;
-        if (data.artifact.type === ArtifactType.GAME) {
-            artifact = Game.deserialize(data.artifact);
-        } else if (data.artifact.type === ArtifactType.MOVIE) {
-            artifact = Movie.deserialize(data.artifact);
-        } else {
-            artifact = Artifact.deserialize(data.artifact);
+    static fromJSON(json: IBacklogItem): BacklogItem {
+        if (json.__type !== SERIALIZE_TYPE) {
+            throw new Error('Invalid Type');
         }
-        const tags = data.tags.map((tagData: any) => {
-            return Tag.deserialize(tagData);
+        let artifact: Artifact;
+        if (json.artifact.type === ArtifactType.GAME) {
+            artifact = Game.fromJSON(json.artifact as IGame);
+        } else if (json.artifact.type === ArtifactType.MOVIE) {
+            artifact = Movie.fromJSON(json.artifact);
+        } else {
+            artifact = Artifact.fromJSON(json.artifact);
+        }
+        const tags = json.tags.map((tagData) => {
+            return Tag.fromJSON(tagData);
         });
-        return new BacklogItem(data.rank, data.elo, data.dateAdded, artifact, tags);
+        return new BacklogItem(json.rank, json.elo, json.dateAdded, artifact, tags);
     }
 }

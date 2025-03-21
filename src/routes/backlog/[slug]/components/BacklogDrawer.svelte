@@ -6,11 +6,14 @@
         Tabs 
     } from "flowbite-svelte";
     import type { BacklogFilters } from "../BacklogFilters";
-    import type { PageData } from "../$types";
     import BacklogDrawerTabAdd from "./BacklogDrawerTabAdd.svelte";
     import BacklogDrawerTabFilters from "./BacklogDrawerTabFilters.svelte";
     import BacklogDrawerTabOrder from "./BacklogDrawerTabOrder.svelte";
     import { backlogPageState, toggleDrawer } from "../stores/MainStore";
+    import type { Genre } from "$lib/model/Genre";
+    import type { Platform } from "$lib/model/game/Platform";
+    import type { Backlog } from "$lib/model/Backlog";
+    import type { Tag } from "$lib/model/Tag";
     
     export let transitionDrawerParams = {
         x: 320,
@@ -18,11 +21,11 @@
         easing: sineIn,
     };
     export let canEdit: boolean;
-    export let backlog: PageData['backlog'];
+    export let backlog: Backlog;
     export let backlogFilters: BacklogFilters;
-    export let genres: any[] = [];
-    export let backlogTags: any[] = [];
-    export let platforms: any[] = [];
+    export let genres: Genre[] = [];
+    export let backlogTags: Tag[] = [];
+    export let platforms: Platform[] = [];
 
     // Event Callbacks
     export let refreshBacklog: () => Promise<void>;

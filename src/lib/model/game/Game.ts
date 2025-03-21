@@ -1,16 +1,23 @@
-import { Artifact, ArtifactType } from "../Artifact";
+import { Artifact, ArtifactType, type IArtifact } from "../Artifact";
 import { RatingType } from "../Rating";
-import { Platform } from "./Platform";
+import type { Serializable } from "../Serializable";
+import { Platform, type IPlatform } from "./Platform";
 
-export class Game extends Artifact {
+export const SERIALIZE_TYPE = 'Game';
+
+export interface IGame extends IArtifact {
+    platforms: IPlatform[]
+}
+
+export class Game extends Artifact implements Serializable<IGame> {
     platforms: Platform[] = []
 
-    constructor(id: number, title: string, type: ArtifactType, releaseDate: Date | null, duration: number) {
+    constructor(id: number, title: string, type: ArtifactType, releaseDate: Date, duration: number) {
         super(id, title, type, releaseDate, duration);
         this.type = ArtifactType.GAME;
     }
 
-    getMeanRating(): number | null {
+    computeMeanRating(): number | null {
         let nbOfRatings = 0;
         let meanRating = 0;
         let mcRating;
@@ -54,29 +61,32 @@ export class Game extends Artifact {
             nbOfRatings++;
         } else if (scRating) {
             meanRating += scRating;
+            nbOfRatings++;
         } else if (steamRating) {
             meanRating += steamRating;
+            nbOfRatings++;
         }
 
         return nbOfRatings > 0 ? meanRating / nbOfRatings : null;
     }
 
-    serialize() {
+    toJSON() {
         return {
-            ...super.serialize(),
-            platforms: this.platforms.map(platform => platform.serialize())
+            ...super.toJSON(),
+            __type: SERIALIZE_TYPE,
+            platforms: this.platforms.map(platform => platform.toJSON())
         }
     }
 
-    static deserialize(data: any) : Game {
-        const artifactData = super.deserialize(data);
+    static fromJSON(data: IGame) : Game {
+        const artifactData = super.fromJSON(data);
         const game = new Game(artifactData.id, artifactData.title, artifactData.type, artifactData.releaseDate, artifactData.duration);
         game.links = artifactData.links;
         game.genres = artifactData.genres;
         game.ratings = artifactData.ratings;
         game.tags = artifactData.tags;
-        game.platforms = data.platforms.map((platformData: any) => {
-            return Platform.deserialize(platformData);
+        game.platforms = data.platforms.map((platformData) => {
+            return Platform.fromJSON(platformData);
         });
         return game;
     }

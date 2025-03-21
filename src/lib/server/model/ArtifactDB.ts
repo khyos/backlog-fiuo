@@ -1,9 +1,9 @@
-import type { ArtifactType } from "$lib/model/Artifact";
-import { UserArtifact } from "$lib/model/UserArtifact";
+import type { IArtifactDB, ArtifactType } from "$lib/model/Artifact";
+import { UserArtifact, type IUserArtifactDB } from "$lib/model/UserArtifact";
 import { db, execQuery } from "../database";
 
 export class ArtifactDB {
-    static async getArtifacts(artifactType: ArtifactType, page: number, pageSize: number, search: string = ''): Promise<any[]> {
+    static async getArtifacts(artifactType: ArtifactType, page: number, pageSize: number, search: string = ''): Promise<IArtifactDB[]> {
         const query = search
             ? `SELECT * FROM artifact WHERE type = ? AND LOWER(title) LIKE ? ORDER BY (LOWER(title) = ?) desc, length(title) ASC LIMIT ? OFFSET ?`
             : `SELECT * FROM artifact WHERE type = ? ORDER BY id ASC LIMIT ? OFFSET ?`;
@@ -11,7 +11,7 @@ export class ArtifactDB {
             ? [artifactType, `%${search.toLowerCase()}%`, search.toLowerCase(), pageSize, page * pageSize]
             : [artifactType, pageSize, page * pageSize];
         return await new Promise((resolve, reject) => {
-            db.all(query, params, async (error, rows: any) => {
+            db.all(query, params, async (error, rows: IArtifactDB[]) => {
                 if (error) {
                     reject(error);
                 } else if (!rows) {
@@ -25,7 +25,7 @@ export class ArtifactDB {
 
     static async getUserInfo(userId: number, artifactId: number): Promise<UserArtifact | null> {
         return await new Promise((resolve, reject) => {
-            db.get(`SELECT * FROM user_artifact WHERE userId = ? AND artifactId = ?`, [userId, artifactId], async (error, row: any) => {
+            db.get(`SELECT * FROM user_artifact WHERE userId = ? AND artifactId = ?`, [userId, artifactId], async (error, row: IUserArtifactDB) => {
                 if (error) {
                     reject(error);
                 } else if (!row) {

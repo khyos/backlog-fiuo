@@ -11,13 +11,13 @@
         CheckCircleOutline,
         PlusOutline,
     } from "flowbite-svelte-icons";
-    import type { PageData } from "../$types";
     import type { Artifact } from "$lib/model/Artifact";
     import { addBacklogItem } from "$lib/services/BacklogService";
+    import type { Backlog } from "$lib/model/Backlog";
     
     export let selectedTab: string = "filters";
     export let canEdit: boolean;
-    export let backlog: PageData['backlog'];
+    export let backlog: Backlog;
     export let refreshBacklog: () => Promise<void>;
     let searchArtifactTerm: string = "";
     let searchedArtifacts: Artifact[] = [];

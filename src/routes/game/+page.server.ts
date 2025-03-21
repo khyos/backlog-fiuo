@@ -4,16 +4,16 @@ import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types.js';
 
 export const load: PageServerLoad = async ({ url, locals }) => {
-	const userInst = User.deserialize(locals.user);
+	const user = User.deserialize(locals.user);
 	const page = parseInt(url.searchParams.get('page') ?? '0', 10);
 	const pageSize = 10;
 	try {
 		const games = await GameDB.getGames(page, pageSize);
 		return {
-			games: games.map(game => game.serialize()),
+			games: games.map(game => game.toJSON()),
 			permissions: {
-				canDelete: userInst.hasRight(UserRights.DELETE_ARTIFACT),
-				canCreate: userInst.hasRight(UserRights.CREATE_ARTIFACT)
+				canDelete: user.hasRight(UserRights.DELETE_ARTIFACT),
+				canCreate: user.hasRight(UserRights.CREATE_ARTIFACT)
 			}
 		};
 	} catch (err) {

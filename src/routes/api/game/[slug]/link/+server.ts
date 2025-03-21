@@ -15,9 +15,8 @@ import { error, json } from "@sveltejs/kit";
 import type { RequestEvent } from "./$types";
 
 export async function POST({ params, request, locals }: RequestEvent) {
-    const { user } = locals;
-    const userInst = User.deserialize(user);
-    if (!userInst.hasRight(UserRights.EDIT_ARTIFACT)) {
+    const user = User.deserialize(locals.user);
+    if (!user.hasRight(UserRights.EDIT_ARTIFACT)) {
         return error(403, "Forbidden");
     }
     const gameId = parseInt(params.slug);
@@ -32,9 +31,8 @@ export async function POST({ params, request, locals }: RequestEvent) {
 }
 
 export async function PATCH({ params, request, locals }: RequestEvent) {
-    const { user } = locals;
-    const userInst = User.deserialize(user);
-    if (!userInst.hasRight(UserRights.EDIT_ARTIFACT)) {
+    const user = User.deserialize(locals.user);
+    if (!user.hasRight(UserRights.EDIT_ARTIFACT)) {
         return error(403, "Forbidden");
     }
     const gameId = parseInt(params.slug);
@@ -80,9 +78,8 @@ const setLinkInfo = async (gameId: number, type: LinkType, url: string): Promise
 }
 
 export async function PUT({ params, request, locals }: RequestEvent) {
-    const { user } = locals;
-    const userInst = User.deserialize(user);
-    if (!userInst.hasRight(UserRights.EDIT_ARTIFACT)) {
+    const user = User.deserialize(locals.user);
+    if (!user.hasRight(UserRights.EDIT_ARTIFACT)) {
         return error(403, "Forbidden");
     }
     const gameId = parseInt(params.slug);

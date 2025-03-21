@@ -7,6 +7,6 @@ export async function GET({ url }: RequestEvent) {
     const pageSize : number = parseInt(url.searchParams.get('pageSize') ?? '10', 10);
     const query : string = url.searchParams.get('query') ?? '';
     const movies = await MovieDB.getMovies(page, pageSize, query);
-    const serializedMovies = movies.map((movie) => movie.serialize());
+    const serializedMovies = movies.map((movie) => movie.toJSON());
     return json(serializedMovies);
 }

@@ -24,7 +24,7 @@
     </NavBrand>
     <div class="flex items-center md:order-2">
         <Avatar id="avatar-menu" />
-        <NavHamburger class1="w-full md:flex md:w-auto md:order-1" />
+        <NavHamburger class="w-full md:flex md:w-auto md:order-1" />
     </div>
     <Dropdown placement="bottom" triggeredBy="#avatar-menu">
         {#if data.user}

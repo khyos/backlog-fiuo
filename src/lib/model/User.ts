@@ -41,7 +41,13 @@ export enum UserRights {
     BOOTSTRAP = 'bootstrap'
 }
 
-export class User {
+export interface IUser {
+    id: number
+    username: string
+    role: UserRole
+}
+
+export class User implements IUser {
     id: number
     username: string
     role: UserRole
@@ -52,7 +58,7 @@ export class User {
         this.role = role;
     }
 
-    serialize() {
+    toJSON() : IUser {
         return {
             id: this.id,
             username: this.username,
@@ -64,7 +70,7 @@ export class User {
         return getUserRights(this.role).includes(right);
     }
 
-    static deserialize(data: any) : User {
+    static deserialize(data: IUser | null) : User {
         if (!data) {
             return new User(-1, '', UserRole.GUEST);
         }

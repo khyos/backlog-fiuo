@@ -4,6 +4,7 @@
     import type { Platform } from "$lib/model/game/Platform";
     import { getLinkTypeLabel, getLinkTypesByArtifactType, Link, LinkType } from "$lib/model/Link";
     import { getMeanRatingColor, getRatingColor } from "$lib/model/Rating";
+    import type { UserArtifact } from "$lib/model/UserArtifact";
     import { getPosterURL } from "$lib/services/ArtifactService";
     import { openLink } from "$lib/services/LinkService";
     import { TimeUtil } from "$lib/util/TimeUtil";
@@ -35,13 +36,14 @@
 
     // Common properties that all artifact types share
     export let artifact: Artifact;
+    let artifactMeanRating = artifact.meanRating;
     
     // Optional properties for specific artifact types
     export let platforms: Platform[] = [];
     
     // User info
     export let userConnected: boolean = false;
-    export let userScore: number | null = null;
+    export let userInfo: UserArtifact | null;
     export let canEdit: boolean = false;
 
     let openAddLink = false;
@@ -237,7 +239,7 @@
                         max="100"
                         placeholder="Rate from 0-100"
                         class="max-w-xs"
-                        value={userScore}
+                        value={userInfo?.score}
                     />
                 </div>
             {/if}
@@ -252,7 +254,7 @@
                 />
             </div>
         {:else}
-            <div class="ml-4 flex-shrink-0 bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center" style="width: 10rem; height: 15rem;">
+            <div class="ml-4 flex-shrink-0 bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center" style="width: 10rem; height: 15rem; max-width: 40%;">
                 <span class="text-gray-400 dark:text-gray-500">No poster</span>
             </div>
         {/if}
@@ -299,8 +301,8 @@
                         <StarSolid class="w-4 h-4 mr-2 text-yellow-500" />
                         <P weight="medium" class="text-lg">Ratings</P>
                     </div>
-                    {#if artifact.getMeanRating()}
-                        <Badge color={getMeanRatingColor(artifact.getMeanRating())}>{Math.round(artifact.getMeanRating())}</Badge>
+                    {#if artifactMeanRating}
+                        <Badge color={getMeanRatingColor(artifactMeanRating)}>{Math.round(artifactMeanRating)}</Badge>
                     {/if}
                 </div>
                 <div class="space-y-2 ml-6">

@@ -7,6 +7,6 @@ export async function GET({ url }: RequestEvent) {
     const pageSize : number = parseInt(url.searchParams.get('pageSize') ?? '10', 10);
     const query : string = url.searchParams.get('query') ?? '';
     const games = await GameDB.getGames(page, pageSize, query);
-    const serializedGames = games.map((game) => game.serialize());
+    const serializedGames = games.map((game) => game.toJSON());
     return json(serializedGames);
 }

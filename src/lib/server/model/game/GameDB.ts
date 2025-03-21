@@ -1,11 +1,11 @@
-import { ArtifactType } from "$lib/model/Artifact";
+import { ArtifactType, type IArtifactDB } from "$lib/model/Artifact";
 import { BacklogOrder, BacklogRankingType } from "$lib/model/Backlog";
 import { BacklogItem } from "$lib/model/BacklogItem";
 import { Genre } from "$lib/model/Genre";
 import { Link } from "$lib/model/Link";
 import { Rating } from "$lib/model/Rating";
 import { Game } from "$lib/model/game/Game";
-import { Platform } from "$lib/model/game/Platform";
+import { Platform, type IPlatformDB } from "$lib/model/game/Platform";
 import { db, execQuery } from "$lib/server/database";
 import { ArtifactDB } from "../ArtifactDB";
 import { BacklogItemDB } from "../BacklogItemDB";
@@ -15,13 +15,13 @@ import { RatingDB } from "../RatingDB";
 export class GameDB {
     static async getById(id: number): Promise<Game | null> {
         return await new Promise((resolve, reject) => {
-            db.get(`SELECT * FROM artifact WHERE id = ?`, [id], async (error, row: any) => {
+            db.get(`SELECT * FROM artifact WHERE id = ?`, [id], async (error, row: IArtifactDB) => {
                 if (error) {
                     reject(error);
                 } else if (!row) {
                     resolve(null);
                 } else {
-                    const releaseDate = row.releaseDate ? new Date(parseInt(row.releaseDate, 10)) : null;
+                    const releaseDate = new Date(parseInt(row.releaseDate, 10));
                     const game = new Game(row.id, row.title, row.type, releaseDate, row.duration);
                     game.platforms = await GameDB.getPlatforms(id);
                     game.genres = await GameDB.getGenres(id);
@@ -34,9 +34,9 @@ export class GameDB {
     }
 
     static async getGames(page: number, pageSize: number, search: string = ''): Promise<Game[]> {
-        return await ArtifactDB.getArtifacts(ArtifactType.GAME, page, pageSize, search).then((rows: any[]) => {
-            const games: Game[] = rows.map((row: any) => {
-                const releaseDate = row.releaseDate ? new Date(parseInt(row.releaseDate, 10)) : null;
+        return await ArtifactDB.getArtifacts(ArtifactType.GAME, page, pageSize, search).then((rows: IArtifactDB[]) => {
+            const games: Game[] = rows.map((row: IArtifactDB) => {
+                const releaseDate = new Date(parseInt(row.releaseDate, 10));
                 return new Game(row.id, row.title, row.type, releaseDate, row.duration)
             });
             return games;
@@ -45,15 +45,15 @@ export class GameDB {
 
     static async getPlatforms(gameId: number): Promise<Platform[]> {
         return await new Promise((resolve, reject) => {
-            db.all(`SELECT * FROM game_platform
+            db.all(`SELECT platform.id as id, title FROM game_platform
                     INNER JOIN platform ON game_platform.platformId = platform.id
-                    WHERE artifactId = ? `, [gameId], async (error, rows: any[]) => {
+                    WHERE artifactId = ? `, [gameId], async (error, rows: IPlatformDB[]) => {
                 if (error) {
                     reject(error);
                 } else {
                     const platforms: Platform[] = [];
                     for (const row of rows) {
-                        const platform = new Platform(row.platformId, row.title);
+                        const platform = new Platform(row.id, row.title);
                         platforms.push(platform);
                     }
                     resolve(platforms);
@@ -64,7 +64,7 @@ export class GameDB {
 
     static async getAllPlatforms(): Promise<Platform[]> {
         return await new Promise((resolve, reject) => {
-            db.all(`SELECT * FROM platform ORDER BY title`, async (error, rows: any[]) => {
+            db.all(`SELECT * FROM platform ORDER BY title`, async (error, rows: IPlatformDB[]) => {
                 if (error) {
                     reject(error);
                 } else {

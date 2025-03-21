@@ -1,4 +1,18 @@
-export class Genre {
+import type { ISerializable, Serializable } from "./Serializable";
+
+export const SERIALIZE_TYPE = 'Genre';
+
+export interface IGenreDB {
+    id: number
+    title: string
+}
+
+export interface IGenre extends ISerializable {
+    id: number
+    title: string
+}
+
+export class Genre implements Serializable<IGenre> {
     id: number
     title: string
 
@@ -7,14 +21,18 @@ export class Genre {
         this.title = title;
     }
 
-    serialize() {
+    toJSON(): IGenre {
         return {
+            __type: SERIALIZE_TYPE,
             id: this.id,
             title: this.title
         }
     }
 
-    static deserialize(data: any) {
-        return new Genre(data.id, data.title);
+    static fromJSON(json: IGenre) {
+        if (json.__type !== SERIALIZE_TYPE) {
+            throw new Error('Invalid Type');
+        }
+        return new Genre(json.id, json.title);
     }
 }

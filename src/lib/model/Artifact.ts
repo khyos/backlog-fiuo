@@ -1,17 +1,42 @@
-import { Genre } from "./Genre";
-import { Link } from "./Link";
-import { Rating } from "./Rating";
-import { Tag } from "./Tag";
+import { Genre, type IGenre } from "./Genre";
+import { Link, type ILink } from "./Link";
+import { Rating, type IRating } from "./Rating";
+import type { ISerializable, Serializable } from "./Serializable";
+import { Tag, type ITag } from "./Tag";
 
 export enum ArtifactType {
     GAME = 'game',
     MOVIE = 'movie'
 }
 
-export abstract class Artifact {
+export const SERIALIZE_TYPE = 'Artifact';
+
+export interface IArtifactDB {
+    id: number,
+    title: string,
+    description?: string,
+    type: ArtifactType,
+    duration: number,
+    releaseDate: string
+}
+
+export interface IArtifact extends ISerializable {
+    id: number
+    links: ILink[]
+    releaseDate: string
+    title: string
+    type: ArtifactType
+    duration: number
+    genres: IGenre[]
+    ratings: IRating[]
+    meanRating: number | null
+    tags: ITag[]
+}
+
+export abstract class Artifact implements Serializable<IArtifact> {
     id: number
     links: Link[] = []
-    releaseDate: Date | null
+    releaseDate: Date
     title: string
     type: ArtifactType
     duration: number
@@ -19,7 +44,9 @@ export abstract class Artifact {
     ratings: Rating[] = []
     tags: Tag[] = []
 
-    constructor(id: number, title: string, type: ArtifactType, releaseDate: Date | null, duration: number) {
+    private _meanRating: number | null | undefined
+
+    constructor(id: number, title: string, type: ArtifactType, releaseDate: Date, duration: number) {
         this.id = id;
         this.title = title;
         this.type = type;
@@ -27,41 +54,50 @@ export abstract class Artifact {
         this.duration = duration;
     }
 
-    abstract getMeanRating(): number | null;
+    abstract computeMeanRating(): number | null;
 
-    serialize() {
+    get meanRating(): number | null {
+        if (this._meanRating === undefined) {
+            this._meanRating = this.computeMeanRating();
+        }
+        return this._meanRating;
+    }
+
+    toJSON() {
         return {
+            __type: SERIALIZE_TYPE,
             id: this.id,
             title: this.title,
             type: this.type,
-            releaseDate: this.releaseDate?.toISOString(),
+            releaseDate: this.releaseDate.toISOString(),
             duration: this.duration,
-            links: this.links.map(link => link.serialize()),
-            genres: this.genres.map(genre => genre.serialize()),
-            ratings: this.ratings.map(rating => rating.serialize()),
-            meanRating: this.getMeanRating(),
-            tags: this.tags.map(tag => tag.serialize())
+            links: this.links.map(link => link.toJSON()),
+            genres: this.genres.map(genre => genre.toJSON()),
+            ratings: this.ratings.map(rating => rating.toJSON()),
+            meanRating: this.meanRating,
+            tags: this.tags.map(tag => tag.toJSON())
         }
     }
 
-    static deserialize(data: any): any {
+    static fromJSON(data: IArtifact) {
         return {
             id: data.id,
             title: data.title,
             type: data.type,
             releaseDate: new Date(data.releaseDate),
             duration: data.duration,
-            links: data.links.map((linkData: any) => {
-                return Link.deserialize(linkData);
+            links: data.links.map((linkData) => {
+                return Link.fromJSON(linkData);
             }),
-            genres: data.genres.map((genreData: any) => {
-                return Genre.deserialize(genreData);
+            genres: data.genres.map((genreData) => {
+                return Genre.fromJSON(genreData);
             }),
-            ratings: data.ratings.map((ratingData: any) => {
-                return Rating.deserialize(ratingData);
+            ratings: data.ratings.map((ratingData) => {
+                return Rating.fromJSON(ratingData);
             }),
-            tags: data.tags.map((tagData: any) => {
-                return Tag.deserialize(tagData);
+            meanRating: data.meanRating,
+            tags: data.tags.map((tagData) => {
+                return Tag.fromJSON(tagData);
             })
         }
     }

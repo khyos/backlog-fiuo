@@ -4,9 +4,8 @@ import { error, json } from "@sveltejs/kit";
 import type { RequestEvent } from "./$types";
 
 export async function POST({ params, request, locals }: RequestEvent) {
-    const { user } = locals;
-    const userInst = User.deserialize(user);
-    if (userInst.id < 0) {
+    const user = User.deserialize(locals.user);
+    if (user.id < 0) {
         error(500, "invalid user");
     }
     const artifactId = parseInt(params.slug);
@@ -14,7 +13,7 @@ export async function POST({ params, request, locals }: RequestEvent) {
     if (score < 0 || score > 100) {
         error(500, "invalid score");
     } 
-    ArtifactDB.setUserScore(userInst.id, artifactId, score);
+    ArtifactDB.setUserScore(user.id, artifactId, score);
     
     return json({ success: true });
 }
