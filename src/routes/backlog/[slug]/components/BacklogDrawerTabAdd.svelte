@@ -13,19 +13,17 @@
     } from "flowbite-svelte-icons";
     import type { Artifact } from "$lib/model/Artifact";
     import { addBacklogItem } from "$lib/services/BacklogService";
-    import type { Backlog } from "$lib/model/Backlog";
+    import { backlogStore, refreshBacklog } from "../stores/BacklogStore";
     
     export let selectedTab: string = "filters";
     export let canEdit: boolean;
-    export let backlog: Backlog;
-    export let refreshBacklog: () => Promise<void>;
     let searchArtifactTerm: string = "";
     let searchedArtifacts: Artifact[] = [];
 
     // Event Callbacks
     const fetchArtifacts = () => {
         fetch(
-            `/api/${backlog.artifactType}/search?query=${searchArtifactTerm}`,
+            `/api/${$backlogStore.backlog.artifactType}/search?query=${searchArtifactTerm}`,
         )
             .then((res) => res.json())
             .then((artifacts) => {
@@ -35,7 +33,7 @@
 
     const addBacklogItemCb = async (e: any) => {
         const artifactId = e.currentTarget.getAttribute("data-id");
-        await addBacklogItem(backlog.id, artifactId);
+        await addBacklogItem($backlogStore.backlog.id, artifactId);
         refreshBacklog();
     };
 
@@ -54,7 +52,7 @@
     {#if searchedArtifacts?.length > 0}
         <Listgroup>
             {#each searchedArtifacts as artifact}
-                {#if backlog.backlogItems.find((bi) => bi.artifact.id === artifact.id) != null}
+                {#if $backlogStore.backlog.backlogItems.find((bi) => bi.artifact.id === artifact.id) != null}
                     <ListgroupItem>
                         <div style="display: inline-flex;">
                             {artifact.title}<CheckCircleOutline />

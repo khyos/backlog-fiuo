@@ -3,8 +3,11 @@ import type { BacklogItem } from '$lib/model/BacklogItem';
 import { getPosterURL } from '$lib/services/ArtifactService';
 import { OrderUtil } from '$lib/util/OrderUtil';
 import { get, writable } from 'svelte/store';
+import { backlogStore } from '../../routes/backlog/[slug]/stores/BacklogStore';
+import { BacklogRankingType } from '$lib/model/Backlog';
+import { pageStore } from '../../routes/backlog/[slug]/stores/PageStore';
 
-export type OrderByFightState = {
+export type OrderByFightStore = {
     artifactType: ArtifactType
     fightType: 'elo' | 'rank'
     pickType: 'locked' | 'random'
@@ -16,7 +19,7 @@ export type OrderByFightState = {
     itemBPoster?: string
 };
 
-export const orderByFightState = writable<OrderByFightState>({
+export const orderByFightStore = writable<OrderByFightStore>({
     artifactType: ArtifactType.GAME,
     fightType: 'rank',
     pickType: 'locked',
@@ -26,89 +29,102 @@ export const orderByFightState = writable<OrderByFightState>({
 
 let previousItemA: BacklogItem | undefined;
 let previousItemB: BacklogItem | undefined;
-orderByFightState.subscribe((state) => {
-    if (state.itemA !== previousItemA) {
-        previousItemA = state.itemA;
-        updatePosterA(state);
+orderByFightStore.subscribe((store) => {
+    if (store.itemA !== previousItemA) {
+        previousItemA = store.itemA;
+        updatePosterA(store);
     }
-    if (state.itemB !== previousItemB) {
-        previousItemB = state.itemB;
-        updatePosterB(state);
+    if (store.itemB !== previousItemB) {
+        previousItemB = store.itemB;
+        updatePosterB(store);
     }
 });
 
-const updatePosterA = async (state: OrderByFightState) => {
-    if (!state.itemA) {
+const updatePosterA = async (store: OrderByFightStore) => {
+    if (!store.itemA) {
         return;
     }
-    orderByFightState.update(s => ({
+    orderByFightStore.update(s => ({
         ...s,
         itemAPoster: undefined
     }));
-    getPosterURL(state.artifactType, state.itemA.artifact.id).then((newItemAPoster) => {
-        orderByFightState.update(s => ({
+    getPosterURL(store.artifactType, store.itemA.artifact.id).then((newItemAPoster) => {
+        orderByFightStore.update(s => ({
             ...s,
             itemAPoster: newItemAPoster
         }));
     });
 };
 
-const updatePosterB = async (state: OrderByFightState) => {
-    if (!state.itemB) {
+const updatePosterB = async (store: OrderByFightStore) => {
+    if (!store.itemB) {
         return;
     }
-    orderByFightState.update(s => ({
+    orderByFightStore.update(s => ({
         ...s,
         itemBPoster: undefined
     }));
-    getPosterURL(state.artifactType, state.itemB.artifact.id).then((newItemBPoster) => {
-        orderByFightState.update(s => ({
+    getPosterURL(store.artifactType, store.itemB.artifact.id).then((newItemBPoster) => {
+        orderByFightStore.update(s => ({
             ...s,
             itemBPoster: newItemBPoster
         }));
     });
 };
 
-export const startOrderByFight = async (backlog: { backlogItems: BacklogItem[], artifactType: ArtifactType }, type: 'elo' | 'rank', artifactId?: number) => {
+export const startOrderByFight = async (artifactId?: number) => {
+    const pageStoreInst = get(pageStore);
+    if (pageStoreInst.hiddenDrawer || pageStoreInst.selectedTab !== 'order') {
+        pageStore.update(s => ({
+            ...s,
+            hiddenDrawer: false,
+            selectedTab: 'order'
+        }));
+    }
+
+    const backlog = get(backlogStore).backlog;
+    
     if (backlog.backlogItems.length < 2) {
         throw new Error("You can't fight alone");
     }
-    orderByFightState.update(s => ({
+    orderByFightStore.update(s => ({
         ...s,
         artifactType: backlog.artifactType,
-        fightType: type,
+        fightType: backlog.rankingType === BacklogRankingType.RANK ? 'rank' : 'elo',
         pickType: artifactId ? 'locked' : 'random',
         highestValue: 1,
         lowestValue: backlog.backlogItems.length
     }));
     if (artifactId) {
-        orderByFightState.update(s => ({
+        orderByFightStore.update(s => ({
             ...s,
             itemA: backlog.backlogItems.find(bi => bi.artifact.id === artifactId)
         }));
     } else {
-        await getRandomItemA(backlog);
+        await getRandomItemA();
     }
     do {
-        await getRandomItemB(backlog);
-    } while (get(orderByFightState).itemA?.artifact.id === get(orderByFightState).itemB?.artifact.id);
+        await getRandomItemB();
+    } while (get(orderByFightStore).itemA?.artifact.id === get(orderByFightStore).itemB?.artifact.id);
 };
 
-export const getRandomItemA = async (backlog: { backlogItems: BacklogItem[], artifactType: ArtifactType }) => {
-    const state = get(orderByFightState);
-    const randomIndex = OrderUtil.getRandomIntegerBetween(state.highestValue - 1, state.lowestValue - 1);
+export const getRandomItemA = async () => {
+    const backlog = get(backlogStore).backlog;
+    const store = get(orderByFightStore);
+    const randomIndex = OrderUtil.getRandomIntegerBetween(store.highestValue - 1, store.lowestValue - 1);
     const itemA = backlog.backlogItems[randomIndex];
-    orderByFightState.update(s => ({
+    orderByFightStore.update(s => ({
         ...s,
         itemA
     }));
 };
 
-export const getRandomItemB = async (backlog: { backlogItems: BacklogItem[], artifactType: ArtifactType }) => {
-    const state = get(orderByFightState);
-    const randomIndex = OrderUtil.getRandomIntegerBetween(state.highestValue - 1, state.lowestValue - 1);
+export const getRandomItemB = async () => {
+    const backlog = get(backlogStore).backlog;
+    const store = get(orderByFightStore);
+    const randomIndex = OrderUtil.getRandomIntegerBetween(store.highestValue - 1, store.lowestValue - 1);
     const itemB = backlog.backlogItems[randomIndex];
-    orderByFightState.update(s => ({
+    orderByFightStore.update(s => ({
         ...s,
         itemB
     }));

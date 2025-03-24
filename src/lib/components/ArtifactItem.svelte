@@ -1,12 +1,13 @@
 <script lang="ts">
     import { invalidate } from "$app/navigation";
-    import { Artifact, ArtifactType } from "$lib/model/Artifact";
-    import type { Platform } from "$lib/model/game/Platform";
+    import { ArtifactType } from "$lib/model/Artifact";
+    import type { Game } from "$lib/model/game/Game";
     import { getLinkTypeLabel, getLinkTypesByArtifactType, Link, LinkType } from "$lib/model/Link";
     import { getMeanRatingColor, getRatingColor } from "$lib/model/Rating";
     import type { UserArtifact } from "$lib/model/UserArtifact";
     import { getPosterURL } from "$lib/services/ArtifactService";
     import { openLink } from "$lib/services/LinkService";
+    import { artifactItemStore, refreshArtifact } from "$lib/stores/ArtifactItemStore";
     import { TimeUtil } from "$lib/util/TimeUtil";
     import {
         Label,
@@ -33,13 +34,13 @@
         EditOutline
     } from "flowbite-svelte-icons";
     import { onMount } from "svelte";
+    import { get } from "svelte/store";
 
     // Common properties that all artifact types share
-    export let artifact: Artifact;
-    let artifactMeanRating = artifact.meanRating;
-    
-    // Optional properties for specific artifact types
-    export let platforms: Platform[] = [];
+    $: artifactItemStoreInst = $artifactItemStore;
+    $: artifact = artifactItemStoreInst.artifact;
+    $: platforms = artifact.type === ArtifactType.GAME ? (artifact as Game).platforms : [];
+    $: artifactMeanRating = artifact.meanRating;
     
     // User info
     export let userConnected: boolean = false;
@@ -55,10 +56,11 @@
     let unboundLinkTypes: {
         value: LinkType,
         name: string
-    }[];
+    }[] = [];
     
     let artifactPosterURL: string | null = null;
     onMount(() => {
+        refreshLinkTypes();
         getPosterURL(artifact.type, artifact.id).then((url) => {
             artifactPosterURL = url;
         });
@@ -67,16 +69,14 @@
     // Track loading states
     let refreshingAllLinks = false;
     let refreshingLinks: Record<string, boolean> = {};
-
-    refreshLinkTypes();
     
     function refreshLinkTypes() {
         unboundLinkTypes = getLinkTypesByArtifactType(artifact.type)
-        .filter(linkType => !artifact.links.some((link) => link.type === linkType))
-        .map(linkType => ({
-            value: linkType,
-            name: getLinkTypeLabel(linkType),
-        }));
+            .filter(linkType => !artifact.links.some((link) => link.type === linkType))
+            .map(linkType => ({
+                value: linkType,
+                name: getLinkTypeLabel(linkType),
+            }));
     }
 
     function refreshLinksData(linksToRefresh: Link[]) {
@@ -99,7 +99,7 @@
                 const errorResponse = await response.json();
                 alert(`Error while refreshing links: ` + errorResponse.message);
             } else {
-                invalidate("data");
+                refreshArtifact();
             }
         }).catch(error => {
             console.error(`Error while refreshing links`, error);
@@ -128,9 +128,8 @@
                 alert("Failed to add link");
                 return;
             }
-            invalidate("data");
+            refreshArtifact();
             refreshLinkTypes();
-            invalidate("unboundLinkTypes");
             openAddLink = false;
             addLinkType = null;
             addLinkUrl = null;
@@ -158,7 +157,7 @@
                 alert("Failed to update link");
                 return;
             }
-            invalidate("data");
+            refreshArtifact();
             openEditLink = false;
             editLinkType = null;
             editLinkUrl = null;

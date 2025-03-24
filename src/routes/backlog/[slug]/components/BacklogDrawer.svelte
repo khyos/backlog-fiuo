@@ -5,14 +5,12 @@
         Drawer,
         Tabs 
     } from "flowbite-svelte";
-    import type { BacklogFilters } from "../BacklogFilters";
     import BacklogDrawerTabAdd from "./BacklogDrawerTabAdd.svelte";
     import BacklogDrawerTabFilters from "./BacklogDrawerTabFilters.svelte";
     import BacklogDrawerTabOrder from "./BacklogDrawerTabOrder.svelte";
-    import { backlogPageState, toggleDrawer } from "../stores/MainStore";
+    import { pageStore, toggleDrawer } from "../stores/PageStore";
     import type { Genre } from "$lib/model/Genre";
     import type { Platform } from "$lib/model/game/Platform";
-    import type { Backlog } from "$lib/model/Backlog";
     import type { Tag } from "$lib/model/Tag";
     
     export let transitionDrawerParams = {
@@ -21,25 +19,20 @@
         easing: sineIn,
     };
     export let canEdit: boolean;
-    export let backlog: Backlog;
-    export let backlogFilters: BacklogFilters;
     export let genres: Genre[] = [];
     export let backlogTags: Tag[] = [];
     export let platforms: Platform[] = [];
 
     // Event Callbacks
-    export let refreshBacklog: () => Promise<void>;
     export let onMoveBacklogItem: (srcRank: number, targetRank: number) => Promise<void>;
     export let onFetchPrices: () => Promise<void>;
-
-    $: state = $backlogPageState;
 </script>
 
 <Drawer
     placement="right"
     transitionType="fly"
     transitionParams={transitionDrawerParams}
-    hidden={state.hiddenDrawer}
+    hidden={$pageStore.hiddenDrawer}
     id="sidebar1"
     bgOpacity="bg-opacity-25"
     width="w-96"
@@ -50,26 +43,20 @@
         style="align-items: center"
     >
         <BacklogDrawerTabFilters
-            bind:selectedTab={state.selectedTab}
-            {backlog}
-            bind:backlogFilters={backlogFilters}
+            bind:selectedTab={$pageStore.selectedTab}
             {genres}
             {backlogTags}
             {platforms}
             {onFetchPrices}
         />
         <BacklogDrawerTabAdd
-            bind:selectedTab={state.selectedTab}
+            bind:selectedTab={$pageStore.selectedTab}
             {canEdit}
-            {backlog}
-            {refreshBacklog}
         />
         <BacklogDrawerTabOrder
-            bind:selectedTab={state.selectedTab}
+            bind:selectedTab={$pageStore.selectedTab}
             canEdit={canEdit}
-            backlog={backlog}
             {onMoveBacklogItem}
-            {refreshBacklog}
         />
         
         <CloseButton

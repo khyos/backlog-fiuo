@@ -8,6 +8,9 @@ export async function fetchBacklog(backlogId: number) {
 
 export async function fetchBacklogs(artifactType: ArtifactType): Promise<Backlog[]> {
     const response = await fetch(`/api/backlog/list?artifactType=${artifactType}`);
+    if (!response.ok) {
+        throw new Error('Error while Fetching Backlog List');
+    }
     return await response.json();
 };
 
@@ -18,6 +21,9 @@ export async function addBacklogItem(backlogId: number, artifactId: number) {
             artifactId: artifactId
         })
     });
+    if (!response.ok) {
+        throw new Error('Error while adding Backlog Item');
+    }
     return response.json();
 };
 
@@ -28,5 +34,23 @@ export async function deleteBacklogItem(backlogId: number, artifactId: number) {
             artifactId: artifactId,
         })
     });
+    if (!response.ok) {
+        throw new Error('Error while deleting Backlog Item');
+    }
     return response.json();
 };
+
+export async function moveBacklogItemToOtherBacklog(fromBacklogId: number, toBacklogId: number, artifactId: number, keepTags: boolean) {
+    const response = await fetch(`/api/backlog/move`, {
+        method: "POST",
+        body: JSON.stringify({
+            fromBacklogId: fromBacklogId,
+            toBacklogId: toBacklogId,
+            artifactId: artifactId,
+            keepTags: keepTags
+        }),
+    });
+    if (!response.ok) {
+        throw new Error('Error while moving Backlog Item to other Backlog');
+    }
+}
