@@ -7,6 +7,7 @@ import type { PageServerLoad } from './$types';
 import { User, UserRights } from '$lib/model/User';
 import type { Backlog } from '$lib/model/Backlog';
 import type { Tag } from '$lib/model/Tag';
+import { TvshowDB } from '$lib/server/model/tvshow/TvshowDB';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const backlogId = parseInt(params.slug);
@@ -54,6 +55,9 @@ async function fetchGenres(artifactType: ArtifactType) {
 	} 
 	else if (artifactType === ArtifactType.MOVIE) {
 		return await MovieDB.getAllGenres();
+	}
+	else if (artifactType === ArtifactType.TVSHOW) {
+		return await TvshowDB.getAllGenres();
 	}
 	return [];
 }

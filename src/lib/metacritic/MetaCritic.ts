@@ -10,6 +10,10 @@ export class MetaCritic {
         return MetaCritic.getRating(`https://www.metacritic.com/movie/${movieId}`);
     }
 
+    static async getTvshowRating(tvshowId: string): Promise<number | null> {
+        return MetaCritic.getRating(`https://www.metacritic.com/tv/${tvshowId}`);
+    }
+
     static async getRating(url: string): Promise<number | null> {
         const response = await got(url);
         const dom = new JSDOM(response.body);
@@ -41,6 +45,10 @@ export class MetaCritic {
 
     static async searchMovie(query: string) {
         return await MetaCritic.searchArtifact(query, 2);
+    }
+
+    static async searchTvshow(query: string) {
+        return await MetaCritic.searchArtifact(query, 1);
     }
 
     static async searchArtifact(query: string, category: number) {

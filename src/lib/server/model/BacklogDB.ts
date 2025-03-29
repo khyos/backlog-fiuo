@@ -7,6 +7,7 @@ import { db, execQuery } from "../database";
 import { BacklogItemDB } from "./BacklogItemDB";
 import { GameDB } from "./game/GameDB";
 import { MovieDB } from "./movie/MovieDB";
+import { TvshowDB } from "./tvshow/TvshowDB";
 
 export class BacklogDB {
     static async createBacklog(userId: number, title: string, artifactType: ArtifactType, rankingType: BacklogRankingType): Promise<Backlog | null> {
@@ -118,6 +119,8 @@ export class BacklogDB {
             backlogItems = await GameDB.getBacklogItems(backlogId, rankingType, finalBacklogOrder);
         } else if (artifactType === ArtifactType.MOVIE){
             backlogItems = await MovieDB.getBacklogItems(backlogId, rankingType, finalBacklogOrder);
+        } else if (artifactType === ArtifactType.TVSHOW){
+            backlogItems = await TvshowDB.getBacklogItems(backlogId, rankingType, finalBacklogOrder);
         }
         return backlogItems;
     }

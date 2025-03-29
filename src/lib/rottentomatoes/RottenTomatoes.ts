@@ -1,14 +1,27 @@
 import { got } from 'got';
 import { JSDOM } from 'jsdom';
 
+export type RottenTomatoesRatings = {
+    audience?: number
+    critics?: number
+}
+
 export class RottenTomatoes {
-    static async getMovieRatings(movieId: string): Promise<any> {
-        const response = await got(`https://www.rottentomatoes.com/m/${movieId}`);
+    static async getMovieRatings(movieId: string): Promise<RottenTomatoesRatings> {
+        return await this.getRatings(`https://www.rottentomatoes.com/m/${movieId}`);
+    }
+
+    static async getTvshowRatings(tvshowId: string): Promise<RottenTomatoesRatings> {
+        return await this.getRatings(`https://www.rottentomatoes.com/tv/${tvshowId}`);
+    }
+
+    static async getRatings(url: string): Promise<RottenTomatoesRatings> {
+        const response = await got(url);
         const dom = new JSDOM(response.body);
         try {
             const criticsRatingText = dom.window.document.querySelector('rt-text[slot="criticsScore"]')?.textContent;
             const audienceRatingText = dom.window.document.querySelector('rt-text[slot="audienceScore"]')?.textContent;
-            const ratings: any = {};
+            const ratings: RottenTomatoesRatings = {};
             if (criticsRatingText) {
                 ratings.critics = Math.round(parseFloat(criticsRatingText.slice(0, -1)));
             }
@@ -18,7 +31,7 @@ export class RottenTomatoes {
             return ratings;
         } catch (e) {
             console.error(e);
-            return null;
+            return {};
         }
     }
 
@@ -28,10 +41,18 @@ export class RottenTomatoes {
     }
 
     static async searchMovie(query: string): Promise<any> {
+        return await this.searchArtifact(query, 'movie');
+    }
+
+    static async searchTvshow(query: string): Promise<any> {
+        return await this.searchArtifact(query, 'tvSeries');
+    }
+
+    static async searchArtifact(query: string, type: string): Promise<any> {
         const response = await got(`https://www.rottentomatoes.com/search?search=${query}`);
         const dom = new JSDOM(response.body);
         try {
-            const links = dom.window.document.querySelectorAll('search-page-media-row>a[data-qa=info-name]');
+            const links = dom.window.document.querySelectorAll(`search-page-result[type=${type}] search-page-media-row>a[data-qa=info-name]`);
             const results = [];
             for (const link of links) {
                 results.push({

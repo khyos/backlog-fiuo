@@ -1,13 +1,13 @@
 <script lang="ts">
-    import { invalidate } from "$app/navigation";
-    import { ArtifactType } from "$lib/model/Artifact";
+    import { Artifact, ArtifactType } from "$lib/model/Artifact";
+    import { ArtifactTypeUtil } from "$lib/model/ArtifactTypeUtil";
     import type { Game } from "$lib/model/game/Game";
     import { getLinkTypeLabel, getLinkTypesByArtifactType, Link, LinkType } from "$lib/model/Link";
     import { getMeanRatingColor, getRatingColor } from "$lib/model/Rating";
-    import type { UserArtifact } from "$lib/model/UserArtifact";
+    import { UserArtifactStatus } from "$lib/model/UserArtifact";
     import { getPosterURL } from "$lib/services/ArtifactService";
     import { openLink } from "$lib/services/LinkService";
-    import { artifactItemStore, refreshArtifact } from "$lib/stores/ArtifactItemStore";
+    import { artifactItemStore, refreshArtifact, updateStatus, updateScore } from "$lib/stores/ArtifactItemStore";
     import { TimeUtil } from "$lib/util/TimeUtil";
     import {
         Label,
@@ -20,7 +20,8 @@
         Heading,
         P,
         Hr,
-        Spinner
+        Spinner,
+        Checkbox
     } from "flowbite-svelte";
     import { 
         PlusOutline, 
@@ -31,10 +32,12 @@
         WindowSolid,
         StarSolid,
         LinkOutline,
-        EditOutline
+        EditOutline,
+        ChevronDownOutline,
+        ChevronRightOutline,
+        ChevronDoubleRightOutline
     } from "flowbite-svelte-icons";
     import { onMount } from "svelte";
-    import { get } from "svelte/store";
 
     // Common properties that all artifact types share
     $: artifactItemStoreInst = $artifactItemStore;
@@ -44,7 +47,6 @@
     
     // User info
     export let userConnected: boolean = false;
-    export let userInfo: UserArtifact | null;
     export let canEdit: boolean = false;
 
     let openAddLink = false;
@@ -57,6 +59,15 @@
         value: LinkType,
         name: string
     }[] = [];
+
+    const USER_STATUSES = [
+        { value: null, name: 'None' },
+        { value: UserArtifactStatus.DROPPED, name: 'Dropped' },
+        { value: UserArtifactStatus.FINISHED, name: 'Finished' },
+        { value: UserArtifactStatus.ON_GOING, name: 'On going' },
+        { value: UserArtifactStatus.ON_HOLD, name: 'On hold' },
+        { value: UserArtifactStatus.WISHLIST, name: 'Wishlist' },
+    ];
     
     let artifactPosterURL: string | null = null;
     onMount(() => {
@@ -173,6 +184,18 @@
         }
     }
 
+    function handleSelectStatusChange(event: any, artifactId: number) {
+        const target = event.target as HTMLSelectElement;
+        const status: UserArtifactStatus | null = target.value === '' ? null : target.value as UserArtifactStatus;
+        updateStatus(artifactId, status);
+    }
+
+    function handleCheckboxStatusChange(event: any, artifact: Artifact) {
+        const target = event.target as HTMLInputElement;
+        const status: UserArtifactStatus | null = target.checked ? UserArtifactStatus.FINISHED : null;
+        updateStatus(artifact.id, status);
+    }
+
     function handleScoreChange(event: any) {
         const target = event.target as HTMLInputElement;
         if (target.value === '') {
@@ -190,16 +213,15 @@
         updateScore(value);
     }
 
-    function updateScore(score: number | null) {
-        fetch(`/api/artifact/${artifact.id}/userScore`, {
-            method: "POST",
-            body: JSON.stringify({
-                score: score
-            }),
-        }).catch(error => {
-            console.error("Error updating score:", error);
-            alert("Failed to update score");
-        });
+    let expandedChidren: Set<number> = new Set();
+
+    function toggleChild(childId: number) {
+        if (expandedChidren.has(childId)) {
+            expandedChidren.delete(childId);
+        } else {
+            expandedChidren.add(childId);
+        }
+        expandedChidren = expandedChidren;
     }
 </script>
 
@@ -223,8 +245,20 @@
                 </div>
             {/if}
             
-            <!-- User score moved here to be on the left side with the title -->
             {#if userConnected}
+                <div class="mt-4 bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+                    <Label for="score" class="mb-2 flex items-center">
+                        <StarSolid class="w-4 h-4 mr-1 text-yellow-400" />
+                        Status
+                    </Label>
+                    <Select
+                        on:change={(event) => handleSelectStatusChange(event, artifact.id)}
+                        id="status"
+                        items={USER_STATUSES}
+                        value={artifact.userInfo?.status}
+                        placeholder="Select Status"
+                    />
+                </div>
                 <div class="mt-4 bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
                     <Label for="score" class="mb-2 flex items-center">
                         <StarSolid class="w-4 h-4 mr-1 text-yellow-400" />
@@ -238,7 +272,7 @@
                         max="100"
                         placeholder="Rate from 0-100"
                         class="max-w-xs"
-                        value={userInfo?.score}
+                        value={artifact.userInfo?.score}
                     />
                 </div>
             {/if}
@@ -289,8 +323,79 @@
                 </div>
             {/if}
             
-            <!-- Slot for additional artifact-specific content -->
-            <slot></slot>
+            {#if artifact.children.length > 0}
+                <div class="children-container">
+                    <div class="flex items-center mb-2">
+                        <ChevronDoubleRightOutline class="w-4 h-4 mr-2 text-purple-500" />
+                        <P weight="medium" class="text-lg">{ArtifactTypeUtil.getChildName(artifact.type, 0)}</P>
+                    </div>
+                    
+                    {#each artifact.children as firstLevelChild}
+                        <div class="child-item mb-4 border rounded-lg">
+                            <button 
+                                class="w-full flex items-center justify-between p-3 hover:bg-gray-100 transition-colors"
+                                on:click={() => toggleChild(firstLevelChild.id)}
+                            >
+                                <span class="font-medium">{firstLevelChild.title}</span>
+                                {#if expandedChidren.has(firstLevelChild.id)}
+                                    <ChevronDownOutline class="w-5 h-5 text-gray-600" />
+                                {:else}
+                                    <ChevronRightOutline class="w-5 h-5 text-gray-600" />
+                                {/if}
+                            </button>
+                            
+                            {#if expandedChidren.has(firstLevelChild.id)}
+                                <div class="secondLevelChildren-list p-3 bg-gray-50">
+                                    {#if firstLevelChild.children.length > 0}
+                                    <table class="w-full text-sm">
+                                        <thead class="bg-gray-100 border-b">
+                                            <tr>
+                                                <th class="p-2 text-left">Index</th>
+                                                <th class="p-2 text-left">{ArtifactTypeUtil.getChildName(artifact.type, 1)}</th>
+                                                <th class="p-2 text-left">Duration</th>
+                                                {#if userConnected}
+                                                <th class="p-2 text-left">
+                                                    <Checkbox
+                                                        checked={firstLevelChild.userInfo?.status === UserArtifactStatus.FINISHED}
+                                                        on:change={(event) => handleCheckboxStatusChange(event, firstLevelChild)}
+                                                    />
+                                                </th>
+                                                {/if}
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {#each firstLevelChild.children as secondLevelChild, index}
+                                                <tr class="border-b last:border-b-0 hover:bg-gray-100">
+                                                    <td class="p-2">{index + 1}</td>
+                                                    <td class="p-2">{secondLevelChild.title}</td>
+                                                    <td class="p-2">
+                                                        {#if secondLevelChild.duration}
+                                                            {TimeUtil.formatDuration(secondLevelChild.duration)}
+                                                        {:else}
+                                                            <span class="text-gray-500 italic">N/A</span>
+                                                        {/if}
+                                                    </td>
+                                                    {#if userConnected}
+                                                    <td class="p-2">
+                                                        <Checkbox
+                                                            checked={secondLevelChild.userInfo?.status === UserArtifactStatus.FINISHED}
+                                                            on:change={(event) => handleCheckboxStatusChange(event, secondLevelChild)}
+                                                        />
+                                                    </td>
+                                                    {/if}
+                                                </tr>
+                                            {/each}
+                                        </tbody>
+                                    </table>
+                                    {:else}
+                                        <p class="text-gray-500 italic">No {ArtifactTypeUtil.getChildName(artifact.type, 1)}</p>
+                                    {/if}
+                                </div>
+                            {/if}
+                        </div>
+                    {/each}
+                </div>
+            {/if}
         </div>
         
         <div>

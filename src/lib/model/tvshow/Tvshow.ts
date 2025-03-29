@@ -1,15 +1,17 @@
 import { Artifact, ArtifactType, type IArtifact } from "../Artifact";
 import type { Serializable } from "../Serializable";
+import { TvshowSeason, type ITvshowSeason } from "./TvshowSeason";
 
-export const SERIALIZE_TYPE = 'Movie';
+export const SERIALIZE_TYPE = 'Tvshow';
 
-export interface IMovie extends IArtifact {
+export interface ITvshow extends IArtifact {
+    children: ITvshowSeason[]
 }
 
-export class Movie extends Artifact implements Serializable<IMovie> {
+export class Tvshow extends Artifact implements Serializable<ITvshow> {
     constructor(id: number, title: string, type: ArtifactType, releaseDate: Date, duration: number) {
         super(id, title, type, releaseDate, duration);
-        this.type = ArtifactType.MOVIE;
+        this.type = ArtifactType.TVSHOW;
     }
 
     computeMeanRating(): number | null {
@@ -32,14 +34,15 @@ export class Movie extends Artifact implements Serializable<IMovie> {
         }
     }
 
-    static fromJSON(data: IMovie) : Movie {
+    static fromJSON(data: ITvshow) : Tvshow {
         const artifactData = super.fromJSON(data);
-        const movie = new Movie(artifactData.id, artifactData.title, artifactData.type, artifactData.releaseDate, artifactData.duration);
-        movie.links = artifactData.links;
-        movie.genres = artifactData.genres;
-        movie.ratings = artifactData.ratings;
-        movie.tags = artifactData.tags;
-        movie.userInfo = artifactData.userInfo;
-        return movie;
+        const tvshow = new Tvshow(artifactData.id, artifactData.title, artifactData.type, artifactData.releaseDate, artifactData.duration);
+        tvshow.children = data.children.map(child => TvshowSeason.fromJSON(child));
+        tvshow.links = artifactData.links;
+        tvshow.genres = artifactData.genres;
+        tvshow.ratings = artifactData.ratings;
+        tvshow.tags = artifactData.tags;
+        tvshow.userInfo = artifactData.userInfo;
+        return tvshow;
     }
 }

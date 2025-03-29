@@ -1,5 +1,5 @@
 import type { IArtifactDB, ArtifactType } from "$lib/model/Artifact";
-import { UserArtifact, type IUserArtifactDB } from "$lib/model/UserArtifact";
+import { UserArtifact, UserArtifactStatus, type IUserArtifactDB } from "$lib/model/UserArtifact";
 import { db, execQuery } from "../database";
 
 export class ArtifactDB {
@@ -31,8 +31,24 @@ export class ArtifactDB {
                 } else if (!row) {
                     resolve(null);
                 } else {
-                    const userArtifact = new UserArtifact(row.userId, row.artifactId, row.score, row.startDate, row.endDate);
+                    const userArtifact = new UserArtifact(row.userId, row.artifactId, row.status, row.score, row.startDate, row.endDate);
                     resolve(userArtifact);
+                }
+            });
+        });
+    }
+
+    static async getUserInfos(userId: number, artifactIds: number[]): Promise<UserArtifact[]> {
+        return await new Promise((resolve, reject) => {
+            const questionMarks = new Array(artifactIds.length).fill('?').join(',');
+            db.all(`SELECT * FROM user_artifact WHERE userId = ? AND artifactId IN (${questionMarks})`, [userId, ...artifactIds], async (error, rows: IUserArtifactDB[]) => {
+                if (error) {
+                    reject(error);
+                } else if (!rows) {
+                    resolve([]);
+                } else {
+                    const userArtifacts = rows.map(row => new UserArtifact(row.userId, row.artifactId, row.status, row.score, row.startDate, row.endDate));
+                    resolve(userArtifacts);
                 }
             });
         });
@@ -61,14 +77,67 @@ export class ArtifactDB {
         });
     }
 
+    static async setUserStatus(userId: number, artifactIds: number[], status: UserArtifactStatus | null): Promise<void> {
+        const userInfos = await ArtifactDB.getUserInfos(userId, artifactIds);
+        const existingArtifactIds = userInfos.map(userInfo => userInfo.artifactId);
+        const artifactIdsToCreate: number[] = [];
+        const artifactIdsToUpdate: number[] = [];
+        for (const artifactId of artifactIds) {
+            if (existingArtifactIds.includes(artifactId)) {
+                artifactIdsToUpdate.push(artifactId);
+            } else {
+                artifactIdsToCreate.push(artifactId);
+            }
+        }
+
+        return await new Promise((resolve, reject) => {
+            if (artifactIdsToCreate.length > 0) {
+                const placeholders = artifactIdsToCreate.map(() => "(?, ?, ?)").join(", ");
+                const values = artifactIdsToCreate.flatMap(artifactId => [userId, artifactId, status]);
+                db.run(`INSERT INTO user_artifact (userId, artifactId, status) VALUES ${placeholders}`, values, async function (error) {
+                    if (error) {
+                        reject(error);
+                    } else {
+                        resolve();
+                    }
+                });
+            }
+            if (artifactIdsToUpdate.length > 0) {
+                const questionMarks = new Array(artifactIdsToUpdate.length).fill('?').join(',');
+                db.run(`UPDATE user_artifact SET status = ? WHERE userId = ? AND artifactId IN (${questionMarks})`, [status, userId, ...artifactIdsToUpdate], async function (error) {
+                    if (error) {
+                        reject(error);
+                    } else {
+                        resolve();
+                    }
+                });
+            }
+        });
+    }
+
+    static async updateDuration(artifactId: number, duration: number = 0) {
+        return await new Promise((resolve, reject) => {
+            db.run(`UPDATE artifact SET duration = ? WHERE id = ?`, [duration, artifactId], async function (error) {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve(null);
+                }
+            });
+        });
+    }
+
     static createArtifactTable() {
         execQuery(`CREATE TABLE IF NOT EXISTS artifact (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             title TEXT NOT NULL,
             description TEXT,
             type TEXT NOT NULL,
+            parent_artifact_id INTEGER,
+            child_index INTEGER,
             duration INTEGER,
-            releaseDate TEXT
+            releaseDate TEXT,
+            FOREIGN KEY (parent_artifact_id) REFERENCES artifact_new(id)
         )`);
     }
 

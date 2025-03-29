@@ -10,6 +10,7 @@ import { UserRatingDB } from "$lib/server/model/UserRatingDB";
 import { GameDB } from "$lib/server/model/game/GameDB";
 import { PlatformDB } from "$lib/server/model/game/PlatformDB";
 import { MovieDB } from "$lib/server/model/movie/MovieDB";
+import { TvshowDB } from "$lib/server/model/tvshow/TvshowDB";
 import { TMDB } from "$lib/tmdb/TMDB";
 
 export class DBUtil {
@@ -28,12 +29,15 @@ export class DBUtil {
         MovieDB.createMovieMovieGenreTable();
         PlatformDB.createPlatformTable();
         RatingDB.createRatingTable();
+        TagDB.createTagTable();
+        TvshowDB.createTvshowGenreTable();
+        TvshowDB.createTvshowTvshowGenreTable();
         UserDB.createUserTable();
         UserRatingDB.createUserRatingTable();
-        TagDB.createTagTable();
 
         await IGDB.initGenres();
         await IGDB.initPlatforms();
-        await TMDB.initGenres();
+        await TMDB.initMovieGenres();
+        await TMDB.initTvshowGenres();
     }
 }

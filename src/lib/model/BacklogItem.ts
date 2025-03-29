@@ -3,6 +3,7 @@ import type { ISerializable, Serializable } from "./Serializable";
 import { Tag, type ITag } from "./Tag";
 import { Game, type IGame } from "./game/Game";
 import { Movie } from "./movie/Movie";
+import { Tvshow } from "./tvshow/Tvshow";
 
 export const SERIALIZE_TYPE = 'BacklogItem';
 
@@ -54,8 +55,10 @@ export class BacklogItem implements Serializable<IBacklogItem> {
             artifact = Game.fromJSON(json.artifact as IGame);
         } else if (json.artifact.type === ArtifactType.MOVIE) {
             artifact = Movie.fromJSON(json.artifact);
+        } else if (json.artifact.type === ArtifactType.TVSHOW) {
+            artifact = Tvshow.fromJSON(json.artifact);
         } else {
-            artifact = Artifact.fromJSON(json.artifact);
+            throw new Error('Invalid Artifact Type');
         }
         const tags = json.tags.map((tagData) => {
             return Tag.fromJSON(tagData);

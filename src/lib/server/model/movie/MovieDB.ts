@@ -20,7 +20,7 @@ export class MovieDB {
                 } else if (!row) {
                     resolve(null);
                 } else {
-                    const releaseDate = row.releaseDate ? new Date(parseInt(row.releaseDate, 10)) : null;
+                    const releaseDate = new Date(parseInt(row.releaseDate, 10));
                     const movie = new Movie(row.id, row.title, row.type, releaseDate, row.duration);
                     movie.genres = await MovieDB.getGenres(id);
                     movie.ratings = await RatingDB.getRatings(id);
@@ -34,7 +34,7 @@ export class MovieDB {
     static async getMovies(page: number, pageSize: number, search: string = ''): Promise<Movie[]> {
         return await ArtifactDB.getArtifacts(ArtifactType.MOVIE, page, pageSize, search).then((rows: IArtifactDB[]) => {
             const movies: Movie[] = rows.map((row: IArtifactDB) => {
-                const releaseDate = row.releaseDate ? new Date(parseInt(row.releaseDate, 10)) : null;
+                const releaseDate = new Date(parseInt(row.releaseDate, 10));
                 return new Movie(row.id, row.title, row.type, releaseDate, row.duration)
             });
             return movies;
@@ -114,11 +114,11 @@ export class MovieDB {
                     reject(error);
                 } else {
                     const backlogItems: BacklogItem[] = await Promise.all(rows.map(async row => {
-                        const releaseDate = row.releaseDate ? new Date(parseInt(row.releaseDate, 10)) : null;
+                        const releaseDate = new Date(parseInt(row.releaseDate, 10));
                         const movie = new Movie(row.artifactId, row.title, row.type, releaseDate, row.duration);
                         movie.genres = await MovieDB.getGenres(row.artifactId);
                         movie.ratings = await RatingDB.getRatings(row.artifactId);
-                        const tags = await BacklogItemDB.getTags(row.backlogId, 'movie', row.artifactId);
+                        const tags = await BacklogItemDB.getTags(row.backlogId, ArtifactType.MOVIE, row.artifactId);
                         return new BacklogItem(row.rank, row.elo, row.dateAdded, movie, tags);
                     }));
                     resolve(backlogItems);
