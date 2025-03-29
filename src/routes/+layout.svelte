@@ -4,6 +4,7 @@
         Dropdown,
         DropdownHeader,
         DropdownItem,
+        MegaMenu,
         NavBrand,
         NavHamburger,
         NavLi,
@@ -12,8 +13,15 @@
     } from "flowbite-svelte";
     import "../app.pcss";
     import type { LayoutData } from "./$types";
+    import { ChevronDownOutline } from "flowbite-svelte-icons";
 
     export let data: LayoutData;
+
+    const tvShowMenu = [
+        { name: 'Search', href: '/tvshow' },
+        { name: 'Create', href: '/tvshow/create' },
+        { name: 'mylist', href: '/mylist/tvshow' }
+    ];
 </script>
 
 <Navbar class="px-0">
@@ -27,9 +35,9 @@
         <NavHamburger class="w-full md:flex md:w-auto md:order-1" />
     </div>
     <Dropdown placement="bottom" triggeredBy="#avatar-menu">
-        {#if data.user}
+        {#if data.user.id >= 0}
             <DropdownHeader>
-                <span class="block text-sm">khyos</span>
+                <span class="block text-sm">${data.user.username}</span>
             </DropdownHeader>
             <DropdownItem href="/profile">Profile</DropdownItem>
             <DropdownItem href="/signout">Sign out</DropdownItem>
@@ -43,7 +51,12 @@
         <NavLi href="/backlog">Backlogs</NavLi>
         <NavLi href="/game">Games</NavLi>
         <NavLi href="/movie">Movies</NavLi>
-        <NavLi href="/tvshow">TV Shows</NavLi>
+        <NavLi class="cursor-pointer">TV Shows<ChevronDownOutline class="w-6 h-6 ms-2 text-primary-800 dark:text-white inline"/></NavLi>
+        <MegaMenu items={tvShowMenu} ulClass="" let:item>
+            <div class="py-2">
+                <a href={item.href} class="hover:text-primary-600 dark:hover:text-primary-500">{item.name}</a>
+            </div>
+        </MegaMenu>
     </NavUl>
 </Navbar>
 <slot></slot>

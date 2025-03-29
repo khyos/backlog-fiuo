@@ -1,5 +1,8 @@
 import type { IArtifactDB, ArtifactType } from "$lib/model/Artifact";
-import { UserArtifact, UserArtifactStatus, type IUserArtifactDB } from "$lib/model/UserArtifact";
+import { SERIALIZE_TYPE, UserArtifact, UserArtifactStatus, type IUserArtifactDB } from "$lib/model/UserArtifact";
+import { UserList } from "$lib/model/UserList";
+import { type IUserListItemDB } from "$lib/model/UserListItem";
+import { artifactFromJSON } from "$lib/services/ArtifactService";
 import { db, execQuery } from "../database";
 
 export class ArtifactDB {
@@ -18,6 +21,53 @@ export class ArtifactDB {
                     resolve([]);
                 } else {
                     resolve(rows);
+                }
+            });
+        });
+    }
+
+    static async getUserList(userId: number, artifactType: ArtifactType): Promise<UserList> {
+        const query = `SELECT *
+                       FROM artifact
+                       INNER JOIN user_artifact ON artifact.id = user_artifact.artifactId
+                       WHERE artifact.type = ? AND user_artifact.userId = ?`;
+        const params = [artifactType, userId];
+        return await new Promise((resolve, reject) => {
+            db.all(query, params, async (error, rows: IUserListItemDB[]) => {
+                if (error) {
+                    reject(error);
+                } else if (!rows) {
+                    const userList = new UserList(userId, artifactType, []);
+                    resolve(userList);
+                } else {
+                    const userListItems = rows.map((row) => {
+                        return artifactFromJSON(artifactType, {
+                            __type: 'Artifact',
+                            id: row.id,
+                            title: row.title,
+                            type: row.type,
+                            duration: row.duration,
+                            releaseDate: new Date(parseInt(row.releaseDate, 10)).toString(),
+                            links: [],
+                            genres: [],
+                            ratings: [],
+                            meanRating: null,
+                            tags: [],
+                            children: [],
+                            childIndex: null,
+                            userInfo: {
+                                __type: SERIALIZE_TYPE,
+                                userId: userId,
+                                artifactId: row.id,
+                                status: row.status,
+                                score: row.score,
+                                startDate: row.startDate,
+                                endDate: row.endDate
+                            }
+                        });
+                    });
+                    const userList = new UserList(userId, artifactType, userListItems);
+                    resolve(userList);
                 }
             });
         });

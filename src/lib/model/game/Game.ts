@@ -6,7 +6,7 @@ import { Platform, type IPlatform } from "./Platform";
 export const SERIALIZE_TYPE = 'Game';
 
 export interface IGame extends IArtifact {
-    platforms: IPlatform[]
+    platforms?: IPlatform[]
 }
 
 export class Game extends Artifact implements Serializable<IGame> {
@@ -86,9 +86,9 @@ export class Game extends Artifact implements Serializable<IGame> {
         game.ratings = artifactData.ratings;
         game.tags = artifactData.tags;
         game.userInfo = artifactData.userInfo;
-        game.platforms = data.platforms.map((platformData) => {
+        game.platforms = data.platforms ? data.platforms.map((platformData) => {
             return Platform.fromJSON(platformData);
-        });
+        }) : [];
         return game;
     }
 }

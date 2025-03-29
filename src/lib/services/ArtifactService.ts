@@ -35,7 +35,7 @@ export const getArtifact = async (type: ArtifactType, id: number, bFetchUserInfo
     return artifact;
 }
 
-const artifactFromJSON = (type: ArtifactType, json: IArtifact): Artifact => {
+export const artifactFromJSON = (type: ArtifactType, json: IArtifact): Artifact => {
     switch (type) {
         case ArtifactType.GAME:
             return Game.fromJSON(json as IGame);
