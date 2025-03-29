@@ -152,12 +152,12 @@ export class GameDB {
                     reject(error);
                 } else {
                     const backlogItems: BacklogItem[] = await Promise.all(rows.map(async row => {
-                        const releaseDate = row.releaseDate ? new Date(parseInt(row.releaseDate, 10)) : null;
+                        const releaseDate = new Date(parseInt(row.releaseDate, 10));
                         const game = new Game(row.artifactId, row.title, row.type, releaseDate, row.duration);
                         game.genres = await GameDB.getGenres(row.artifactId);
                         game.platforms = await GameDB.getPlatforms(row.artifactId);
                         game.ratings = await RatingDB.getRatings(row.artifactId);
-                        const tags = await BacklogItemDB.getTags(row.backlogId, 'game', row.artifactId);
+                        const tags = await BacklogItemDB.getTags(row.backlogId, ArtifactType.GAME, row.artifactId);
                         return new BacklogItem(row.rank, row.elo, row.dateAdded, game, tags);
                     }));
                     resolve(backlogItems);

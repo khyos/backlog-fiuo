@@ -85,6 +85,7 @@ export class Game extends Artifact implements Serializable<IGame> {
         game.genres = artifactData.genres;
         game.ratings = artifactData.ratings;
         game.tags = artifactData.tags;
+        game.userInfo = artifactData.userInfo;
         game.platforms = data.platforms.map((platformData) => {
             return Platform.fromJSON(platformData);
         });

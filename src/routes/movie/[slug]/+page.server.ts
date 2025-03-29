@@ -9,12 +9,14 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	const movieId = parseInt(params.slug);
 	const movie = await MovieDB.getById(movieId);
 	if (movie) {
-		const userInfo = await ArtifactDB.getUserInfo(user.id, movieId);
+		const userInfos = await ArtifactDB.getUserInfos(user.id, [movieId]);
+		movie.setUserInfos(Object.fromEntries(
+			userInfos.map(userInfo => [userInfo.artifactId, userInfo])
+		));
 		return {
 			canEdit: user.hasRight(UserRights.EDIT_ARTIFACT),
 			movie: movie.toJSON(),
-			userConnected: user.id >= 0,
-			userInfo: userInfo ? userInfo.toJSON() : null
+			userConnected: user.id >= 0
 		};
 	}
 	error(404, 'Not found');

@@ -5,8 +5,9 @@ import puppeteer from 'puppeteer';
 export class HLTB {
     static async getGameDuration(gameId: string): Promise<number> {
         const response = await got(`https://howlongtobeat.com/game?id=${gameId}`);
-        const dom = new JSDOM(response.body);
+        let dom;
         try {
+            dom = new JSDOM(response.body);
             const timeTable = dom.window.document.querySelector('[class^=GameTimeTable_game_main_table]');
             const durationText = timeTable?.children[1].children[1].children[2].textContent;
             if (!durationText) {
@@ -27,6 +28,10 @@ export class HLTB {
         } catch (e) {
             console.error(e);
             return 0;
+        } finally {
+            if (dom?.window) {
+                dom.window.close();
+            }
         }
     }
 

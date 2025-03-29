@@ -7,8 +7,11 @@ const GAME_RELEASE_DATE_MIN = 1970;
 const GAME_RELEASE_DATE_MAX = 2025;
 const MOVIE_RELEASE_DATE_MIN = 1895;
 const MOVIE_RELEASE_DATE_MAX = 2025;
+const TVSHOW_RELEASE_DATE_MIN = 1930;
+const TVSHOW_RELEASE_DATE_MAX = 2025;
 const GAME_MAX_DURATION = 200;
 const MOVIE_MAX_DURATION = 240;
+const TVSHOW_MAX_DURATION = 400;
 
 export type BacklogFilters = {
     orderBy: { 
@@ -109,6 +112,14 @@ export function createBacklogFilters(artifactType: ArtifactType, rankingType: Ba
         filters.releaseDate.max = MOVIE_RELEASE_DATE_MAX;
         filters.releaseDate.absoluteMin = MOVIE_RELEASE_DATE_MIN;
         filters.releaseDate.absoluteMax = MOVIE_RELEASE_DATE_MAX;
+    } else if (artifactType === ArtifactType.TVSHOW) {
+        filters.duration.max = TVSHOW_MAX_DURATION;
+        filters.duration.absoluteMax = TVSHOW_MAX_DURATION;
+        filters.duration.unit = 'hours';
+        filters.releaseDate.min = TVSHOW_RELEASE_DATE_MIN;
+        filters.releaseDate.max = TVSHOW_RELEASE_DATE_MAX;
+        filters.releaseDate.absoluteMin = TVSHOW_RELEASE_DATE_MIN;
+        filters.releaseDate.absoluteMax = TVSHOW_RELEASE_DATE_MAX;
     }
     return filters;
 }

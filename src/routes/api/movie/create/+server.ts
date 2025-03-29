@@ -24,11 +24,11 @@ export async function POST({ request, locals }: RequestEvent) {
         error(500, 'Movie already exists in list');
     }
     const tmdbMovie = await TMDB.getMovie(tmdbId);
-    let releaseDate = await TMDB.getReleaseDate(tmdbId, tmdbMovie.origin_country?.[0]);
+    let releaseDate = await TMDB.getMovieReleaseDate(tmdbId, tmdbMovie.origin_country?.[0]);
     if (!releaseDate) {
-        releaseDate = tmdbMovie.release_date &&tmdbMovie.release_date !== '' ? new Date(tmdbMovie.release_date) : undefined;
+        releaseDate = tmdbMovie.release_date && tmdbMovie.release_date !== '' ? new Date(tmdbMovie.release_date) : undefined;
     }
-    let title = await TMDB.getTitle(tmdbId, tmdbMovie);
+    let title = await TMDB.getMovieTitle(tmdbId, tmdbMovie);
     if (!title) {
         title = tmdbMovie.title;
     }

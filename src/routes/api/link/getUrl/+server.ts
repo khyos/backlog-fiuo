@@ -37,23 +37,37 @@ const getURLFromId = async function(artifactType: ArtifactType | null, type: Lin
                 return `https://www.metacritic.com/game/${url}`;
             } else if (artifactType === ArtifactType.MOVIE) {
                 return `https://www.metacritic.com/movie/${url}`;
+            } else if (artifactType === ArtifactType.TVSHOW) {
+                return `https://www.metacritic.com/tv/${url}`;
             }
             break;
         case LinkType.OPENCRITIC:
             return `https://opencritic.com/game/${url}`;
         case LinkType.ROTTEN_TOMATOES:
-            return `https://www.rottentomatoes.com/m/${url}`;
+            if (artifactType === ArtifactType.MOVIE) {
+                return `https://www.rottentomatoes.com/m/${url}`;
+            } else if (artifactType === ArtifactType.TVSHOW) {
+                return `https://www.rottentomatoes.com/tv/${url}`;
+            }
+            break;
         case LinkType.SENSCRITIQUE:
             if (artifactType === ArtifactType.GAME) {
                 return `https://www.senscritique.com/jeuvideo/${url}`;
             } else if (artifactType === ArtifactType.MOVIE) {
                 return `https://www.senscritique.com/film/${url}`;
+            } else if (artifactType === ArtifactType.TVSHOW) {
+                return `https://www.senscritique.com/serie/${url}`;
             }
             break;
         case LinkType.STEAM:
             return `https://store.steampowered.com/app/${url}`;
         case LinkType.TMDB:
-            return `https://www.themoviedb.org/movie/${url}`;
+            if (artifactType === ArtifactType.MOVIE) {
+                return `https://www.themoviedb.org/movie/${url}`;
+            } else if (artifactType === ArtifactType.TVSHOW) {
+                return `https://www.themoviedb.org/tv/${url}`;
+            }
+            break;
         default:
             return url;
     }

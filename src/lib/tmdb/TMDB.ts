@@ -1,5 +1,6 @@
 import { TMDB_READ_ACCESS_TOKEN } from "$env/static/private";
 import { MovieDB } from "$lib/server/model/movie/MovieDB";
+import { TvshowDB } from "$lib/server/model/tvshow/TvshowDB";
 
 
 class ReleaseDates {
@@ -47,7 +48,7 @@ export class TMDB {
         return results;
     }
 
-    static async getReleaseDate(movieId: string, originCountry: string): Promise<Date | undefined> {
+    static async getMovieReleaseDate(movieId: string, originCountry: string): Promise<Date | undefined> {
         const response = await fetch(`https://api.themoviedb.org/3/movie/${movieId}/release_dates`, {
             method: 'GET',
             headers: TMDB.getHeaders()
@@ -102,7 +103,7 @@ export class TMDB {
         return releaseDate ? new Date(releaseDate) : undefined;
     }
 
-    static async getTitle(movieId: string, tmdbMovie: any): Promise<string> {
+    static async getMovieTitle(movieId: string, tmdbMovie: any): Promise<string> {
         if (tmdbMovie.origin_country?.[0] === 'FR' && tmdbMovie.original_title) {
             return tmdbMovie.original_title;
         }
@@ -128,7 +129,7 @@ export class TMDB {
         return frName || usName || originCountryName;
     }
 
-    static async getImageURL(movieId: string) {
+    static async getMovieImageURL(movieId: string) {
         const movie = await TMDB.getMovie(movieId);
         if (movie?.poster_path) {
             return `https://image.tmdb.org/t/p/w600_and_h900_bestv2/${movie?.poster_path}`;
@@ -136,7 +137,7 @@ export class TMDB {
         return null;
     }
 
-    static async initGenres(): Promise<any> {
+    static async initMovieGenres(): Promise<any> {
         const response = await fetch("https://api.themoviedb.org/3/genre/movie/list?language=en", {
             method: 'GET',
             headers: TMDB.getHeaders()
@@ -145,6 +146,88 @@ export class TMDB {
         for (const genre of jsonResponse.genres) {
             try {
                 await MovieDB.addMovieGenre(genre.id, genre.name);
+            } catch (e: any) {
+                console.error(e.message);
+            }   
+        }
+    }
+
+    static async getTvshow(tvshowId: string): Promise<any> {
+        const response = await fetch(`https://api.themoviedb.org/3/tv/${tvshowId}?language=en-US`, {
+            method: 'GET',
+            headers: TMDB.getHeaders()
+        });
+        return await response.json();
+    }
+
+    static async getTvshowSeasons(tvshowId: string, seasonIndex: number): Promise<any> {
+        const response = await fetch(`https://api.themoviedb.org/3/tv/${tvshowId}/season/${seasonIndex}?language=en-US`, {
+            method: 'GET',
+            headers: TMDB.getHeaders()
+        });
+        return await response.json();
+    }
+
+    static async searchTvshow(query: string): Promise<any> {
+        const response = await fetch(`https://api.themoviedb.org/3/search/tv?query=${query}`, {
+            method: 'GET',
+            headers: TMDB.getHeaders()
+        });
+        const responses = await response.json();
+        const results = [];
+        for (const resp of responses.results) {
+            results.push({
+                id: resp.id,
+                name: resp.name,
+                link: `https://www.themoviedb.org/tv/${resp.id}`
+            });
+        }
+        return results;
+    }
+
+    static async getTvshowTitle(tvshowId: string, tmdbMovie: any): Promise<string> {
+        if (tmdbMovie.origin_country?.[0] === 'FR' && tmdbMovie.original_name) {
+            return tmdbMovie.original_name;
+        }
+        const response = await fetch(`https://api.themoviedb.org/3/tv/${tvshowId}/translations`, {
+            method: 'GET',
+            headers: TMDB.getHeaders()
+        });
+        const translations = (await response.json()).translations;
+
+        let frName = null;
+        let usName = null;
+        let originCountryName = null;
+
+        for (const translation of translations) {
+            if (translation.iso_3166_1 === 'FR') {
+                frName = translation.data.name;
+            } else if (translation.iso_3166_1 === 'US') {
+                usName = translation.data.name;
+            } else if (translation.iso_3166_1.toLowerCase() === tmdbMovie.origin_country?.[0].toLowerCase()) {
+                originCountryName = translation.data.name;
+            }
+        }
+        return frName || usName || originCountryName;
+    }
+
+    static async getTvshowImageURL(movieId: string) {
+        const tvshow = await TMDB.getTvshow(movieId);
+        if (tvshow?.poster_path) {
+            return `https://image.tmdb.org/t/p/w600_and_h900_bestv2/${tvshow?.poster_path}`;
+        }
+        return null;
+    }
+
+    static async initTvshowGenres(): Promise<any> {
+        const response = await fetch("https://api.themoviedb.org/3/genre/tv/list?language=en", {
+            method: 'GET',
+            headers: TMDB.getHeaders()
+        });
+        const jsonResponse = await response.json();
+        for (const genre of jsonResponse.genres) {
+            try {
+                await TvshowDB.addTvshowGenre(genre.id, genre.name);
             } catch (e: any) {
                 console.error(e.message);
             }   

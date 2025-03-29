@@ -1,21 +1,21 @@
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { User, UserRights } from '$lib/model/User';
-import { GameDB } from '$lib/server/model/game/GameDB';
+import { TvshowDB } from '$lib/server/model/tvshow/TvshowDB';
 import { ArtifactDB } from '$lib/server/model/ArtifactDB';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const user = User.deserialize(locals.user);
-	const gameId = parseInt(params.slug);
-	const game = await GameDB.getById(gameId);
-	if (game) {
-		const userInfos = await ArtifactDB.getUserInfos(user.id, [gameId]);
-		game.setUserInfos(Object.fromEntries(
+	const tvshowId = parseInt(params.slug);
+	const tvshow = await TvshowDB.getById(tvshowId, true, true);
+	if (tvshow) {
+		const userInfos = await ArtifactDB.getUserInfos(user.id, tvshow.getArtifactIds());
+		tvshow.setUserInfos(Object.fromEntries(
 			userInfos.map(userInfo => [userInfo.artifactId, userInfo])
 		));
 		return {
 			canEdit: user.hasRight(UserRights.EDIT_ARTIFACT),
-			game: game.toJSON(),
+			tvshow: tvshow.toJSON(),
 			userConnected: user.id >= 0
 		};
 	}

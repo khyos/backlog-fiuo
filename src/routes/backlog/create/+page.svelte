@@ -10,6 +10,7 @@
     let artifactTypes = [
         { value: ArtifactType.GAME, name: 'Game' },
         { value: ArtifactType.MOVIE, name: 'Movie' },
+        { value: ArtifactType.TVSHOW, name: 'TV Show' },
     ];
 
     let types = [

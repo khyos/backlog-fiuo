@@ -43,6 +43,7 @@
         <NavLi href="/backlog">Backlogs</NavLi>
         <NavLi href="/game">Games</NavLi>
         <NavLi href="/movie">Movies</NavLi>
+        <NavLi href="/tvshow">TV Shows</NavLi>
     </NavUl>
 </Navbar>
 <slot></slot>

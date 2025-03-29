@@ -43,6 +43,8 @@ export function getLinkTypesByArtifactType(artifactType: ArtifactType) {
         return getGameLinkTypes();
     } else if (artifactType === ArtifactType.MOVIE) {
         return getMovieLinkTypes();
+    } else if (artifactType === ArtifactType.TVSHOW) {
+        return getTvshowLinkTypes();
     }
     return [];
 }
@@ -54,6 +56,11 @@ export function getGameLinkTypes() {
 export function getMovieLinkTypes() {
     return [LinkType.TMDB, LinkType.SENSCRITIQUE, LinkType.METACRITIC, LinkType.ROTTEN_TOMATOES];
 }
+
+export function getTvshowLinkTypes() {
+    return [LinkType.TMDB, LinkType.SENSCRITIQUE, LinkType.METACRITIC, LinkType.ROTTEN_TOMATOES];
+}
+
 
 export const SERIALIZE_TYPE = 'Link';
 

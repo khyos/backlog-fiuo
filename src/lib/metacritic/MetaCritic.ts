@@ -10,10 +10,15 @@ export class MetaCritic {
         return MetaCritic.getRating(`https://www.metacritic.com/movie/${movieId}`);
     }
 
+    static async getTvshowRating(tvshowId: string): Promise<number | null> {
+        return MetaCritic.getRating(`https://www.metacritic.com/tv/${tvshowId}`);
+    }
+
     static async getRating(url: string): Promise<number | null> {
         const response = await got(url);
-        const dom = new JSDOM(response.body);
+        let dom;
         try {
+            dom = new JSDOM(response.body)
             const ratingSpan = dom.window.document.querySelector('.c-productScoreInfo_scoreNumber .c-siteReviewScore_medium span');
             const ratingText = ratingSpan?.textContent
             if (!ratingText) {
@@ -27,6 +32,10 @@ export class MetaCritic {
         } catch (e) {
             console.error(e);
             return null;
+        } finally {
+            if (dom?.window) {
+                dom.window.close();
+            }
         }
     }
 
@@ -43,10 +52,15 @@ export class MetaCritic {
         return await MetaCritic.searchArtifact(query, 2);
     }
 
+    static async searchTvshow(query: string) {
+        return await MetaCritic.searchArtifact(query, 1);
+    }
+
     static async searchArtifact(query: string, category: number) {
         const response = await got(`https://www.metacritic.com/search/${query}/?category=${category}`);
-        const dom = new JSDOM(response.body);
+        let dom;
         try {
+            dom = new JSDOM(response.body);
             const results = [];
             const links =  dom.window.document.querySelectorAll('.c-pageSiteSearch-results .g-grid-container>a');
             for (const link of links) {
@@ -62,6 +76,10 @@ export class MetaCritic {
         } catch (e) {
             console.error(e);
             return null;
+        } finally {
+            if (dom?.window) {
+                dom.window.close();
+            }
         }
     }
 }
