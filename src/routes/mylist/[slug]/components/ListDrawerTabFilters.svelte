@@ -10,7 +10,6 @@
     import { ArtifactType } from "$lib/model/Artifact";
     import type { Genre } from "$lib/model/Genre";
     import type { Platform } from "$lib/model/game/Platform";
-    import type { Tag } from "$lib/model/Tag";
     import { userListStore } from "../stores/UserListStore";
     
     export let selectedTab: string = "filters";
@@ -59,7 +58,7 @@
     <Label class="block mb-1 mt-2"
         >Max Duration: {formatDurationDisplay($userListStore.userListFilters.duration.max)}</Label
     >
-    <Range class="appearance-auto" min="0" max="200" step="1" bind:value={$userListStore.userListFilters.duration.max} />
+    <Range class="appearance-auto" min="0" max={$userListStore.userListFilters.duration.absoluteMax} step="1" bind:value={$userListStore.userListFilters.duration.max} />
     <Label class="block mb-1 mt-2">Min Rating: {$userListStore.userListFilters.rating.min}</Label>
     <Range class="appearance-auto" min="0" max="100" step="1" bind:value={$userListStore.userListFilters.rating.min} />
     {#if $userListStore.userListFilters.platforms}

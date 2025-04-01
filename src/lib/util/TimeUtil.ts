@@ -15,11 +15,10 @@ export class TimeUtil {
         return formattedDuration;
     }
 
-    static formatDate(dateString: string | Date | null): string {
-        if (!dateString) {
+    static formatDate(date: Date | null): string {
+        if (!date) {
             return 'TBD';
         }
-        const date = new Date(dateString);
         if (date.getDate() === 31 && date.getMonth() === 11) {
             return date.getFullYear().toString();
         }

@@ -78,7 +78,7 @@ export async function POST({ request, locals }: RequestEvent) {
                 let seasonDuration = 0;
                 if (tmdbTvshowSeason.episodes) {
                     for (const episode of tmdbTvshowSeason.episodes) {
-                        const episodeReleaseDate = episode.air_date ? new Date(tmdbTvshowSeason.air_date) : undefined;
+                        const episodeReleaseDate = episode.air_date ? new Date(episode.air_date) : undefined;
                         const episodeTitle = episode.name;
                         await TvshowDB.createTvshowEpisode(tvshowSeason.id, episode.episode_number, episodeTitle, episodeReleaseDate, episode.runtime * 60);
                         seasonDuration += episode.runtime * 60;

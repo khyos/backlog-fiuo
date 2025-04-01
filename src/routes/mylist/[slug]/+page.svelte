@@ -7,7 +7,6 @@
         TableHeadCell,
     } from "flowbite-svelte";
     import type { PageData } from "./$types";
-    import "./page.pcss";
     import ListDrawer from "./components/ListDrawer.svelte";
     import { TimeUtil } from "$lib/util/TimeUtil";
     import ListItemComp from "./components/ListItemComp.svelte";
@@ -15,6 +14,7 @@
     import { filteredArtifacts, initializeStore } from "./stores/UserListStore";
     import { Genre } from "$lib/model/Genre";
     import { Platform } from "$lib/model/game/Platform";
+    import { ArtifactType } from "$lib/model/Artifact";
 
     export let data: PageData;
 
@@ -42,8 +42,12 @@
         <TableHeadCell>Title</TableHeadCell>
         <TableHeadCell>Score</TableHeadCell>
         <TableHeadCell>Status</TableHeadCell>
+        {#if data.list.artifactType === ArtifactType.MOVIE}
+        <TableHeadCell>Date</TableHeadCell>
+        {:else}
         <TableHeadCell>Start Date</TableHeadCell>
         <TableHeadCell>End Date</TableHeadCell>
+        {/if}
     </TableHead>
     <TableBody tableBodyClass="divide-y">
         {#each $filteredArtifacts as artifact}

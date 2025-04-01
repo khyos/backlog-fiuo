@@ -1,6 +1,7 @@
 import { TMDB_READ_ACCESS_TOKEN } from "$env/static/private";
 import { MovieDB } from "$lib/server/model/movie/MovieDB";
 import { TvshowDB } from "$lib/server/model/tvshow/TvshowDB";
+import { TextUtil } from "$lib/util/TextUtil";
 
 
 class ReleaseDates {
@@ -205,10 +206,12 @@ export class TMDB {
             } else if (translation.iso_3166_1 === 'US') {
                 usName = translation.data.name;
             } else if (translation.iso_3166_1.toLowerCase() === tmdbMovie.origin_country?.[0].toLowerCase()) {
-                originCountryName = translation.data.name;
+                if (TextUtil.areEastAsianCharactersOverThreashold(translation.data.name)) {
+                    originCountryName = translation.data.name;
+                }
             }
         }
-        return frName || usName || originCountryName;
+        return frName || usName || originCountryName || tmdbMovie.name;
     }
 
     static async getTvshowImageURL(movieId: string) {

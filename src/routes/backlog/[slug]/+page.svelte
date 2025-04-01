@@ -14,7 +14,6 @@
     } from "flowbite-svelte-icons";
     import { Tag } from "$lib/model/Tag";
     import type { PageData } from "./$types";
-    import "./page.pcss";
     import { deleteBacklogItem, moveBacklogItemToOtherBacklog as moveBacklogItemToOtherBacklogAPI } from "$lib/services/BacklogService";
     import { fetchPrices } from "$lib/services/PricesService";
     import type { Price } from "$lib/types/Price";

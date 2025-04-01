@@ -36,13 +36,13 @@ export class UserArtifact implements Serializable<IUserArtifact> {
     startDate: Date | null
     endDate: Date | null
 
-    constructor(userId: number, artifactId: number, status: UserArtifactStatus | null, score: number | null, startDate: string | null, endDate: string | null) {
+    constructor(userId: number, artifactId: number, status: UserArtifactStatus | null, score: number | null, startDate: Date | null, endDate: Date | null) {
         this.userId = userId;
         this.artifactId = artifactId;
         this.status = status;
         this.score = score;
-        this.startDate = startDate ? new Date(startDate) : null;
-        this.endDate = endDate ? new Date(endDate) : null;
+        this.startDate = startDate;
+        this.endDate = endDate;
     }
 
     toJSON(): IUserArtifact {
@@ -58,6 +58,9 @@ export class UserArtifact implements Serializable<IUserArtifact> {
     }
 
     static fromJSON(json: IUserArtifact) {
-        return new UserArtifact(json.userId, json.artifactId, json.status, json.score, json.startDate, json.endDate);
+        return new UserArtifact(json.userId, json.artifactId, json.status, json.score,
+            json.startDate ? new Date(json.startDate) : null,
+            json.endDate ? new Date(json.endDate) : null
+        );
     }
 }

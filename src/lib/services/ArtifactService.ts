@@ -76,3 +76,16 @@ export const updateScore = async (artifactId: number, score: number | null) => {
         alert("Failed to update score");
     });
 }
+
+export const updateDate = async (artifactId: number, date: Date | null, startEnd: 'start' | 'end' | 'both') => {
+    fetch(`/api/artifact/${artifactId}/userDate`, {
+        method: "POST",
+        body: JSON.stringify({
+            date: date ? date.toISOString() : null,
+            startEnd: startEnd
+        }),
+    }).catch(error => {
+        console.error("Error updating score:", error);
+        alert("Failed to update score");
+    });
+}

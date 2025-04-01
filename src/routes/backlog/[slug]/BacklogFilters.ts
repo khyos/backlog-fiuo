@@ -192,7 +192,7 @@ export function filterBacklogItems(items: BacklogItem[], artifactType: ArtifactT
     }
     if (filters.duration.max < filters.duration.absoluteMax) {
         let maxDurationInSeconds: number;
-        if (artifactType === ArtifactType.GAME) {
+        if (artifactType === ArtifactType.GAME || artifactType === ArtifactType.TVSHOW) {
             maxDurationInSeconds = filters.duration.max * 3600;
         } else if (artifactType === ArtifactType.MOVIE) {
             maxDurationInSeconds = filters.duration.max * 60;

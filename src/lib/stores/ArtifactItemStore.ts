@@ -1,6 +1,11 @@
 import { type Artifact } from "$lib/model/Artifact";
 import { UserArtifactStatus } from "$lib/model/UserArtifact";
-import { getArtifact, updateStatus as updateStatusAPI, updateScore as updateScoreAPI } from "$lib/services/ArtifactService";
+import {
+    getArtifact,
+    updateStatus as updateStatusAPI,
+    updateScore as updateScoreAPI,
+    updateDate as updateDateAPI
+} from "$lib/services/ArtifactService";
 import { get, writable } from "svelte/store";
 
 export type ArtifactItemStore = {
@@ -52,6 +57,40 @@ export const updateScore = async (score: number | null) => {
     await updateScoreAPI(store.artifact.id, score);
 
     store.artifact.updateUserScore(score);
+    artifactItemStore.update(s => ({
+        ...s,
+        artifact: store.artifact
+    }));
+}
+
+export const updateDate = async (date: Date | null) => {
+    const store = get(artifactItemStore);
+    await updateDateAPI(store.artifact.id, date, 'both');
+
+    store.artifact.updateUserStartDate(date);
+    store.artifact.updateUserEndDate(date);
+    artifactItemStore.update(s => ({
+        ...s,
+        artifact: store.artifact
+    }));
+}
+
+export const updateStartDate = async (date: Date | null) => {
+    const store = get(artifactItemStore);
+    await updateDateAPI(store.artifact.id, date, 'start');
+
+    store.artifact.updateUserStartDate(date);
+    artifactItemStore.update(s => ({
+        ...s,
+        artifact: store.artifact
+    }));
+}
+
+export const updateEndDate = async (date: Date | null) => {
+    const store = get(artifactItemStore);
+    await updateDateAPI(store.artifact.id, date, 'end');
+
+    store.artifact.updateUserEndDate(date);
     artifactItemStore.update(s => ({
         ...s,
         artifact: store.artifact
