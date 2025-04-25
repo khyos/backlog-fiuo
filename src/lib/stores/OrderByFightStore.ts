@@ -30,11 +30,11 @@ export const orderByFightStore = writable<OrderByFightStore>({
 let previousItemA: BacklogItem | undefined;
 let previousItemB: BacklogItem | undefined;
 orderByFightStore.subscribe((store) => {
-    if (store.itemA !== previousItemA) {
+    if (store.itemA?.artifact.id !== previousItemA?.artifact.id) {
         previousItemA = store.itemA;
         updatePosterA(store);
     }
-    if (store.itemB !== previousItemB) {
+    if (store.itemB?.artifact.id !== previousItemB?.artifact.id) {
         previousItemB = store.itemB;
         updatePosterB(store);
     }
@@ -118,6 +118,16 @@ export const getRandomItemA = async () => {
         itemA
     }));
 };
+
+export const updateItemA = async () => {
+    const backlog = get(backlogStore).backlog;
+    const store = get(orderByFightStore);
+    const itemA = backlog.backlogItems.find(bi => bi.artifact.id === store.itemA?.artifact.id);
+    orderByFightStore.update(s => ({
+        ...s,
+        itemA
+    }));
+}
 
 export const getRandomItemB = async () => {
     const backlog = get(backlogStore).backlog;

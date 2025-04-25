@@ -62,14 +62,16 @@ export class MetaCritic {
         try {
             dom = new JSDOM(response.body);
             const results = [];
-            const links =  dom.window.document.querySelectorAll('.c-pageSiteSearch-results .g-grid-container>a');
-            for (const link of links) {
-                const nameContainer = link?.querySelector('div:nth-child(2)>p');
+            const cards =  dom.window.document.querySelectorAll('.c-pageSiteSearch-results .g-grid-container>a');
+            for (const card of cards) {
+                const nameContainer = card.querySelector('div:nth-child(2)>p');
                 const name = nameContainer?.innerHTML.trim();
+                const date = card?.querySelector('div:nth-child(2)>span>span')?.innerHTML.trim();
                 results.push({
-                    id: MetaCritic.getLastPart(link.href),
+                    id: MetaCritic.getLastPart(card.href),
                     name: name,
-                    link: `https://www.metacritic.com${link.href}`
+                    link: `https://www.metacritic.com${card.href}`,
+                    date: date
                 });
             }
             return results;

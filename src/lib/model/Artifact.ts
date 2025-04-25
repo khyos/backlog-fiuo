@@ -49,6 +49,7 @@ export abstract class Artifact implements Serializable<IArtifact> {
     releaseDate: Date
     title: string
     type: ArtifactType
+    parent: Artifact | null = null;
     children: Artifact[]
     childIndex: number | null
     duration: number
@@ -57,7 +58,11 @@ export abstract class Artifact implements Serializable<IArtifact> {
     tags: Tag[] = []
     userInfo: UserArtifact | null
 
-    private _meanRating: number | null | undefined
+    protected _meanRating: number | null | undefined
+    protected _lastAndNextOngoing: {
+        last: Artifact | null,
+        next: Artifact | null
+    } | undefined
 
     constructor(id: number, title: string, type: ArtifactType, releaseDate: Date, duration: number) {
         this.id = id;
@@ -77,6 +82,32 @@ export abstract class Artifact implements Serializable<IArtifact> {
             this._meanRating = this.computeMeanRating();
         }
         return this._meanRating;
+    }
+
+    abstract computeLastAndNextOngoing(): {
+        last: Artifact | null,
+        next: Artifact | null
+    }
+
+    get lastAndNextOngoing(): {
+        last: Artifact | null,
+        next: Artifact | null
+    } {
+        if (this._lastAndNextOngoing === undefined) {
+            this._lastAndNextOngoing = this.computeLastAndNextOngoing();
+        }
+        return this._lastAndNextOngoing;
+    }
+
+    get numbering(): string | null {
+        return null;
+    }
+
+    get rootParent(): Artifact {
+        if (this.parent) {
+            return this.parent.rootParent;
+        }
+        return this;
     }
 
     getArtifactIds(): number[] {
@@ -136,6 +167,22 @@ export abstract class Artifact implements Serializable<IArtifact> {
             this.userInfo.score = userScore;
         } else {
             this.userInfo = new UserArtifact(-1, this.id, null, userScore, null, null);
+        }
+    }
+
+    updateUserStartDate(userStartDate: Date | null) {
+        if (this.userInfo) {
+            this.userInfo.startDate = userStartDate;
+        } else {
+            this.userInfo = new UserArtifact(-1, this.id, null, null, userStartDate, null);
+        }
+    }
+
+    updateUserEndDate(userEndDate: Date | null) {
+        if (this.userInfo) {
+            this.userInfo.endDate = userEndDate;
+        } else {
+            this.userInfo = new UserArtifact(-1, this.id, null, null, null, userEndDate);
         }
     }
 

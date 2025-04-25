@@ -7,7 +7,7 @@
     import { UserArtifactStatus } from "$lib/model/UserArtifact";
     import { getPosterURL } from "$lib/services/ArtifactService";
     import { openLink } from "$lib/services/LinkService";
-    import { artifactItemStore, refreshArtifact, updateStatus, updateScore } from "$lib/stores/ArtifactItemStore";
+    import { artifactItemStore, refreshArtifact, updateStatus, updateScore, updateDate, updateStartDate, updateEndDate } from "$lib/stores/ArtifactItemStore";
     import { TimeUtil } from "$lib/util/TimeUtil";
     import {
         Label,
@@ -21,7 +21,10 @@
         P,
         Hr,
         Spinner,
-        Checkbox
+        Checkbox,
+
+        Datepicker
+
     } from "flowbite-svelte";
     import { 
         PlusOutline, 
@@ -213,6 +216,21 @@
         updateScore(value);
     }
 
+    function handleDateChange(event: any) {
+        const selectedDate = event.detail;
+        updateDate(selectedDate);
+    }
+
+    function handleStartDateChange(event: any) {
+        const selectedDate = event.detail;
+        updateStartDate(selectedDate);
+    }
+
+    function handleEndDateChange(event: any) {
+        const selectedDate = event.detail;
+        updateEndDate(selectedDate);
+    }
+
     let expandedChidren: Set<number> = new Set();
 
     function toggleChild(childId: number) {
@@ -253,7 +271,6 @@
                     </Label>
                     <Select
                         on:change={(event) => handleSelectStatusChange(event, artifact.id)}
-                        id="status"
                         items={USER_STATUSES}
                         value={artifact.userInfo?.status}
                         placeholder="Select Status"
@@ -267,13 +284,57 @@
                     <Input
                         on:change={handleScoreChange}
                         type="number"
-                        id="score"
                         data-input-counter-min="0"
                         max="100"
                         placeholder="Rate from 0-100"
                         class="max-w-xs"
                         value={artifact.userInfo?.score}
                     />
+                </div>
+                <div class="mt-4 bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+                    <Label for="score" class="mb-2 flex items-center">
+                        <CalendarMonthSolid class="w-4 h-4 mr-1 text-yellow-400" />
+                        Date
+                    </Label>
+                    {#if artifact.type === ArtifactType.MOVIE}
+                        <Datepicker
+                            on:clear={handleDateChange}
+                            on:apply={handleDateChange}
+                            dateFormat= {{
+                                day: '2-digit',
+                                month: '2-digit',
+                                year: 'numeric'
+                            }}
+                            showActionButtons
+                            autohide={false}
+                            placeholder="Pick a date"
+                            value={artifact.userInfo?.startDate} />
+                    {:else}
+                        <Datepicker
+                            on:clear={handleStartDateChange}
+                            on:apply={handleStartDateChange}
+                            dateFormat= {{
+                                day: '2-digit',
+                                month: '2-digit',
+                                year: 'numeric'
+                            }}
+                            showActionButtons
+                            autohide={false}
+                            placeholder="Pick a start date"
+                            value={artifact.userInfo?.startDate} />
+                        <Datepicker
+                            on:clear={handleEndDateChange}
+                            on:apply={handleEndDateChange}
+                            dateFormat= {{
+                                day: '2-digit',
+                                month: '2-digit',
+                                year: 'numeric'
+                            }}
+                            showActionButtons
+                            autohide={false}
+                            placeholder="Pick a end date"
+                            value={artifact.userInfo?.endDate} />
+                    {/if}
                 </div>
             {/if}
         </div>

@@ -4,6 +4,7 @@
         Dropdown,
         DropdownHeader,
         DropdownItem,
+        MegaMenu,
         NavBrand,
         NavHamburger,
         NavLi,
@@ -12,8 +13,28 @@
     } from "flowbite-svelte";
     import "../app.pcss";
     import type { LayoutData } from "./$types";
+    import { ChevronDownOutline } from "flowbite-svelte-icons";
 
     export let data: LayoutData;
+
+    const gameMenu = [
+        { name: 'Search', href: '/game' },
+        { name: 'Create', href: '/game/create' },
+        { name: 'My List', href: '/mylist/game' }
+    ];
+
+    const movieMenu = [
+        { name: 'Search', href: '/movie' },
+        { name: 'Create', href: '/movie/create' },
+        { name: 'My List', href: '/mylist/movie' }
+    ];
+
+    const tvShowMenu = [
+        { name: 'Search', href: '/tvshow' },
+        { name: 'Create', href: '/tvshow/create' },
+        { name: 'On Going', href: '/ongoing/tvshow' },
+        { name: 'My List', href: '/mylist/tvshow' }
+    ];
 </script>
 
 <Navbar class="px-0">
@@ -24,12 +45,12 @@
     </NavBrand>
     <div class="flex items-center md:order-2">
         <Avatar id="avatar-menu" />
-        <NavHamburger class="w-full md:flex md:w-auto md:order-1" />
+        <NavHamburger class="block md:hidden" />
     </div>
     <Dropdown placement="bottom" triggeredBy="#avatar-menu">
-        {#if data.user}
+        {#if data.user.id >= 0}
             <DropdownHeader>
-                <span class="block text-sm">khyos</span>
+                <span class="block text-sm">{data.user.username}</span>
             </DropdownHeader>
             <DropdownItem href="/profile">Profile</DropdownItem>
             <DropdownItem href="/signout">Sign out</DropdownItem>
@@ -38,12 +59,27 @@
             <DropdownItem href="/signup">Sign up</DropdownItem>
         {/if}
     </Dropdown>
-    <NavUl>
+    <NavUl class="z-50">
         <NavLi href="/">Home</NavLi>
         <NavLi href="/backlog">Backlogs</NavLi>
-        <NavLi href="/game">Games</NavLi>
-        <NavLi href="/movie">Movies</NavLi>
-        <NavLi href="/tvshow">TV Shows</NavLi>
+        <NavLi class="cursor-pointer">Games<ChevronDownOutline class="w-6 h-6 ms-2 text-primary-800 dark:text-white inline"/></NavLi>
+        <MegaMenu items={gameMenu} ulClass="" let:item>
+            <div class="py-2">
+                <a href={item.href} class="hover:text-primary-600 dark:hover:text-primary-500">{item.name}</a>
+            </div>
+        </MegaMenu>
+        <NavLi class="cursor-pointer">Movies<ChevronDownOutline class="w-6 h-6 ms-2 text-primary-800 dark:text-white inline"/></NavLi>
+        <MegaMenu items={movieMenu} ulClass="" let:item>
+            <div class="py-2">
+                <a href={item.href} class="hover:text-primary-600 dark:hover:text-primary-500">{item.name}</a>
+            </div>
+        </MegaMenu>
+        <NavLi class="cursor-pointer">TV Shows<ChevronDownOutline class="w-6 h-6 ms-2 text-primary-800 dark:text-white inline"/></NavLi>
+        <MegaMenu items={tvShowMenu} ulClass="" let:item>
+            <div class="py-2">
+                <a href={item.href} class="hover:text-primary-600 dark:hover:text-primary-500">{item.name}</a>
+            </div>
+        </MegaMenu>
     </NavUl>
 </Navbar>
 <slot></slot>

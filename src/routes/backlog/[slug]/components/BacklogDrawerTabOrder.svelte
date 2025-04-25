@@ -8,7 +8,7 @@
         P
     } from "flowbite-svelte";
     import { BacklogRankingType } from "$lib/model/Backlog";
-    import { getRandomItemA, getRandomItemB, orderByFightStore, startOrderByFight } from "$lib/stores/OrderByFightStore";
+    import { getRandomItemA, getRandomItemB, orderByFightStore, startOrderByFight, updateItemA } from "$lib/stores/OrderByFightStore";
     import { get } from "svelte/store";
     import { AwardOutline, CheckCircleOutline, RefreshOutline, ThumbsDownOutline, ThumbsUpOutline } from "flowbite-svelte-icons";
     import type { BacklogItem } from "$lib/model/BacklogItem";
@@ -55,6 +55,8 @@
             await refreshBacklog();
             if (store.pickType === 'random') {
                 await getRandomItemA();
+            } else {
+                await updateItemA();
             }
             await getRandomItemB();
         } catch (error) {

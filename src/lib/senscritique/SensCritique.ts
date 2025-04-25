@@ -66,13 +66,16 @@ export class SensCritique {
 
             results = await page.evaluate(() => {
                 const results = [];
-                const links = document.querySelectorAll('[data-testid=product-explorer-card]>div:nth-child(2)>h3>a');
-                for (const link of links) {
+                const cards = document.querySelectorAll('[data-testid=product-explorer-card]');
+                for (const card of cards) {
+                    const link = card.querySelector('div:nth-child(2)>h3>a');
                     if (link instanceof HTMLAnchorElement) {
+                        const date = card.querySelector('div:nth-child(2)>p>*:nth-child(3)')?.innerText?.slice(-4);
                         results.push({
                             id: link.href.split('/').slice(-2).join('/'),
                             name: link.innerText,
-                            link: link.href
+                            link: link.href,
+                            date: date
                         });
                     }
                 }

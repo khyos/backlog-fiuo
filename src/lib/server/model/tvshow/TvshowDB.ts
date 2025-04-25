@@ -28,8 +28,7 @@ export class TvshowDB {
                     tvshow.ratings = await RatingDB.getRatings(id);
                     tvshow.links = await LinkDB.getLinks(id);
                     if (fetchSeasons) {
-                        await this.fetchSeasons(tvshow, fetchEpisodes);
-
+                        await this.fetchSeasons([tvshow], fetchEpisodes);
                     }
                     resolve(tvshow);
                 }
@@ -37,9 +36,14 @@ export class TvshowDB {
         });
     }
 
-    static async fetchSeasons(tvshow: Tvshow, fetchEpisodes: boolean = false): Promise<void> {
+    static async fetchSeasons(tvshows: Tvshow[], fetchEpisodes: boolean = false): Promise<void> {
         return await new Promise((resolve, reject) => {
-            db.all(`SELECT * FROM artifact WHERE parent_artifact_id = ? ORDER BY child_index`, [tvshow.id], async (error, rows: IArtifactDB[]) => {
+            const questionMarks = new Array(tvshows.length).fill('?').join(',');
+            const tvshowIds = tvshows.map(tvshow => tvshow.id);
+            const tvshowsMap = new Map<number, TvshowSeason>(
+                tvshows.map(tvshow => [tvshow.id, tvshow])
+            );
+            db.all(`SELECT * FROM artifact WHERE parent_artifact_id IN (${questionMarks}) ORDER BY child_index`, tvshowIds, async (error, rows: IArtifactDB[]) => {
                 if (error) {
                     reject(error);
                 } else if (!rows) {
@@ -50,9 +54,11 @@ export class TvshowDB {
                         const releaseDate = new Date(parseInt(row.releaseDate, 10));
                         const tvshowSeason = new TvshowSeason(row.id, row.child_index, row.title, row.type, releaseDate, row.duration);
                         seasons.push(tvshowSeason);
+                        if (row.parent_artifact_id) {
+                            tvshowsMap.get(row.parent_artifact_id)?.children.push(tvshowSeason);
+                        }
                     }
-                    tvshow.children = seasons;
-                    if (rows.length > 0 && fetchEpisodes) {
+                    if (seasons.length > 0 && fetchEpisodes) {
                         await this.fetchEpisodes(seasons)
                     }
                     resolve();
@@ -314,6 +320,41 @@ export class TvshowDB {
             db.run(`DELETE FROM backlog_items WHERE artifactId = ?`, [id]);
             db.run(`DELETE FROM backlog_item_tag WHERE artifactId = ?`, [id]);
         }
+    }
+
+    static async getUserOngoingTvShows(userId: number, fetchOnhold: boolean = false): Promise<Tvshow[]> {
+        const statusCondition = fetchOnhold
+            ? `AND (user_artifact.status = 'ongoing' OR user_artifact.status = 'onhold')`
+            : `AND user_artifact.status = 'ongoing'`;
+        const onGoingTvshows = `
+            SELECT 
+                *
+            FROM 
+                artifact
+            JOIN 
+                user_artifact ON artifact.id = user_artifact.artifactId
+            WHERE 
+                artifact.type = 'tvshow'
+                AND user_artifact.userId = ?
+                ${statusCondition}
+        `;
+
+        return await new Promise((resolve, reject) => {
+            db.all(onGoingTvshows, [userId], async (error, rows: any) => {
+                if (error) {
+                    reject(error);
+                } else if (!rows) {
+                    resolve([]);
+                } else {
+                    const tvShows: Tvshow[] = rows.map((row) => {
+                        const releaseDate = new Date(parseInt(row.releaseDate, 10));
+                        return new Tvshow(row.id, row.title, row.type, releaseDate, row.duration)
+                    });
+                    await this.fetchSeasons(tvShows, true);
+                    resolve(tvShows);
+                }
+            });
+        });
     }
 
     static createTvshowGenreTable() {

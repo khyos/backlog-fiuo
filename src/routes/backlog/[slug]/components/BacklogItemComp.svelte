@@ -2,7 +2,7 @@
     import { Badge, Button, Dropdown, DropdownItem } from "flowbite-svelte";
     import { AwardOutline, ChevronDownOutline, TagSolid } from "flowbite-svelte-icons";
     import { draggable, dropzone } from "./dnd";
-    import { Backlog, BacklogRankingType } from "$lib/model/Backlog";
+    import { BacklogRankingType } from "$lib/model/Backlog";
     import type { Price } from "$lib/types/Price";
     import { startOrderByFight } from "$lib/stores/OrderByFightStore";
     import type { BacklogItem } from "$lib/model/BacklogItem";
@@ -34,7 +34,7 @@
     use:draggable={{ canEdit: canEdit && backlogStoreInst.backlog.rankingType === BacklogRankingType.RANK, rank: backlogItem.rank }}
     use:dropzone={{ canEdit: canEdit && backlogStoreInst.backlog.rankingType === BacklogRankingType.RANK, rank: backlogItem.rank, onDrop: onMoveBacklogItem }}
 >
-    <div class="flexCenter">
+    <div class="flex items-center">
         <div style="display: inline-flex; flex-grow: 1; align-items: center;">
             <Badge color="blue" class="font-semibold flex items-center gap-1 mr-2" style="white-space: nowrap;">
                 # {backlogItem.rank}

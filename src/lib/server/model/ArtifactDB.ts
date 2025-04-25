@@ -1,5 +1,8 @@
 import type { IArtifactDB, ArtifactType } from "$lib/model/Artifact";
-import { UserArtifact, UserArtifactStatus, type IUserArtifactDB } from "$lib/model/UserArtifact";
+import { SERIALIZE_TYPE, UserArtifact, UserArtifactStatus, type IUserArtifactDB } from "$lib/model/UserArtifact";
+import { UserList } from "$lib/model/UserList";
+import { type IUserListItemDB } from "$lib/model/UserListItem";
+import { artifactFromJSON } from "$lib/services/ArtifactService";
 import { db, execQuery } from "../database";
 
 export class ArtifactDB {
@@ -23,6 +26,100 @@ export class ArtifactDB {
         });
     }
 
+    static async getUserList(userId: number, artifactType: ArtifactType): Promise<UserList> {
+        const query = `SELECT *
+                       FROM artifact
+                       INNER JOIN user_artifact ON artifact.id = user_artifact.artifactId
+                       WHERE artifact.type = ? AND user_artifact.userId = ?`;
+        const params = [artifactType, userId];
+        return await new Promise((resolve, reject) => {
+            db.all(query, params, async (error, rows: IUserListItemDB[]) => {
+                if (error) {
+                    reject(error);
+                } else if (!rows) {
+                    const userList = new UserList(userId, artifactType, []);
+                    resolve(userList);
+                } else {
+                    const userListItems = rows.map((row) => {
+                        return artifactFromJSON(artifactType, {
+                            __type: 'Artifact',
+                            id: row.id,
+                            title: row.title,
+                            type: row.type,
+                            duration: row.duration,
+                            releaseDate: new Date(parseInt(row.releaseDate, 10)).toString(),
+                            links: [],
+                            genres: [],
+                            ratings: [],
+                            meanRating: null,
+                            tags: [],
+                            children: [],
+                            childIndex: null,
+                            userInfo: {
+                                __type: SERIALIZE_TYPE,
+                                userId: userId,
+                                artifactId: row.id,
+                                status: row.status,
+                                score: row.score,
+                                startDate: row.startDate,
+                                endDate: row.endDate
+                            }
+                        });
+                    });
+                    const userList = new UserList(userId, artifactType, userListItems);
+                    resolve(userList);
+                }
+            });
+        });
+    }
+
+    static async getUserOngoingList(userId: number, artifactType: ArtifactType): Promise<UserList> {
+        const query = `SELECT *
+                       FROM artifact
+                       INNER JOIN user_artifact ON artifact.id = user_artifact.artifactId
+                       WHERE artifact.type = ? AND user_artifact.userId = ? AND user_artifact.status = 'ongoing'`;
+        const params = [artifactType, userId];
+        return await new Promise((resolve, reject) => {
+            db.all(query, params, async (error, rows: IUserListItemDB[]) => {
+                if (error) {
+                    reject(error);
+                } else if (!rows) {
+                    const userList = new UserList(userId, artifactType, []);
+                    resolve(userList);
+                } else {
+                    const userListItems = rows.map((row) => {
+                        return artifactFromJSON(artifactType, {
+                            __type: 'Artifact',
+                            id: row.id,
+                            title: row.title,
+                            type: row.type,
+                            duration: row.duration,
+                            releaseDate: new Date(parseInt(row.releaseDate, 10)).toString(),
+                            links: [],
+                            genres: [],
+                            ratings: [],
+                            meanRating: null,
+                            tags: [],
+                            children: [],
+                            childIndex: null,
+                            userInfo: {
+                                __type: SERIALIZE_TYPE,
+                                userId: userId,
+                                artifactId: row.id,
+                                status: row.status,
+                                score: row.score,
+                                startDate: row.startDate,
+                                endDate: row.endDate
+                            }
+                        });
+                    });
+                    const userList = new UserList(userId, artifactType, userListItems);
+                    resolve(userList);
+                }
+            });
+        });
+    }
+
     static async getUserInfo(userId: number, artifactId: number): Promise<UserArtifact | null> {
         return await new Promise((resolve, reject) => {
             db.get(`SELECT * FROM user_artifact WHERE userId = ? AND artifactId = ?`, [userId, artifactId], async (error, row: IUserArtifactDB) => {
@@ -31,7 +128,14 @@ export class ArtifactDB {
                 } else if (!row) {
                     resolve(null);
                 } else {
-                    const userArtifact = new UserArtifact(row.userId, row.artifactId, row.status, row.score, row.startDate, row.endDate);
+                    const userArtifact = new UserArtifact(
+                        row.userId,
+                        row.artifactId,
+                        row.status,
+                        row.score,
+                        row.startDate ? new Date(row.startDate) : null,
+                        row.endDate ? new Date(row.endDate) : null
+                    );
                     resolve(userArtifact);
                 }
             });
@@ -47,7 +151,15 @@ export class ArtifactDB {
                 } else if (!rows) {
                     resolve([]);
                 } else {
-                    const userArtifacts = rows.map(row => new UserArtifact(row.userId, row.artifactId, row.status, row.score, row.startDate, row.endDate));
+                    const userArtifacts = rows.map(
+                        row => new UserArtifact(
+                            row.userId,
+                            row.artifactId,
+                            row.status,
+                            row.score,
+                            row.startDate ? new Date(row.startDate) : null,
+                            row.endDate ? new Date(row.endDate) : null
+                        ));
                     resolve(userArtifacts);
                 }
             });
@@ -111,6 +223,61 @@ export class ArtifactDB {
                         resolve();
                     }
                 });
+            }
+        });
+    }
+
+    static async setUserDate(userId: number, artifactId: number, date: string | null, startEnd: 'start' | 'end' | 'both'): Promise<void> {
+        const userInfo = await ArtifactDB.getUserInfo(userId, artifactId);
+        return await new Promise((resolve, reject) => {
+            let query: string | null = null;
+            let params: (string | null | number)[] = [];
+            if (userInfo) {
+                if (startEnd === 'start') {
+                    query = `UPDATE user_artifact SET startDate = ? WHERE userId = ? AND artifactId = ?`;
+                    params = [date, userId, artifactId];
+                } else if (startEnd === 'end') {
+                    query = `UPDATE user_artifact SET endDate = ? WHERE userId = ? AND artifactId = ?`;
+                    params = [date, userId, artifactId];
+                } else if (startEnd === 'both') {
+                    query = `UPDATE user_artifact SET startDate = ?, endDate = ? WHERE userId = ? AND artifactId = ?`;
+                    params = [date, date, userId, artifactId];
+                }
+
+                if (query) {
+                    db.run(query, params, async function (error) {
+                        if (error) {
+                            reject(error);
+                        } else {
+                            resolve();
+                        }
+                    });
+                } else {
+                    reject(new Error('no query'));
+                }
+            } else {
+                if (startEnd === 'start') {
+                    query = `INSERT INTO user_artifact (userId, artifactId, startDate) VALUES (?, ?, ?)`;
+                    params = [userId, artifactId, date];
+                } else if (startEnd === 'end') {
+                    query = `INSERT INTO user_artifact (userId, artifactId, endDate) VALUES (?, ?, ?)`;
+                    params = [userId, artifactId, date];
+                } else if (startEnd === 'both') {
+                    query = `INSERT INTO user_artifact (userId, artifactId, startDate, endDate) VALUES (?, ?, ?, ?)`;
+                    params = [userId, artifactId, date, date];
+                }
+
+                if (query) {
+                    db.run(query, params, async function (error) {
+                        if (error) {
+                            reject(error);
+                        } else {
+                            resolve();
+                        }
+                    });
+                } else {
+                    reject(new Error('no query'));
+                }
             }
         });
     }

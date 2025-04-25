@@ -1,6 +1,5 @@
-import { ArtifactType } from "$lib/model/Artifact"
-import { BacklogOrder, BacklogRankingType } from "$lib/model/Backlog"
-import type { BacklogItem } from "$lib/model/BacklogItem";
+import { Artifact, ArtifactType } from "$lib/model/Artifact";
+import { UserListOrder } from "$lib/model/UserList";
 import type { Game } from "$lib/model/game/Game";
 
 const GAME_RELEASE_DATE_MIN = 1970;
@@ -13,9 +12,9 @@ const GAME_MAX_DURATION = 200;
 const MOVIE_MAX_DURATION = 240;
 const TVSHOW_MAX_DURATION = 400;
 
-export type BacklogFilters = {
+export type UserListFilters = {
     orderBy: { 
-        type: BacklogOrder
+        type: UserListOrder
         direction: 'asc' | 'desc'
     }
     duration: {
@@ -39,36 +38,13 @@ export type BacklogFilters = {
         absoluteMin: number
         absoluteMax: number
     }
-    tags: {
-        included: string[]
-        excluded: string[]
-    }
 }
 
-export function createBacklogFilters(artifactType: ArtifactType, rankingType: BacklogRankingType): BacklogFilters {
-    let orderType = BacklogOrder.RANK;
-    let orderDirection: 'asc' | 'desc' = 'asc';
-    switch (rankingType) {
-        case BacklogRankingType.RANK:
-            orderType = BacklogOrder.RANK;
-            orderDirection = 'asc';
-            break;
-        case BacklogRankingType.ELO:
-            orderType = BacklogOrder.ELO;
-            orderDirection = 'desc';
-            break;
-        case BacklogRankingType.WISHLIST:
-            orderType = BacklogOrder.DATE_RELEASE;
-            orderDirection = 'asc';
-            break;
-        default:
-            break;
-    }
-    
-    const filters: BacklogFilters = {
+export function createUserListFilters(artifactType: ArtifactType): UserListFilters {
+    const filters: UserListFilters = {
         orderBy: { 
-            type: orderType,
-            direction: orderDirection
+            type: UserListOrder.DATE_RELEASE,
+            direction: 'asc'
         },
         duration: {
             max: 0,
@@ -87,10 +63,6 @@ export function createBacklogFilters(artifactType: ArtifactType, rankingType: Ba
             max: 0,
             absoluteMin: 0,
             absoluteMax: 0
-        },
-        tags: {
-            included: [],
-            excluded: []
         }
     }
     if (artifactType === ArtifactType.GAME) {
@@ -124,61 +96,35 @@ export function createBacklogFilters(artifactType: ArtifactType, rankingType: Ba
     return filters;
 }
 
-export function filterBacklogItems(items: BacklogItem[], artifactType: ArtifactType, filters: BacklogFilters) {
-    if (filters.orderBy.type === BacklogOrder.DATE_ADDED) {
+export function filterUserListItems(items: Artifact[], artifactType: ArtifactType, filters: UserListFilters) {
+    if (filters.orderBy.type === UserListOrder.DATE_RELEASE) {
         items.sort((a, b) => {
-            return b.dateAdded - a.dateAdded;
-        });
-    } else if (filters.orderBy.type === BacklogOrder.DATE_RELEASE) {
-        items.sort((a, b) => {
-            if (!a.artifact.releaseDate) {
+            if (!a.releaseDate) {
                 return -1;
-            } else if (!b.artifact.releaseDate) {
+            } else if (!b.releaseDate) {
                 return 1;
             }
-            return new Date(a.artifact.releaseDate).getTime() - new Date(b.artifact.releaseDate).getTime();
-        });
-    } else if (filters.orderBy.type === BacklogOrder.ELO) {
-        items.sort((a, b) => {
-            return b.elo - a.elo;
-        });
-    } else if (filters.orderBy.type === BacklogOrder.RANK) {
-        items.sort((a, b) => {
-            return a.rank - b.rank;
+            return new Date(a.releaseDate).getTime() - new Date(b.releaseDate).getTime();
         });
     }
     if (filters.genres.included.length > 0) {
         items = items.filter((item) => {
-            return item.artifact.genres.some((genre) => {
+            return item.genres.some((genre) => {
                 return filters.genres.included.includes(genre.id);
             });
         });
     }
     if (filters.genres.excluded.length > 0) {
         items = items.filter((item) => {
-            return !item.artifact.genres.some((genre) => {
+            return !item.genres.some((genre) => {
                 return filters.genres.excluded.includes(genre.id);
-            });
-        });
-    }
-    if (filters.tags.included.length > 0) {
-        items = items.filter((item) => {
-            return item.tags.some((tag) => {
-                return filters.tags.included.includes(tag.id);
-            });
-        });
-    }
-    if (filters.tags.excluded.length > 0) {
-        items = items.filter((item) => {
-            return !item.tags.some((tag) => {
-                return filters.tags.excluded.includes(tag.id);
             });
         });
     }
     if (filters.releaseDate.min > filters.releaseDate.absoluteMin
         || filters.releaseDate.max < filters.releaseDate.absoluteMax) {
         items = items.filter((item) => {
-            const artifactYearString = item.artifact.releaseDate;
+            const artifactYearString = item.releaseDate;
             let artifactYear: number | null = null;
             if (artifactYearString) {
                 artifactYear = new Date(artifactYearString).getFullYear();
@@ -198,19 +144,19 @@ export function filterBacklogItems(items: BacklogItem[], artifactType: ArtifactT
             maxDurationInSeconds = filters.duration.max * 60;
         }
         items = items.filter((item) => {
-            return item.artifact.duration <= maxDurationInSeconds;
+            return item.duration <= maxDurationInSeconds;
         });
     }
     if (artifactType === ArtifactType.GAME && filters.platforms && filters.platforms.included.length > 0) {
         items = items.filter((item) => {
-            return (item.artifact as Game).platforms.some((platform) => {
+            return (item as Game).platforms.some((platform) => {
                 return filters.platforms?.included.includes(platform.id);
             });
         });
     }
     if (filters.rating.min > 0) {
         items = items.filter((item) => {
-            const meanRating = item.artifact.meanRating;
+            const meanRating = item.meanRating;
             return meanRating === null || meanRating >= filters.rating.min;
         });
     }

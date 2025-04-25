@@ -151,7 +151,7 @@ const updateTMDB = async (tvshowId: number, url: string) => {
                     if (tmdbTvshowSeason.episodes) {
                         for (const episode of tmdbTvshowSeason.episodes) {
                             const episodeNumber = episode.episode_number;
-                            const episodeReleaseDate = episode.air_date ? new Date(tmdbTvshowSeason.air_date) : undefined;
+                            const episodeReleaseDate = episode.air_date ? new Date(episode.air_date) : undefined;
                             const episodeTitle = episode.name;
                             const tvshowEpisode = tvshowSeason.children.find(child => child.childIndex === episodeNumber)
                             if (!tvshowEpisode) {

@@ -35,7 +35,7 @@ export const getArtifact = async (type: ArtifactType, id: number, bFetchUserInfo
     return artifact;
 }
 
-const artifactFromJSON = (type: ArtifactType, json: IArtifact): Artifact => {
+export const artifactFromJSON = (type: ArtifactType, json: IArtifact): Artifact => {
     switch (type) {
         case ArtifactType.GAME:
             return Game.fromJSON(json as IGame);
@@ -70,6 +70,19 @@ export const updateScore = async (artifactId: number, score: number | null) => {
         method: "POST",
         body: JSON.stringify({
             score: score
+        }),
+    }).catch(error => {
+        console.error("Error updating score:", error);
+        alert("Failed to update score");
+    });
+}
+
+export const updateDate = async (artifactId: number, date: Date | null, startEnd: 'start' | 'end' | 'both') => {
+    fetch(`/api/artifact/${artifactId}/userDate`, {
+        method: "POST",
+        body: JSON.stringify({
+            date: date ? date.toISOString() : null,
+            startEnd: startEnd
         }),
     }).catch(error => {
         console.error("Error updating score:", error);

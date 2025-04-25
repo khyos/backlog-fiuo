@@ -73,7 +73,7 @@
     <Label class="block mb-1 mt-2"
         >Max Duration: {formatDurationDisplay($backlogStore.backlogFilters.duration.max)}</Label
     >
-    <Range class="appearance-auto" min="0" max="200" step="1" bind:value={$backlogStore.backlogFilters.duration.max} />
+    <Range class="appearance-auto" min="0" max={$backlogStore.backlogFilters.duration.absoluteMax} step="1" bind:value={$backlogStore.backlogFilters.duration.max} />
     <Label class="block mb-1 mt-2">Min Rating: {$backlogStore.backlogFilters.rating.min}</Label>
     <Range class="appearance-auto" min="0" max="100" step="1" bind:value={$backlogStore.backlogFilters.rating.min} />
     {#if $backlogStore.backlogFilters.platforms}

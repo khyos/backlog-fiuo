@@ -31,7 +31,7 @@ export const refreshBacklog = () => {
     return fetchBacklog(store.backlog.id).then((backlog) => {
         backlogStore.update(s => ({
             ...s,
-            backlog: backlog
+            backlog: Backlog.fromJSON(backlog)
         }));
     });
 }

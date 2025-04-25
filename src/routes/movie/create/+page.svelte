@@ -15,6 +15,7 @@
         value: string;
         name: string;
         link: string;
+        date: string;
     }
 
     interface SearchResults {
@@ -101,6 +102,9 @@
             for (const key in results) {
                 for (const result of results[key]) {
                     result.value = result.id;
+                    if (result.date) {
+                        result.name = `${result.name} (${new Date(result.date).getFullYear()})`
+                    }
                 }
             }
             
