@@ -21,7 +21,7 @@
         <TableHeadCell>Next</TableHeadCell>
         <TableHeadCell></TableHeadCell>
     </TableHead>
-    <TableBody tableBodyClass="divide-y">
+    <TableBody>
         {#each $userListStore.userList.artifacts as artifact}
             <ListItemComp
                 {artifact}

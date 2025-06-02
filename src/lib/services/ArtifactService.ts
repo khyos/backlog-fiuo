@@ -85,7 +85,7 @@ export const updateDate = async (artifactId: number, date: Date | null, startEnd
             startEnd: startEnd
         }),
     }).catch(error => {
-        console.error("Error updating score:", error);
-        alert("Failed to update score");
+        console.error("Error updating date:", error);
+        alert("Failed to update date");
     });
 }

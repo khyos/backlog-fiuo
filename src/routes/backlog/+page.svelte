@@ -1,6 +1,6 @@
 <script lang="ts">
-    import { Button, Listgroup, ListgroupItem, Search } from "flowbite-svelte";
-    import { PlusOutline, TrashBinSolid } from "flowbite-svelte-icons";
+    import { Button, Input, Listgroup, ListgroupItem } from "flowbite-svelte";
+    import { PlusOutline, SearchOutline, TrashBinSolid } from "flowbite-svelte-icons";
     import type { PageData } from "./$types";
 
 	export let data: PageData;
@@ -26,7 +26,7 @@
         }
 	}
 
-    function handleKeyDown(event: KeyboardEvent) {
+    function handleKeyUp(event: KeyboardEvent) {
         if (event.key === 'Enter') {
             event.preventDefault();
             searchBacklogs();
@@ -71,7 +71,7 @@
         <h1 class="text-2xl font-extrabold dark:text-white">Backlogs</h1>
         
         {#if data.permissions.canCreate}
-            <Button size="sm" on:click={navigateToCreateBacklog}>
+            <Button size="sm" onclick={navigateToCreateBacklog}>
                 <PlusOutline class="mr-2 h-4 w-4" />
                 Add Backlog
             </Button>
@@ -79,22 +79,27 @@
     </div>
 
     <div class="search-container">
-        <Search 
-            type="text"
+        <Input
             id="search-field"
+            class="ps-9"
             placeholder="Search backlogs..." 
             autocomplete="off"
             bind:value={searchTerm}
-            on:keydown={handleKeyDown}
-        />
-        <Button 
-            size="sm"
-            class="ml-2"
-            disabled={isSearching}
-            on:click={searchBacklogs}
-        >
-            {isSearching ? 'Searching...' : 'Search'}
-        </Button>
+            onkeyup={handleKeyUp}>
+            {#snippet left()}
+                <SearchOutline />
+            {/snippet}
+            {#snippet right()}
+                <Button 
+                    size="xs"
+                    class="ml-2"
+                    disabled={isSearching}
+                    onclick={searchBacklogs}
+                >
+                    {isSearching ? 'Searching...' : 'Search'}
+                </Button>
+            {/snippet}
+        </Input>
     </div>
 
     {#if data.backlogs.length === 0}
@@ -105,7 +110,7 @@
         <Listgroup class="mt-1">
             {#each data.backlogs as backlog}
                 <ListgroupItem>
-                    <div style="display: flex; align-items: center;">
+                    <div class="flex justify-between items-center w-full">
                         <button 
                             class="text-left cursor-pointer hover:underline flex-grow"
                             on:click={(event) => handleBacklogClick(event, backlog.id)}
@@ -118,7 +123,7 @@
                             <Button 
                                 size="xs" 
                                 color="red"
-                                on:click={() => deleteBacklog(backlog.id)}
+                                onclick={() => deleteBacklog(backlog.id)}
                                 class="ml-2"
                             >
                                 <TrashBinSolid class="h-3 w-3" />

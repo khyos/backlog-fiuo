@@ -2,16 +2,16 @@
     import {
         Avatar,
         Dropdown,
+        DropdownGroup,
         DropdownHeader,
         DropdownItem,
-        MegaMenu,
         NavBrand,
         NavHamburger,
         NavLi,
         NavUl,
         Navbar,
     } from "flowbite-svelte";
-    import "../app.pcss";
+    import "../app.css";
     import type { LayoutData } from "./$types";
     import { ChevronDownOutline } from "flowbite-svelte-icons";
 
@@ -52,34 +52,38 @@
             <DropdownHeader>
                 <span class="block text-sm">{data.user.username}</span>
             </DropdownHeader>
-            <DropdownItem href="/profile">Profile</DropdownItem>
-            <DropdownItem href="/signout">Sign out</DropdownItem>
+            <DropdownGroup>
+                <DropdownItem href="/profile">Profile</DropdownItem>
+                <DropdownItem href="/signout">Sign out</DropdownItem>
+            </DropdownGroup>
         {:else}
-            <DropdownItem href="/signin">Sign in</DropdownItem>
-            <DropdownItem href="/signup">Sign up</DropdownItem>
+            <DropdownGroup>
+                <DropdownItem href="/signin">Sign in</DropdownItem>
+                <DropdownItem href="/signup">Sign up</DropdownItem>
+            </DropdownGroup>
         {/if}
     </Dropdown>
     <NavUl class="z-50">
-        <NavLi href="/">Home</NavLi>
-        <NavLi href="/backlog">Backlogs</NavLi>
-        <NavLi class="cursor-pointer">Games<ChevronDownOutline class="w-6 h-6 ms-2 text-primary-800 dark:text-white inline"/></NavLi>
-        <MegaMenu items={gameMenu} ulClass="" let:item>
-            <div class="py-2">
-                <a href={item.href} class="hover:text-primary-600 dark:hover:text-primary-500">{item.name}</a>
-            </div>
-        </MegaMenu>
-        <NavLi class="cursor-pointer">Movies<ChevronDownOutline class="w-6 h-6 ms-2 text-primary-800 dark:text-white inline"/></NavLi>
-        <MegaMenu items={movieMenu} ulClass="" let:item>
-            <div class="py-2">
-                <a href={item.href} class="hover:text-primary-600 dark:hover:text-primary-500">{item.name}</a>
-            </div>
-        </MegaMenu>
-        <NavLi class="cursor-pointer">TV Shows<ChevronDownOutline class="w-6 h-6 ms-2 text-primary-800 dark:text-white inline"/></NavLi>
-        <MegaMenu items={tvShowMenu} ulClass="" let:item>
-            <div class="py-2">
-                <a href={item.href} class="hover:text-primary-600 dark:hover:text-primary-500">{item.name}</a>
-            </div>
-        </MegaMenu>
+        <NavLi href="/" class="mr-4">Home</NavLi>
+        <NavLi href="/backlog" class="mr-4">Backlogs</NavLi>
+        <NavLi class="cursor-pointer mr-4">Games<ChevronDownOutline class="w-5 h-5 ms-2 text-primary-800 dark:text-white inline"/></NavLi>
+        <Dropdown simple class="w-30">
+            {#each gameMenu as item}
+                <DropdownItem href={item.href} class="hover:text-primary-600 dark:hover:text-primary-500">{item.name}</DropdownItem>
+            {/each}
+        </Dropdown>
+        <NavLi class="cursor-pointer mr-4">Movies<ChevronDownOutline class="w-5 h-5 ms-2 text-primary-800 dark:text-white inline"/></NavLi>
+        <Dropdown simple class="w-30">
+            {#each movieMenu as item}
+                <DropdownItem href={item.href} class="hover:text-primary-600 dark:hover:text-primary-500">{item.name}</DropdownItem>
+            {/each}
+        </Dropdown>
+        <NavLi class="cursor-pointer">TV Shows<ChevronDownOutline class="w-5 h-5 ms-2 text-primary-800 dark:text-white inline"/></NavLi>
+        <Dropdown simple class="w-30">
+            {#each tvShowMenu as item}
+                <DropdownItem href={item.href} class="hover:text-primary-600 dark:hover:text-primary-500">{item.name}</DropdownItem>
+            {/each}
+        </Dropdown>
     </NavUl>
 </Navbar>
 <slot></slot>

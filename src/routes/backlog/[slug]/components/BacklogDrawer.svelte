@@ -3,7 +3,9 @@
     import { 
         CloseButton, 
         Drawer,
-        Tabs 
+        Tabs, 
+        type drawerTransitionParamTypes
+
     } from "flowbite-svelte";
     import BacklogDrawerTabAdd from "./BacklogDrawerTabAdd.svelte";
     import BacklogDrawerTabFilters from "./BacklogDrawerTabFilters.svelte";
@@ -13,7 +15,7 @@
     import type { Platform } from "$lib/model/game/Platform";
     import type { Tag } from "$lib/model/Tag";
     
-    export let transitionDrawerParams = {
+    export let transitionDrawerParams: drawerTransitionParamTypes = {
         x: 320,
         duration: 200,
         easing: sineIn,
@@ -30,16 +32,14 @@
 
 <Drawer
     placement="right"
-    transitionType="fly"
     transitionParams={transitionDrawerParams}
     hidden={$pageStore.hiddenDrawer}
     id="sidebar1"
-    bgOpacity="bg-opacity-25"
-    width="w-96"
+    backdropClass="opacity-25"
+    class="w-full md:w-92"
 >
     <Tabs
         tabStyle="full"
-        defaultClass="flex divide-x rtl:divide-x-reverse"
         style="align-items: center"
     >
         <BacklogDrawerTabFilters
@@ -60,7 +60,7 @@
         />
         
         <CloseButton
-            on:click={toggleDrawer}
+            onclick={toggleDrawer}
             class="dark:text-white"
         />
     </Tabs>

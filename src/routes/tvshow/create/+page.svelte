@@ -1,6 +1,6 @@
 <script lang="ts">
-    import { A, Alert, Button, Input, Label, Popover, Search, Select, Spinner } from "flowbite-svelte";
-    import { QuestionCircleOutline } from "flowbite-svelte-icons";
+    import { A, Alert, Button, Input, Label, Popover, Select, Spinner } from "flowbite-svelte";
+    import { QuestionCircleOutline, SearchOutline } from "flowbite-svelte-icons";
 
     // Improved type definitions
     interface SiteConfig {
@@ -202,7 +202,7 @@
     };
 
     // Handle keyboard submission with Enter key
-    const handleKeyDown = (event: KeyboardEvent): void => {
+    const handleKeyUp = (event: KeyboardEvent): void => {
         if (event.key === 'Enter' && searchTerm.trim()) {
             findTvshowInfo();
         }
@@ -215,15 +215,20 @@
     <!-- Search section -->
     <div class="mb-8">
         <div class="flex gap-2">
-            <Search 
-                type="text"
+             <Input
                 id="search-field"
-                class="w-full"
-                placeholder="Search for a TV Show" 
+                class="ps-9"
+                placeholder="Search for a game" 
                 autocomplete="off"
                 bind:value={searchTerm}
-                on:keydown={handleKeyDown} />
-            <Button on:click={findTvshowInfo}>Search</Button>
+                onkeyup={handleKeyUp}>
+                {#snippet left()}
+                    <SearchOutline />
+                {/snippet}
+                {#snippet right()}
+                    <Button size="xs" onclick={findTvshowInfo}>Search</Button>
+                {/snippet}
+            </Input>
         </div>
         
         {#if searchStatus === 'started'}
@@ -237,7 +242,7 @@
     <form on:submit={createTvshow} class="space-y-6">
         <div class="grid md:grid-cols-2 gap-6">
             {#each sites as site}
-                <div class="p-4 border dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800">
+                <div class="p-4 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800">
                     <div class="flex flex-col space-y-3">
                         <div class="flex items-center gap-2">
                             <Label for="{site.id}Id" class="text-lg font-medium">{site.name}</Label>
@@ -257,7 +262,7 @@
                                 <Select 
                                     items={searchResults[site.id]} 
                                     bind:value={selectedIds[site.id]} 
-                                    on:change={() => updateSiteSelection(site.id)}
+                                    onchange={() => updateSiteSelection(site.id)}
                                     class="w-full" />
                                     
                                 {#if selectedData[site.id]}

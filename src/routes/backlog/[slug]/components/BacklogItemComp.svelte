@@ -31,6 +31,7 @@
 </script>
 
 <div
+    class="w-full"
     use:draggable={{ canEdit: canEdit && backlogStoreInst.backlog.rankingType === BacklogRankingType.RANK, rank: backlogItem.rank }}
     use:dropzone={{ canEdit: canEdit && backlogStoreInst.backlog.rankingType === BacklogRankingType.RANK, rank: backlogItem.rank, onDrop: onMoveBacklogItem }}
 >
@@ -48,7 +49,7 @@
                             <Button
                                 id="deleteTag"
                                 size="xs"
-                                on:click={() => removeTag(backlogItem.artifact.id, tag.id)}
+                                onclick={() => removeTag(backlogItem.artifact.id, tag.id)}
                                 class="px-2.5 py-0"
                                 style="background-color: transparent; color: var(--tw-text-opacity)"
                             >x</Button>
@@ -63,7 +64,7 @@
                     <Button
                         id="showTags"
                         size="xs"
-                        on:click={() => showTags()}
+                        onclick={() => showTags()}
                         class="px-0 py-0 flex items-center gap-1 "
                         style="background-color: transparent; color: var(--tw-text-opacity)"
                     >
@@ -95,15 +96,15 @@
                 <ChevronDownOutline class="w-4 h-4" />
             </Button>
             <Dropdown>
-                <DropdownItem on:click={() => showAddTag(backlogItem)}>Add Tag</DropdownItem>
+                <DropdownItem onclick={() => showAddTag(backlogItem)}>Add Tag</DropdownItem>
                 {#if backlogStoreInst.backlog.rankingType === BacklogRankingType.RANK}
-                    <DropdownItem on:click={() => showMoveToRank(backlogItem)}>Move to Rank</DropdownItem>
-                    <DropdownItem on:click={() => startOrderByFight(backlogItem.artifact.id)}>Order by Comparison</DropdownItem>
+                    <DropdownItem onclick={() => showMoveToRank(backlogItem)}>Move to Rank</DropdownItem>
+                    <DropdownItem onclick={() => startOrderByFight(backlogItem.artifact.id)}>Order by Comparison</DropdownItem>
                 {:else if backlogStoreInst.backlog.rankingType === BacklogRankingType.ELO}
-                    <DropdownItem on:click={() => startOrderByFight(backlogItem.artifact.id)}>Order by Elo</DropdownItem>
+                    <DropdownItem onclick={() => startOrderByFight(backlogItem.artifact.id)}>Order by Elo</DropdownItem>
                 {/if}
-                <DropdownItem on:click={() => showMoveToBacklog(backlogItem)}>Move to other Backlog</DropdownItem>
-                <DropdownItem data-id={backlogItem.artifact.id} on:click={onDeleteBacklogItem}>Delete</DropdownItem>
+                <DropdownItem onclick={() => showMoveToBacklog(backlogItem)}>Move to other Backlog</DropdownItem>
+                <DropdownItem data-id={backlogItem.artifact.id} onclick={onDeleteBacklogItem}>Delete</DropdownItem>
             </Dropdown>
         {/if}
     </div>

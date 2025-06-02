@@ -1,7 +1,7 @@
 <script lang="ts">
     import type { IArtifact, ArtifactType } from '$lib/model/Artifact';
-    import { Button, Listgroup, ListgroupItem, Search } from 'flowbite-svelte';
-    import { PlusOutline, TrashBinSolid } from 'flowbite-svelte-icons';
+    import { Button, Input, Listgroup, ListgroupItem, Search } from 'flowbite-svelte';
+    import { PlusOutline, SearchOutline, TrashBinSolid } from 'flowbite-svelte-icons';
     
     export let artifacts: IArtifact[] = [];
     export let artifactType: ArtifactType; // 'movie' or 'game'
@@ -30,7 +30,7 @@
         }
     }
 
-    function handleKeyDown(event: KeyboardEvent) {
+    function handleKeyUp(event: KeyboardEvent) {
         if (event.key === 'Enter') {
             event.preventDefault();
             searchArtifacts();
@@ -75,7 +75,7 @@
         <h1 class="text-2xl font-extrabold dark:text-white">{title}</h1>
         
         {#if permissions.canCreate}
-            <Button size="sm" on:click={navigateToCreate}>
+            <Button size="sm" onclick={navigateToCreate}>
                 <PlusOutline class="mr-2 h-4 w-4" />
                 Add {artifactType.charAt(0).toUpperCase() + artifactType.slice(1)}
             </Button>
@@ -83,22 +83,29 @@
     </div>
 
     <div class="search-container">
-        <Search 
-            type="text"
+        <Input 
             id="search-field"
+            class="ps-9"
             placeholder="Search {artifactType}s..." 
             autocomplete="off"
             bind:value={searchTerm}
-            on:keydown={handleKeyDown}
-        />
-        <Button 
-            size="sm"
-            class="ml-2"
-            disabled={isSearching}
-            on:click={searchArtifacts}
+            onkeyup={handleKeyUp}
         >
-            {isSearching ? 'Searching...' : 'Search'}
-        </Button>
+            {#snippet left()}
+                <SearchOutline />
+            {/snippet}
+            {#snippet right()}
+                <Button 
+                    size="xs"
+                    class="ml-2"
+                    disabled={isSearching}
+                    onclick={searchArtifacts}
+                >
+                    {isSearching ? 'Searching...' : 'Search'}
+                </Button>
+            {/snippet}
+        </Input>
+        
     </div>
 
     {#if artifacts.length === 0}
@@ -122,7 +129,7 @@
                             <Button 
                                 size="xs" 
                                 color="red"
-                                on:click={() => deleteArtifact(artifact.id)}
+                                onclick={() => deleteArtifact(artifact.id)}
                                 class="ml-2"
                             >
                                 <TrashBinSolid class="h-3 w-3" />

@@ -23,7 +23,10 @@
         Spinner,
         Checkbox,
 
-        Datepicker
+        Datepicker,
+
+        type DateOrRange
+
 
     } from "flowbite-svelte";
     import { 
@@ -55,9 +58,9 @@
     let openAddLink = false;
     let openEditLink = false;
     let addLinkType: LinkType | null;
-    let addLinkUrl: string | null;
+    let addLinkUrl: string | undefined;
     let editLinkType: LinkType | null;
-    let editLinkUrl: string | null;
+    let editLinkUrl: string | undefined;
     let unboundLinkTypes: {
         value: LinkType,
         name: string
@@ -126,7 +129,7 @@
         });
     }
 
-    function canAddLink(linkType: LinkType | null, linkUrl: string | null) {
+    function canAddLink(linkType: LinkType | null, linkUrl?: string) {
         return !linkType || !linkUrl;
     }
 
@@ -146,7 +149,7 @@
             refreshLinkTypes();
             openAddLink = false;
             addLinkType = null;
-            addLinkUrl = null;
+            addLinkUrl = undefined;
         }).catch(error => {
             console.error("Error adding link:", error);
             alert("Failed to add link");
@@ -174,7 +177,7 @@
             refreshArtifact();
             openEditLink = false;
             editLinkType = null;
-            editLinkUrl = null;
+            editLinkUrl = undefined;
         }).catch(error => {
             console.error("Error updating link:", error);
             alert("Failed to update link");
@@ -216,19 +219,22 @@
         updateScore(value);
     }
 
-    function handleDateChange(event: any) {
-        const selectedDate = event.detail;
-        updateDate(selectedDate);
+    function handleDateChange(date: DateOrRange) {
+        if (date instanceof Date) {
+            updateDate(date);
+        }
     }
 
-    function handleStartDateChange(event: any) {
-        const selectedDate = event.detail;
-        updateStartDate(selectedDate);
+    function handleStartDateChange(date: DateOrRange) {
+        if (date instanceof Date) {
+            updateStartDate(date);
+        }
     }
 
-    function handleEndDateChange(event: any) {
-        const selectedDate = event.detail;
-        updateEndDate(selectedDate);
+    function handleEndDateChange(date: DateOrRange) {
+        if (date instanceof Date) {
+            updateEndDate(date);
+        }
     }
 
     let expandedChidren: Set<number> = new Set();
@@ -243,7 +249,7 @@
     }
 </script>
 
-<Card padding="xl" class="max-w-4xl mx-auto shadow-lg">
+<Card class="p-6 max-w-4xl mx-auto shadow-lg">
     <div class="flex justify-between items-start mb-4">
         <div class="flex-1">
             <Badge color={artifact.type.toLowerCase() === ArtifactType.GAME ? 'indigo' : 'purple'} class="mb-2">{artifact.type}</Badge>
@@ -270,7 +276,7 @@
                         Status
                     </Label>
                     <Select
-                        on:change={(event) => handleSelectStatusChange(event, artifact.id)}
+                        onchange={(event) => handleSelectStatusChange(event, artifact.id)}
                         items={USER_STATUSES}
                         value={artifact.userInfo?.status}
                         placeholder="Select Status"
@@ -282,13 +288,13 @@
                         Your Rating
                     </Label>
                     <Input
-                        on:change={handleScoreChange}
+                        onchange={handleScoreChange}
                         type="number"
                         data-input-counter-min="0"
                         max="100"
                         placeholder="Rate from 0-100"
                         class="max-w-xs"
-                        value={artifact.userInfo?.score}
+                        value={artifact.userInfo?.score || undefined}
                     />
                 </div>
                 <div class="mt-4 bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
@@ -298,42 +304,42 @@
                     </Label>
                     {#if artifact.type === ArtifactType.MOVIE}
                         <Datepicker
-                            on:clear={handleDateChange}
-                            on:apply={handleDateChange}
+                            onclear={() => updateDate(null)}
+                            onapply={handleDateChange}
                             dateFormat= {{
                                 day: '2-digit',
                                 month: '2-digit',
                                 year: 'numeric'
                             }}
-                            showActionButtons
+                            showActionButtons={true}
                             autohide={false}
                             placeholder="Pick a date"
-                            value={artifact.userInfo?.startDate} />
+                            value={artifact.userInfo?.startDate || undefined} />
                     {:else}
                         <Datepicker
-                            on:clear={handleStartDateChange}
-                            on:apply={handleStartDateChange}
+                            onclear={() => updateStartDate(null)}
+                            onapply={handleStartDateChange}
                             dateFormat= {{
                                 day: '2-digit',
                                 month: '2-digit',
                                 year: 'numeric'
                             }}
-                            showActionButtons
+                            showActionButtons={true}
                             autohide={false}
                             placeholder="Pick a start date"
-                            value={artifact.userInfo?.startDate} />
+                            value={artifact.userInfo?.startDate || undefined} />
                         <Datepicker
-                            on:clear={handleEndDateChange}
-                            on:apply={handleEndDateChange}
+                            onclear={() => updateEndDate(null)}
+                            onapply={handleEndDateChange}
                             dateFormat= {{
                                 day: '2-digit',
                                 month: '2-digit',
                                 year: 'numeric'
                             }}
-                            showActionButtons
+                            showActionButtons={true}
                             autohide={false}
                             placeholder="Pick a end date"
-                            value={artifact.userInfo?.endDate} />
+                            value={artifact.userInfo?.endDate || undefined} />
                     {/if}
                 </div>
             {/if}
@@ -392,7 +398,7 @@
                     </div>
                     
                     {#each artifact.children as firstLevelChild}
-                        <div class="child-item mb-4 border rounded-lg">
+                        <div class="child-item mb-4 border rounded-lg border-gray-300">
                             <button 
                                 class="w-full flex items-center justify-between p-3 hover:bg-gray-100 transition-colors"
                                 on:click={() => toggleChild(firstLevelChild.id)}
@@ -409,7 +415,7 @@
                                 <div class="secondLevelChildren-list p-3 bg-gray-50">
                                     {#if firstLevelChild.children.length > 0}
                                     <table class="w-full text-sm">
-                                        <thead class="bg-gray-100 border-b">
+                                        <thead class="bg-gray-50 border-b">
                                             <tr>
                                                 <th class="p-2 text-left">Index</th>
                                                 <th class="p-2 text-left">{ArtifactTypeUtil.getChildName(artifact.type, 1)}</th>
@@ -418,7 +424,7 @@
                                                 <th class="p-2 text-left">
                                                     <Checkbox
                                                         checked={firstLevelChild.userInfo?.status === UserArtifactStatus.FINISHED}
-                                                        on:change={(event) => handleCheckboxStatusChange(event, firstLevelChild)}
+                                                        onchange={(event) => handleCheckboxStatusChange(event, firstLevelChild)}
                                                     />
                                                 </th>
                                                 {/if}
@@ -426,7 +432,7 @@
                                         </thead>
                                         <tbody>
                                             {#each firstLevelChild.children as secondLevelChild, index}
-                                                <tr class="border-b last:border-b-0 hover:bg-gray-100">
+                                                <tr class="border-b last:border-b-0 border-gray-300 hover:bg-gray-100">
                                                     <td class="p-2">{index + 1}</td>
                                                     <td class="p-2">{secondLevelChild.title}</td>
                                                     <td class="p-2">
@@ -440,7 +446,7 @@
                                                     <td class="p-2">
                                                         <Checkbox
                                                             checked={secondLevelChild.userInfo?.status === UserArtifactStatus.FINISHED}
-                                                            on:change={(event) => handleCheckboxStatusChange(event, secondLevelChild)}
+                                                            onchange={(event) => handleCheckboxStatusChange(event, secondLevelChild)}
                                                         />
                                                     </td>
                                                     {/if}
@@ -492,14 +498,14 @@
                                 size="xs"
                                 color="green"
                                 disabled={unboundLinkTypes.length == 0}
-                                on:click={() => (openAddLink = true)}>
+                                onclick={() => (openAddLink = true)}>
                                 <PlusOutline class="mr-1 w-3 h-3" />Add
                             </Button>
                             <Button
                                 size="xs"
                                 color="blue"
                                 disabled={refreshingAllLinks}
-                                on:click={() => refreshLinksData(artifact.links)}>
+                                onclick={() => refreshLinksData(artifact.links)}>
                                 {#if refreshingAllLinks}
                                     <Spinner size="4" class="mr-1" />
                                 {:else}
@@ -527,7 +533,7 @@
                                         pill
                                         color="light"
                                         disabled={refreshingLinks[link.type] || refreshingAllLinks}
-                                        on:click={() => openEditLinkModal(link)}
+                                        onclick={() => openEditLinkModal(link)}
                                     >
                                         <EditOutline class="w-3 h-3" />
                                     </Button>
@@ -536,7 +542,7 @@
                                         pill
                                         color="light"
                                         disabled={refreshingLinks[link.type] || refreshingAllLinks}
-                                        on:click={() => refreshLinksData([link])}
+                                        onclick={() => refreshLinksData([link])}
                                     >
                                         {#if refreshingLinks[link.type] || refreshingAllLinks}
                                             <Spinner size="4" />
@@ -576,15 +582,15 @@
             />
         </div>
     </div>
-    <svelte:fragment slot="footer">
+    {#snippet footer()}
         <Button
             color="green"
-            on:click={addLink}
+            onclick={addLink}
             disabled={canAddLink(addLinkType, addLinkUrl)}>
             Add Link
         </Button>
-        <Button color="alternative" on:click={() => (openAddLink = false)}>Cancel</Button>
-    </svelte:fragment>
+        <Button color="alternative" onclick={() => (openAddLink = false)}>Cancel</Button>
+    {/snippet}
 </Modal>
 
 <Modal title="Edit Link" bind:open={openEditLink} autoclose size="sm">
@@ -609,13 +615,13 @@
             />
         </div>
     </div>
-    <svelte:fragment slot="footer">
+    {#snippet footer()}
         <Button
             color="green"
-            on:click={updateLink}
+            onclick={updateLink}
             disabled={canAddLink(editLinkType, editLinkUrl)}>
             Edit Link
         </Button>
-        <Button color="alternative" on:click={() => (openAddLink = false)}>Cancel</Button>
-    </svelte:fragment>
+        <Button color="alternative" onclick={() => (openAddLink = false)}>Cancel</Button>
+    {/snippet}
 </Modal>

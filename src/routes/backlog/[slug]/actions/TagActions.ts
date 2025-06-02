@@ -44,10 +44,6 @@ export const addTag = (tagId: string) => {
 
 export const removeTag = (artifactId: number, tagId: string) => {
     const backlogStoreInst = get(backlogStore);
-    const pageStoreInst = get(pageStore);
-    if (!pageStoreInst.selectedBacklogItem) {
-        return;
-    }
     removeTagAPI(backlogStoreInst.backlog.id, artifactId, tagId).then(() => {
         refreshBacklog();
     });

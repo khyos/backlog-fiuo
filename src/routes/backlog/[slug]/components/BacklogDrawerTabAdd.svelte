@@ -42,29 +42,28 @@
 <TabItem open={selectedTab == 'add'} title="Add" class="w-full" disabled={!canEdit}>
     <Label class="block mb-2">Add to backlog</Label>
     <Input
-        type="text"
         id="search-field"
         placeholder="Search"
         autocomplete="off"
         bind:value={searchArtifactTerm}
-        on:input={fetchArtifacts}
+        onkeyup={fetchArtifacts}
     />
     {#if searchedArtifacts?.length > 0}
         <Listgroup>
             {#each searchedArtifacts as artifact}
                 {#if $backlogStore.backlog.backlogItems.find((bi) => bi.artifact.id === artifact.id) != null}
-                    <ListgroupItem>
-                        <div style="display: inline-flex;">
-                            {artifact.title}<CheckCircleOutline />
-                        </div>
+                    <ListgroupItem class="flex justify-between items-center w-full">
+                        <div class="flex-auto overflow-hidden text-ellipsis">{artifact.title}</div>
+                        <CheckCircleOutline class="flex-none" />
                     </ListgroupItem>
                 {:else}
-                    <ListgroupItem>
-                        {artifact.title}
+                    <ListgroupItem class="flex justify-between items-center w-full">
+                        <div class="flex-auto overflow-hidden text-ellipsis">{artifact.title}</div>
                         <Button
                             size="xs"
+                            class="flex-none"
                             data-id={artifact.id}
-                            on:click={addBacklogItemCb}
+                            onclick={addBacklogItemCb}
                         >
                             <PlusOutline size="xs" />
                         </Button>

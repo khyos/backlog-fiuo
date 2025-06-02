@@ -48,7 +48,7 @@
 
 <TabItem open={selectedTab == 'filters'} title="Filters" class="w-full">
     {#if $backlogStore.backlog.artifactType === ArtifactType.GAME}
-        <Button on:click={onFetchPrices}>Fetch Prices</Button>
+        <Button onclick={onFetchPrices}>Fetch Prices</Button>
     {/if}
     <Label class="block mb-1 mt-2">Order By</Label>
     <Select items={orderBacklogByItems} bind:value={$backlogStore.backlogFilters.orderBy.type} />

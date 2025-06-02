@@ -106,7 +106,7 @@
         >
             {data.backlog.title} ({TimeUtil.formatDuration(totalTime)})
         </h3>
-        <Button on:click={toggleDrawer}>Filters / Add</Button>
+        <Button onclick={toggleDrawer}>Filters / Add</Button>
     </div>
     {#each $filteredBacklogItems as backlogItem}
         <ListgroupItem>
@@ -142,16 +142,16 @@
             class="mr-1"
             style="flex-grow: 1;"
             bind:value={tagStoreInst.searchTagTerm}
-            on:input={fetchTags}
+            oninput={fetchTags}
         />
         <Button
             size="xs"
             disabled={tagStoreInst.searchTagTerm.length < 2}
-            on:click={createTag}><PlusOutline size="sm" /></Button
+            onclick={createTag}><PlusOutline size="sm" /></Button
         >
     </div>
     {#each tagStoreInst.searchedTags as tag}
-        <Button size="xs" class="m-1" on:click={() => addTag(tag.id)}
+        <Button size="xs" class="m-1" onclick={() => addTag(tag.id)}
             >{tag.id}</Button
         >
     {/each}
@@ -160,7 +160,7 @@
 <Modal size="xs" title="Move to Rank" bind:open={$pageStore.showMoveToRank} autoclose>
     Move <Badge class="mr-2 gap-1" color="blue"># {$pageStore.selectedBacklogItem.rank}</Badge><b>{$pageStore.selectedBacklogItem.artifact.title}</b> to
     <Select class="mt-2" items={backlogItemsForSelect} bind:value={moveToRankSelected} />
-    <Button class="mt-2" on:click={() => {
+    <Button class="mt-2" onclick={() => {
         moveBacklogItem($pageStore.selectedBacklogItem.rank, moveToRankSelected).then(() => {
             hideMoveToRank();
         });
@@ -171,7 +171,7 @@
     Move <Badge class="mr-2 gap-1" color="blue"># {$pageStore.selectedBacklogItem.rank}</Badge><b>{$pageStore.selectedBacklogItem.artifact.title}</b> to
     <Select class="mt-2" items={$pageStore.backlogsForSelect} bind:value={moveToBacklogSelected} />
     <Checkbox bind:checked={keepTagsSelected}>Keep tags</Checkbox>
-    <Button class="mt-2" on:click={() => {
+    <Button class="mt-2" onclick={() => {
         moveBacklogItemToOtherBacklog().then(() => {
             hideMoveToBacklog();
         });

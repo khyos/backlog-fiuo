@@ -11,7 +11,7 @@
     $: userListStoreInst = $userListStore;
 </script>
 
-<TableBodyRow>
+<TableBodyRow class="text-gray-950 border-gray-300">
     <TableBodyCell>
         <div style="display: inline-flex">
             {#if artifact.userInfo?.status === UserArtifactStatus.ON_GOING}
@@ -43,7 +43,7 @@
     </TableBodyCell>
     <TableBodyCell>
         {#if artifact.lastAndNextOngoing.next}
-        <Button size="xs" on:click={() => updateStatus(artifact.lastAndNextOngoing.next.id)}>Seen</Button>
+        <Button size="xs" onclick={() => updateStatus(artifact.lastAndNextOngoing.next.id)}>Seen</Button>
         {/if}
     </TableBodyCell>
 </TableBodyRow>

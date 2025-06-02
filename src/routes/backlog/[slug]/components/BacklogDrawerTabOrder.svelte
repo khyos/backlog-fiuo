@@ -147,11 +147,11 @@
 </script>
 
 <TabItem open={selectedTab == 'order'} title="Order" class="w-full" disabled={!canEdit}>
-    <div class="p-4 bg-gray-50 rounded-lg">
+    <div class="bg-gray-50 rounded-lg">
         {#if !store.itemA || !store.itemB}
-            <Card class="text-center mb-4">
+            <Card class="text-center p-4">
                 <Heading tag="h4" class="mb-2">Backlog Ordering</Heading>
-                <P class="mb-4">
+                <P class="mb-2">
                     {#if backlogStoreInst.backlog.rankingType === BacklogRankingType.RANK}
                         Arrange your backlog items in order of priority by comparing them one by one.
                     {:else}
@@ -161,7 +161,7 @@
                 <Button 
                     color="blue" 
                     class="mx-auto" 
-                    on:click={startRanking}
+                    onclick={startRanking}
                     disabled={isLoading}
                 >
                     <div class="flex items-center gap-2">
@@ -173,7 +173,7 @@
         {:else}
             {#if backlogStoreInst.backlog.rankingType === BacklogRankingType.RANK}
                 <div class="space-y-4">
-                    <Card padding="md" class="relative">
+                    <Card class="p-2 relative">
                         <div class="absolute top-2 right-2">
                             <Badge color="blue" class="font-semibold">#{store.itemA.rank}</Badge>
                         </div>
@@ -181,7 +181,7 @@
                         <P class="font-medium">{store.itemA.artifact.title}</P>
                     </Card>
                     
-                    <Card padding="md" class="relative">
+                    <Card class="p-2 relative">
                         <div class="absolute top-2 right-2">
                             <Badge color="blue" class="font-semibold">#{store.itemB.rank}</Badge>
                         </div>
@@ -192,7 +192,7 @@
                     <div class="flex gap-2 justify-center">
                         <Button 
                             color="blue" 
-                            on:click={orderByComparisonPickHigher}
+                            onclick={orderByComparisonPickHigher}
                             disabled={isLoading}
                         >
                             <div class="flex items-center gap-2">
@@ -203,7 +203,7 @@
 
                         <Button 
                             color="green" 
-                            on:click={() => startRanking()}
+                            onclick={() => startRanking()}
                             disabled={isLoading}
                         >
                             <div class="flex items-center gap-2">
@@ -214,7 +214,7 @@
                     
                         <Button 
                             color="blue" 
-                            on:click={orderByComparisonPickLower}
+                            onclick={orderByComparisonPickLower}
                             disabled={isLoading}
                         >
                             <div class="flex items-center gap-2">
@@ -228,9 +228,8 @@
                 <Heading tag="h5" class="mb-4 text-center">Which item do you prefer?</Heading>
                 <div class="grid grid-cols-2 gap-4">
                     <Card 
-                        padding="sm" 
-                        class="hover:bg-blue-50 transition-colors cursor-pointer relative"
-                        on:click={() => orderByEloFight("A")}
+                        class="p-2 hover:bg-blue-50 transition-colors cursor-pointer relative"
+                        onclick={() => orderByEloFight("A")}
                     >
                         <div class="absolute top-2 left-2 z-10">
                             <Badge color="blue" class="font-semibold flex items-center gap-1">
@@ -243,7 +242,7 @@
                                 <span>{store.itemA.elo}</span>
                             </Badge>
                         </div>
-                        <div class="relative mt-4 mb-2 overflow-hidden rounded-md">
+                        <div class="relative mt-6 mb-2 overflow-hidden rounded-md">
                             <img 
                                 src={store.itemAPoster}
                                 alt=''
@@ -254,9 +253,8 @@
                     </Card>
                     
                     <Card 
-                        padding="sm" 
-                        class="hover:bg-blue-50 transition-colors cursor-pointer relative"
-                        on:click={() => orderByEloFight("B")}
+                        class="p-2 hover:bg-blue-50 transition-colors cursor-pointer relative"
+                        onclick={() => orderByEloFight("B")}
                     >
                         <div class="absolute top-2 left-2 z-10">
                             <Badge color="blue" class="font-semibold flex items-center gap-1">
@@ -269,7 +267,7 @@
                                 <span>{store.itemB.elo}</span>
                             </Badge>
                         </div>
-                        <div class="relative mt-4 mb-2 overflow-hidden rounded-md">
+                        <div class="relative mt-6 mb-2 overflow-hidden rounded-md">
                             <img 
                                 src={store.itemBPoster} 
                                 alt=''
@@ -284,7 +282,7 @@
                     <Button 
                         color="light" 
                         size="sm" 
-                        on:click={startRanking}
+                        onclick={startRanking}
                         disabled={isLoading}
                     >
                         <div class="flex items-center gap-2">
@@ -296,7 +294,7 @@
                 <div class="mt-4 text-center">
                     <Checkbox
                         checked={store.similarElo}
-                        on:change={similarEloChange}
+                        onchange={similarEloChange}
                     >
                         Pick Similar Elo
                     </Checkbox>
