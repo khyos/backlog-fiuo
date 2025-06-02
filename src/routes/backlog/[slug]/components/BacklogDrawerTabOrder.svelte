@@ -5,10 +5,11 @@
         TabItem,
         Card,
         Heading,
-        P
+        P,
+        Checkbox
     } from "flowbite-svelte";
     import { BacklogRankingType } from "$lib/model/Backlog";
-    import { getRandomItemA, getRandomItemB, orderByFightStore, startOrderByFight, updateItemA } from "$lib/stores/OrderByFightStore";
+    import { getRandomItemA, getRandomItemB, orderByFightStore, startOrderByFight, updateItemA, updateSimilarElo } from "$lib/stores/OrderByFightStore";
     import { get } from "svelte/store";
     import { AwardOutline, CheckCircleOutline, RefreshOutline, ThumbsDownOutline, ThumbsUpOutline } from "flowbite-svelte-icons";
     import type { BacklogItem } from "$lib/model/BacklogItem";
@@ -137,6 +138,11 @@
         } finally {
             isLoading = false;
         }
+    }
+
+    const similarEloChange = (event: any) => {
+        const target = event.target as HTMLInputElement;
+        updateSimilarElo(target.checked);
     }
 </script>
 
@@ -286,6 +292,14 @@
                             <span>Pick Different Items</span>
                         </div>
                     </Button>
+                </div>
+                <div class="mt-4 text-center">
+                    <Checkbox
+                        checked={store.similarElo}
+                        on:change={similarEloChange}
+                    >
+                        Pick Similar Elo
+                    </Checkbox>
                 </div>
             {/if}
         {/if}
