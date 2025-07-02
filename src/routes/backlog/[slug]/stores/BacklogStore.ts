@@ -2,6 +2,7 @@ import { Backlog, type IBacklog } from '$lib/model/Backlog';
 import { fetchBacklog } from '$lib/services/BacklogService';
 import { derived, get, writable } from 'svelte/store';
 import { createBacklogFilters, filterBacklogItems, type BacklogFilters } from '../BacklogFilters';
+import { showCopiedToast } from './PageStore';
 
 export type BacklogStore = {
     backlog: Backlog,
@@ -34,4 +35,12 @@ export const refreshBacklog = () => {
             backlog: Backlog.fromJSON(backlog)
         }));
     });
+}
+
+export const copyAiPrompt = () => {
+    const items = get(filteredBacklogItems);
+    const itemList = items.map(item => item.artifact.title).join(' | ');
+    const prompt = `Je recherche dans cette liste de films des films qui correspondraient à ces critères:\n""\n${itemList}`;
+    navigator.clipboard.writeText(prompt);
+    showCopiedToast();
 }

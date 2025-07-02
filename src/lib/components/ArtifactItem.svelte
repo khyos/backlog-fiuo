@@ -1,11 +1,11 @@
 <script lang="ts">
-    import { Artifact, ArtifactType } from "$lib/model/Artifact";
+    import { Artifact, ArtifactType, type ArtifactAsyncInfo } from "$lib/model/Artifact";
     import { ArtifactTypeUtil } from "$lib/model/ArtifactTypeUtil";
     import type { Game } from "$lib/model/game/Game";
     import { getLinkTypeLabel, getLinkTypesByArtifactType, Link, LinkType } from "$lib/model/Link";
     import { getMeanRatingColor, getRatingColor } from "$lib/model/Rating";
     import { UserArtifactStatus } from "$lib/model/UserArtifact";
-    import { getPosterURL } from "$lib/services/ArtifactService";
+    import { getAsyncInfo } from "$lib/services/ArtifactService";
     import { openLink } from "$lib/services/LinkService";
     import { artifactItemStore, refreshArtifact, updateStatus, updateScore, updateDate, updateStartDate, updateEndDate } from "$lib/stores/ArtifactItemStore";
     import { TimeUtil } from "$lib/util/TimeUtil";
@@ -75,11 +75,11 @@
         { value: UserArtifactStatus.WISHLIST, name: 'Wishlist' },
     ];
     
-    let artifactPosterURL: string | null = null;
+    let artifactAsyncInfo: ArtifactAsyncInfo | null = null;
     onMount(() => {
         refreshLinkTypes();
-        getPosterURL(artifact.type, artifact.id).then((url) => {
-            artifactPosterURL = url;
+        getAsyncInfo(artifact.type, artifact.id).then((asyncInfo) => {
+            artifactAsyncInfo = asyncInfo;
         });
     });
 
@@ -268,6 +268,12 @@
                     <span>{TimeUtil.formatDuration(artifact.duration)}</span>
                 </div>
             {/if}
+
+            {#if artifactAsyncInfo?.description}
+                <div class="flex items-center dark:text-gray-400 text-sm mt-1">
+                    <span>{artifactAsyncInfo?.description}</span>
+                </div>
+            {/if}
             
             {#if userConnected}
                 <div class="mt-4 bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
@@ -345,10 +351,10 @@
             {/if}
         </div>
         
-        {#if artifactPosterURL}
+        {#if artifactAsyncInfo?.poster}
             <div class="ml-4 flex-shrink-0" style="max-width: 40%;">
                 <img 
-                    src={artifactPosterURL} 
+                    src={artifactAsyncInfo.poster} 
                     alt="{artifact.title} poster" 
                     class="rounded-lg shadow-md max-h-64 w-auto object-cover"
                 />

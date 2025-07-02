@@ -146,6 +146,10 @@ export function filterBacklogItems(items: BacklogItem[], artifactType: ArtifactT
         items.sort((a, b) => {
             return a.rank - b.rank;
         });
+    } else if (filters.orderBy.type === BacklogOrder.RATING) {
+        items.sort((a, b) => {
+            return (b.artifact.meanRating ?? -Infinity) - (a.artifact.meanRating ?? -Infinity)
+        });
     }
     if (filters.genres.included.length > 0) {
         items = items.filter((item) => {

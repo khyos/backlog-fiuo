@@ -1,6 +1,6 @@
 import { LinkType } from "$lib/model/Link";
 import { TMDB } from "$lib/tmdb/TMDB";
-import { error, text } from "@sveltejs/kit";
+import { error, json } from "@sveltejs/kit";
 import { TvshowDB } from "$lib/server/model/tvshow/TvshowDB";
 import type { RequestEvent } from "./$types";
 
@@ -10,9 +10,9 @@ export async function GET({ params }: RequestEvent) {
 	if (tvshow?.links) {
 		const link = tvshow.links.find(link => link.type === LinkType.TMDB);
         if (link) {
-            const url = await TMDB.getTvshowImageURL(link.url);
-            if (url) {
-                return text(url);
+            const tmdbTvshow = await TMDB.getTvshow(link.url, 'fr-FR');
+            if (tmdbTvshow) {
+                return json(tmdbTvshow);
             }
         }
 	}

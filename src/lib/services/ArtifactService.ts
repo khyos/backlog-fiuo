@@ -1,4 +1,4 @@
-import { Artifact, ArtifactType, type IArtifact } from "$lib/model/Artifact";
+import { Artifact, ArtifactType, type ArtifactAsyncInfo, type IArtifact } from "$lib/model/Artifact";
 import { Game, type IGame } from "$lib/model/game/Game";
 import { Movie } from "$lib/model/movie/Movie";
 import { Tvshow } from "$lib/model/tvshow/Tvshow";
@@ -6,19 +6,31 @@ import { TvshowEpisode } from "$lib/model/tvshow/TvshowEpisode";
 import { TvshowSeason } from "$lib/model/tvshow/TvshowSeason";
 import { UserArtifact, UserArtifactStatus, type IUserArtifact } from "$lib/model/UserArtifact";
 
-export async function getPosterURL(artifactType: ArtifactType, artifactId: number) {
-    let url = "";
+export async function getAsyncInfo(artifactType: ArtifactType, artifactId: number) {
+    const asyncInfo: ArtifactAsyncInfo = {
+        description: null,
+        poster: null
+    };
+
     if (artifactType === ArtifactType.GAME) {
         const response = await fetch(`/api/game/${artifactId}/poster`);
-        url = await response.text();
+        asyncInfo.poster = await response.text();
     } else if (artifactType === ArtifactType.MOVIE) {
-        const response = await fetch(`/api/movie/${artifactId}/poster`);
-        url = await response.text();
+        const response = await fetch(`/api/movie/${artifactId}/tmdb`);
+        const info = await response.json();
+        asyncInfo.poster = info?.poster_path;
+        asyncInfo.description = info?.overview;
     } else if (artifactType === ArtifactType.TVSHOW) {
-        const response = await fetch(`/api/tvshow/${artifactId}/poster`);
-        url = await response.text();
+        const response = await fetch(`/api/tvshow/${artifactId}/tmdb`);
+        const info = await response.json();
+        asyncInfo.poster = info?.poster_path;
+        asyncInfo.description = info?.overview;
     }
-    return url;
+    return asyncInfo;
+}
+
+export async function getPosterURL(artifactType: ArtifactType, artifactId: number) {
+    return (await getAsyncInfo(artifactType, artifactId)).poster;
 }
 
 export const getArtifact = async (type: ArtifactType, id: number, bFetchUserInfo: boolean = false): Promise<Artifact> => {

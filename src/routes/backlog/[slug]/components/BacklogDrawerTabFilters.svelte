@@ -13,6 +13,7 @@
     import type { Platform } from "$lib/model/game/Platform";
     import type { Tag } from "$lib/model/Tag";
     import { backlogStore } from "../stores/BacklogStore";
+    import { BacklogOrder, BacklogOrderLabel } from "$lib/model/Backlog";
     
     export let selectedTab: string = "filters";
     export let genres: Genre[] = [];
@@ -22,8 +23,9 @@
     $: backlogStoreInst = $backlogStore;
 
     $: orderBacklogByItems = [
-        { value: backlogStoreInst.backlogFilters.orderBy.type, name: backlogStoreInst.backlogFilters.orderBy.type },
-        { value: "dateAdded", name: "Date Added in List" }
+        { value: backlogStoreInst.backlogFilters.orderBy.type, name: BacklogOrderLabel[backlogStoreInst.backlogFilters.orderBy.type] },
+        { value: BacklogOrder.DATE_ADDED, name: BacklogOrderLabel[BacklogOrder.DATE_ADDED] },
+        { value: BacklogOrder.RATING, name: BacklogOrderLabel[BacklogOrder.RATING] }
     ];
 
     let genreItems = genres.map((genre) => { return { value: genre.id, name: genre.title } }) ;

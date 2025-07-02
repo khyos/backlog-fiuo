@@ -8,8 +8,10 @@
         ListgroupItem,
         Modal,
         Select,
+        Toast,
     } from "flowbite-svelte";
     import {
+    CheckCircleSolid,
         PlusOutline,
     } from "flowbite-svelte-icons";
     import { Tag } from "$lib/model/Tag";
@@ -21,7 +23,7 @@
     import { TimeUtil } from "$lib/util/TimeUtil";
     import BacklogItemComp from "./components/BacklogItemComp.svelte";
     import { pageStore, hideMoveToBacklog, hideMoveToRank, toggleDrawer } from "./stores/PageStore";
-    import { filteredBacklogItems, initializeStore, refreshBacklog } from "./stores/BacklogStore";
+    import { copyAiPrompt, filteredBacklogItems, initializeStore, refreshBacklog } from "./stores/BacklogStore";
     import { tagStore } from "./stores/TagStore";
     import { Genre } from "$lib/model/Genre";
     import { Platform } from "$lib/model/game/Platform";
@@ -99,14 +101,24 @@
 </script>
 
 <Listgroup>
-    <div style="display:flex">
+    <div class="flex p-1">
         <h3
             class="p-1 text-xl font-medium text-gray-900 dark:text-white"
             style="flex-grow: 1; padding-left: 1rem"
         >
             {data.backlog.title} ({TimeUtil.formatDuration(totalTime)})
         </h3>
-        <Button onclick={toggleDrawer}>Filters / Add</Button>
+        {#if $pageStore.isCopiedToastVisible}
+            <Toast class="fixed bottom-4 left-1/2 transform -translate-x-1/2" params={{ delay: 250, duration: 1000 }} dismissable={false}>
+                {#snippet icon()}
+                    <CheckCircleSolid class="h-6 w-6" />
+                {/snippet}
+                Copied !
+            </Toast>
+        {/if}
+
+        <Button size="xs" class="mr-1" onclick={copyAiPrompt}>AI</Button>
+        <Button size="xs" onclick={toggleDrawer}>Filters / Add</Button>
     </div>
     {#each $filteredBacklogItems as backlogItem}
         <ListgroupItem>

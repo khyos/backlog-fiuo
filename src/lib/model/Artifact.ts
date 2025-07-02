@@ -43,6 +43,11 @@ export interface IArtifact extends ISerializable {
     userInfo: IUserArtifact | null
 }
 
+export type ArtifactAsyncInfo = {
+    description: string | null,
+    poster: string | null
+}
+
 export abstract class Artifact implements Serializable<IArtifact> {
     id: number
     links: Link[] = []

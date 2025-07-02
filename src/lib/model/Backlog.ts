@@ -12,9 +12,17 @@ export enum BacklogOrder {
     RANK = "rank",
     ELO = "elo",
     DATE_ADDED = "dateAdded",
-    DATE_RELEASE = "dateRelease"
+    DATE_RELEASE = "dateRelease",
+    RATING = "rating"
 }
 
+export const BacklogOrderLabel = {
+    [BacklogOrder.RANK]: "Rank",
+    [BacklogOrder.ELO]: "Elo",
+    [BacklogOrder.DATE_ADDED]: "Date Added in List",
+    [BacklogOrder.DATE_RELEASE]: "Release Date",
+    [BacklogOrder.RATING]: "Rating"
+} as const;
 
 export const SERIALIZE_TYPE = 'Backlog';
 
