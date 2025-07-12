@@ -28,6 +28,19 @@
     const showTags = () => {
         showFullTags = true;
     };
+
+    const getPriceTagColor = (price: Price) => {
+        if (!price.historyLow) {
+            return "primary";
+        }
+        if (price.current <= price.historyLow) {
+            return "green";
+        }
+        if (price.current <= price.historyLow * 1.10) {
+            return "purple"
+        }
+        return "primary";
+    }
 </script>
 
 <div
@@ -76,7 +89,7 @@
             {/if}
         </div>
         {#if prices?.[backlogItem.artifact.id]}
-            <Badge class="mr-1">
+            <Badge color={getPriceTagColor(prices[backlogItem.artifact.id])} class="mr-1">
                 <button on:click={() => openLink(backlogStoreInst.backlog.artifactType, LinkType.ITAD, prices[backlogItem.artifact.id].id)}>
                     {prices[backlogItem.artifact.id].current}€ / {prices[backlogItem.artifact.id].historyLow}€
                 </button>

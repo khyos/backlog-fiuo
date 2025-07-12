@@ -1,3 +1,4 @@
+import { IGDB } from "$lib/igdb/IGDB";
 import { ArtifactType, type IArtifactDB } from "$lib/model/Artifact";
 import { BacklogOrder, BacklogRankingType } from "$lib/model/Backlog";
 import { BacklogItem } from "$lib/model/BacklogItem";
@@ -236,7 +237,7 @@ export class GameDB {
     }
 
     static addGenre(gameId: number, genreId: number) {
-        db.run(`INSERT INTO game_game_genre (artifactId, genreId) VALUES (?, ?)`, [gameId, genreId]);
+        db.run(`INSERT OR IGNORE INTO game_game_genre (artifactId, genreId) VALUES (?, ?)`, [gameId, genreId]);
     }
 
     static deleteGenre(gameId: number, genreId: number) {
@@ -254,12 +255,12 @@ export class GameDB {
 
         const platformsToAdd = platformIds.filter(id => !existingPlatformsIds.includes(id));
         for (const platformId of platformsToAdd) {
-            this.addPlatform(gameId, platformId);
+            await this.addPlatform(gameId, platformId);
         }
     }
 
-    static addPlatform(gameId: number, platformId: number) {
-        db.run(`INSERT INTO game_platform (artifactId, platformId) VALUES (?, ?)`, [gameId, platformId]);
+    static async addPlatform(gameId: number, platformId: number) {
+        db.run(`INSERT OR IGNORE INTO game_platform (artifactId, platformId) VALUES (?, ?)`, [gameId, platformId]);
     }
 
     static deletePlatform(gameId: number, platformId: number) {

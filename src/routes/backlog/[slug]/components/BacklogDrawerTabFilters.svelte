@@ -14,6 +14,7 @@
     import type { Tag } from "$lib/model/Tag";
     import { backlogStore } from "../stores/BacklogStore";
     import { BacklogOrder, BacklogOrderLabel } from "$lib/model/Backlog";
+    import { get } from "svelte/store";
     
     export let selectedTab: string = "filters";
     export let genres: Genre[] = [];
@@ -22,10 +23,13 @@
 
     $: backlogStoreInst = $backlogStore;
 
+    const originalOrderByType = get(backlogStore).backlogFilters.orderBy.type;
+
     $: orderBacklogByItems = [
-        { value: backlogStoreInst.backlogFilters.orderBy.type, name: BacklogOrderLabel[backlogStoreInst.backlogFilters.orderBy.type] },
+        { value: originalOrderByType, name: BacklogOrderLabel[originalOrderByType] },
         { value: BacklogOrder.DATE_ADDED, name: BacklogOrderLabel[BacklogOrder.DATE_ADDED] },
-        { value: BacklogOrder.RATING, name: BacklogOrderLabel[BacklogOrder.RATING] }
+        { value: BacklogOrder.RATING, name: BacklogOrderLabel[BacklogOrder.RATING] },
+        { value: BacklogOrder.DATE_RELEASE, name: BacklogOrderLabel[BacklogOrder.DATE_RELEASE] }
     ];
 
     let genreItems = genres.map((genre) => { return { value: genre.id, name: genre.title } }) ;

@@ -181,7 +181,7 @@ export class MovieDB {
     }
 
     static addGenre(movieId: number, genreId: number) {
-        db.run(`INSERT INTO movie_movie_genre (artifactId, genreId) VALUES (?, ?)`, [movieId, genreId]);
+        db.run(`INSERT OR IGNORE INTO movie_movie_genre (artifactId, genreId) VALUES (?, ?)`, [movieId, genreId]);
     }
 
     static deleteGenre(movieId: number, genreId: number) {

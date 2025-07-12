@@ -10,7 +10,7 @@ export class PlatformDB {
 
     static addPlatform(platformId: number, title: string): Promise<void> {
         return new Promise((resolve, reject) => {
-            db.run(`INSERT INTO platform (id, title) VALUES (?, ?)`, [platformId, title], async function (error) {
+            db.run(`INSERT OR IGNORE INTO platform (id, title) VALUES (?, ?)`, [platformId, title], async function (error) {
                 if (error) {
                     reject(error);
                 }
