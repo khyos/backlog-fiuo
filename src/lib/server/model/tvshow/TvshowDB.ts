@@ -322,6 +322,11 @@ export class TvshowDB {
         }
     }
 
+    static async deleteTvshowEpisode(id: number) {
+        db.run(`DELETE FROM artifact WHERE id = ?`, [id]);
+        db.run(`DELETE FROM user_artifact WHERE artifactId = ?`, [id]);
+    }
+
     static async getUserOngoingTvShows(userId: number, fetchOnhold: boolean = false): Promise<Tvshow[]> {
         const statusCondition = fetchOnhold
             ? `AND (user_artifact.status = 'ongoing' OR user_artifact.status = 'onhold')`

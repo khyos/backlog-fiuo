@@ -2,18 +2,18 @@ import type { Artifact } from '$lib/model/Artifact';
 import { writable } from 'svelte/store';
 
 export type UserListPageStore = {
-    hiddenDrawer: boolean;
+    openDrawer: boolean;
     selectedTab: 'filters' | 'add';
     selectedArtifact?: Artifact;
 };
 
 export const pageStore = writable<UserListPageStore>({
-    hiddenDrawer: true,
+    openDrawer: false,
     selectedTab: 'filters'
 });
 export const toggleDrawer = () => {
     pageStore.update(s => ({
         ...s,
-        hiddenDrawer: !s.hiddenDrawer
+        openDrawer: !s.openDrawer
     }));
 }

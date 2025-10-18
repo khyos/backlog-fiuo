@@ -161,6 +161,12 @@ const updateTMDB = async (tvshowId: number, url: string) => {
                             }
                             seasonDuration += episode.runtime * 60;
                         }
+                        for (const tvshowEpisode of tvshowSeason.children) {
+                            const episode = tmdbTvshowSeason.episodes.find(child => child.episode_number === tvshowEpisode.childIndex);
+                            if (!episode) {
+                                await TvshowDB.deleteTvshowEpisode(tvshowEpisode.id);
+                            }
+                        }
                     }
                     await ArtifactDB.updateDuration(tvshowSeason.id, seasonDuration);
                     duration += seasonDuration;

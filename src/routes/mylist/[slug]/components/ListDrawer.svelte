@@ -1,12 +1,11 @@
 <script lang="ts">
     import { sineIn } from "svelte/easing";
     import { 
-        CloseButton, 
         Drawer,
         Tabs 
     } from "flowbite-svelte";
     
-    import { pageStore, toggleDrawer } from "../stores/PageStore";
+    import { pageStore } from "../stores/PageStore";
     import type { Genre } from "$lib/model/Genre";
     import type { Platform } from "$lib/model/game/Platform";
     import ListDrawerTabFilters from "./ListDrawerTabFilters.svelte";
@@ -23,17 +22,15 @@
 
 <Drawer
     placement="right"
-    transitionType="fly"
     transitionParams={transitionDrawerParams}
-    hidden={$pageStore.hiddenDrawer}
+    bind:open={$pageStore.openDrawer}
     id="sidebar1"
-    bgOpacity="bg-opacity-25"
-    width="w-96"
+    class="w-full md:w-92 backdrop:bg-black/25"
 >
     <Tabs
         tabStyle="full"
-        defaultClass="flex divide-x rtl:divide-x-reverse"
         style="align-items: center"
+        class="mr-8"
     >
         <ListDrawerTabFilters
             bind:selectedTab={$pageStore.selectedTab}
@@ -42,11 +39,6 @@
         />
         <ListDrawerTabAdd
             bind:selectedTab={$pageStore.selectedTab}
-        />
-        
-        <CloseButton
-            on:click={toggleDrawer}
-            class="dark:text-white"
         />
     </Tabs>
 </Drawer>

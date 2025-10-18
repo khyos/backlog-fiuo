@@ -35,7 +35,7 @@
     >
         {data.list.artifactType} ({TimeUtil.formatDuration(totalTime)})
     </h3>
-    <Button on:click={toggleDrawer}>Filters / Add</Button>
+    <Button onclick={toggleDrawer}>Filters / Add</Button>
 </div>
 <Table>
     <TableHead>
@@ -49,7 +49,7 @@
         <TableHeadCell>End Date</TableHeadCell>
         {/if}
     </TableHead>
-    <TableBody tableBodyClass="divide-y">
+    <TableBody>
         {#each $filteredArtifacts as artifact}
             <ListItemComp
                 {artifact}

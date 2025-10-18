@@ -6,7 +6,7 @@ import { backlogStore } from './BacklogStore';
 
 export type BacklogPageStore = {
     backlogsForSelect?: SelectOptionType<any>[],
-    hiddenDrawer: boolean;
+    openDrawer: boolean;
     isCopiedToastVisible: boolean;
     selectedTab: 'filters' | 'add' | 'order';
     selectedBacklogItem?: BacklogItem;
@@ -15,7 +15,7 @@ export type BacklogPageStore = {
 };
 
 export const pageStore = writable<BacklogPageStore>({
-    hiddenDrawer: true,
+    openDrawer: false,
     isCopiedToastVisible: false,
     selectedTab: 'filters',
     showMoveToBacklog: false,
@@ -25,7 +25,7 @@ export const pageStore = writable<BacklogPageStore>({
 export const toggleDrawer = () => {
     pageStore.update(s => ({
         ...s,
-        hiddenDrawer: !s.hiddenDrawer
+        openDrawer: !s.openDrawer
     }));
 }
 

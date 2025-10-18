@@ -1,7 +1,6 @@
 <script lang="ts">
     import { sineIn } from "svelte/easing";
     import { 
-        CloseButton, 
         Drawer,
         Tabs, 
         type drawerTransitionParamTypes
@@ -10,7 +9,7 @@
     import BacklogDrawerTabAdd from "./BacklogDrawerTabAdd.svelte";
     import BacklogDrawerTabFilters from "./BacklogDrawerTabFilters.svelte";
     import BacklogDrawerTabOrder from "./BacklogDrawerTabOrder.svelte";
-    import { pageStore, toggleDrawer } from "../stores/PageStore";
+    import { pageStore } from "../stores/PageStore";
     import type { Genre } from "$lib/model/Genre";
     import type { Platform } from "$lib/model/game/Platform";
     import type { Tag } from "$lib/model/Tag";
@@ -33,14 +32,14 @@
 <Drawer
     placement="right"
     transitionParams={transitionDrawerParams}
-    hidden={$pageStore.hiddenDrawer}
+    bind:open={$pageStore.openDrawer}
     id="sidebar1"
-    backdropClass="opacity-25"
-    class="w-full md:w-92"
+    class="w-full md:w-92 backdrop:bg-black/25"
 >
     <Tabs
         tabStyle="full"
         style="align-items: center"
+        class="mr-8"
     >
         <BacklogDrawerTabFilters
             bind:selectedTab={$pageStore.selectedTab}
@@ -57,11 +56,6 @@
             bind:selectedTab={$pageStore.selectedTab}
             canEdit={canEdit}
             {onMoveBacklogItem}
-        />
-        
-        <CloseButton
-            onclick={toggleDrawer}
-            class="dark:text-white"
         />
     </Tabs>
 </Drawer>

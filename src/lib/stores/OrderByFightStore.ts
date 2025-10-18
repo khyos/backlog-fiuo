@@ -76,10 +76,10 @@ const updatePosterB = async (store: OrderByFightStore) => {
 
 export const startOrderByFight = async (artifactId?: number) => {
     const pageStoreInst = get(pageStore);
-    if (pageStoreInst.hiddenDrawer || pageStoreInst.selectedTab !== 'order') {
+    if (!pageStoreInst.openDrawer || pageStoreInst.selectedTab !== 'order') {
         pageStore.update(s => ({
             ...s,
-            hiddenDrawer: false,
+            openDrawer: true,
             selectedTab: 'order'
         }));
     }
