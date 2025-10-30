@@ -52,16 +52,16 @@ function extractUniqueTagsFromBacklog(backlog: Backlog) {
 
 async function fetchGenres(artifactType: ArtifactType) {
 	if (artifactType === ArtifactType.ANIME) {
-		return await AnimeDB.getAllGenres();
+		return await AnimeDB.getGenreDefinitions();
 	}
 	else if (artifactType === ArtifactType.GAME) {
-		return await GameDB.getAllGenres();
+		return await GameDB.getGenreDefinitions();
 	} 
 	else if (artifactType === ArtifactType.MOVIE) {
-		return await MovieDB.getAllGenres();
+		return await MovieDB.getGenreDefinitions();
 	}
 	else if (artifactType === ArtifactType.TVSHOW) {
-		return await TvshowDB.getAllGenres();
+		return await TvshowDB.getGenreDefinitions();
 	}
 	return [];
 }

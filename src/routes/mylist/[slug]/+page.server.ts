@@ -48,16 +48,16 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 async function fetchGenres(artifactType: ArtifactType) {
 	if (artifactType === ArtifactType.GAME) {
-		return await GameDB.getAllGenres();
+		return await GameDB.getGenreDefinitions();
 	} 
 	else if (artifactType === ArtifactType.MOVIE) {
-		return await MovieDB.getAllGenres();
+		return await MovieDB.getGenreDefinitions();
 	}
 	else if (artifactType === ArtifactType.TVSHOW) {
-		return await TvshowDB.getAllGenres();
+		return await TvshowDB.getGenreDefinitions();
 	}
 	else if (artifactType === ArtifactType.ANIME) {
-		return await AnimeDB.getAllGenres();
+		return await AnimeDB.getGenreDefinitions();
 	}
 	return [];
 }

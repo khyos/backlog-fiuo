@@ -93,7 +93,7 @@ export async function PUT({ params, request, locals }: RequestEvent) {
                     const igdbGame = await IGDB.getGame(url);
                     const date = igdbGame.first_release_date ? new Date(igdbGame.first_release_date * 1000) : undefined;
                     await GameDB.updateGame(gameId, igdbGame.name, date);
-                    await GameDB.updateGenres(gameId, igdbGame.genres);
+                    await GameDB.updateAssignedGenres(gameId, igdbGame.genres);
                     await GameDB.updatePlatforms(gameId, igdbGame.platforms);
                 } catch {
                     return error(500, "Failed to Update IGDB");

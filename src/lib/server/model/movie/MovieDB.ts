@@ -20,7 +20,7 @@ export class MovieDB {
         const releaseDate = new Date(parseInt(row.releaseDate, 10));
         const movie = new Movie(row.id, row.title, row.type, releaseDate, row.duration);
         
-        movie.genres = await MovieDB.getGenres(id);
+        movie.genres = await MovieDB.getAssignedGenres(id);
         movie.ratings = await RatingDB.getRatings(id);
         movie.links = await LinkDB.getLinks(id);
         
@@ -40,28 +40,28 @@ export class MovieDB {
     // ========================================
     // Genre Methods
     // ========================================
-    static async getGenres(movieId: number): Promise<Genre[]> {
-        return await ArtifactDB.getGenres(movieId, 'movie_genre', 'movie_movie_genre');
+    static async getGenreDefinitions(): Promise<Genre[]> {
+        return await ArtifactDB.getGenreDefinitions('movie_genre');
     }
 
-    static async getAllGenres(): Promise<Genre[]> {
-        return await ArtifactDB.getAllGenres('movie_genre');
+    static addGenreDefinition(genreId: number, title: string): Promise<void> {
+        return ArtifactDB.addGenreDefinition(genreId, title, 'movie_genre');
     }
 
-    static async addGenre(movieId: number, genreId: number): Promise<void> {
-        return await ArtifactDB.addGenre(movieId, genreId, 'movie_movie_genre');
+    static async getAssignedGenres(movieId: number): Promise<Genre[]> {
+        return await ArtifactDB.getAssignedGenres(movieId, 'movie_genre', 'movie_movie_genre');
     }
 
-    static async updateGenres(movieId: number, genreIds: number[]): Promise<void> {
-        return await ArtifactDB.updateGenres(movieId, genreIds, MovieDB.getGenres, 'movie_movie_genre');
+    static async assignGenre(movieId: number, genreId: number): Promise<void> {
+        return await ArtifactDB.assignGenre(movieId, genreId, 'movie_movie_genre');
     }
 
-    static async deleteGenre(movieId: number, genreId: number): Promise<void> {
-        return await ArtifactDB.deleteGenre(movieId, genreId, 'movie_movie_genre');
+    static async updateAssignedGenres(movieId: number, genreIds: number[]): Promise<void> {
+        return await ArtifactDB.updateAssignedGenres(movieId, genreIds, MovieDB.getAssignedGenres, 'movie_movie_genre');
     }
 
-    static addMovieGenre(genreId: number, title: string): Promise<void> {
-        return ArtifactDB.addArtifactGenre(genreId, title, 'movie_genre');
+    static async unassignGenre(movieId: number, genreId: number): Promise<void> {
+        return await ArtifactDB.unassignGenre(movieId, genreId, 'movie_movie_genre');
     }
 
     // ========================================
@@ -76,7 +76,7 @@ export class MovieDB {
             async (row: Record<string, unknown>) => {
                 const releaseDate = new Date(parseInt(row.releaseDate as string, 10));
                 const movie = new Movie(row.artifactId as number, row.title as string, row.type as ArtifactType, releaseDate, row.duration as number);
-                movie.genres = await MovieDB.getGenres(row.artifactId as number);
+                movie.genres = await MovieDB.getAssignedGenres(row.artifactId as number);
                 movie.ratings = await RatingDB.getRatings(row.artifactId as number);
                 return movie;
             }
@@ -91,7 +91,7 @@ export class MovieDB {
         
         // Add genres
         for (const genreId of genreIds) {
-            await MovieDB.addGenre(movieId, genreId);
+            await MovieDB.assignGenre(movieId, genreId);
         }
         
         // Add links
@@ -106,7 +106,7 @@ export class MovieDB {
         
         // Create and return movie object
         const movie = new Movie(movieId, title, ArtifactType.MOVIE, releaseDate, duration);
-        movie.genres = await MovieDB.getGenres(movieId);
+        movie.genres = await MovieDB.getAssignedGenres(movieId);
         movie.links = links;
         movie.ratings = ratings;
         return movie;

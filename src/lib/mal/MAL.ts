@@ -174,7 +174,7 @@ export class MAL {
             
             for (const genre of genres.data) {
                 try {
-                    await AnimeDB.addAnimeGenre(genre.mal_id, genre.name);
+                    await AnimeDB.addGenreDefinition(genre.mal_id, genre.name);
                 } catch (e: any) {
                     console.error(e.message);
                 }

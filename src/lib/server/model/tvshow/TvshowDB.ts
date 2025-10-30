@@ -23,7 +23,7 @@ export class TvshowDB {
         const releaseDate = new Date(parseInt(row.releaseDate, 10));
         const tvshow = new Tvshow(row.id, row.title, row.type, releaseDate, row.duration);
         
-        tvshow.genres = await TvshowDB.getGenres(id);
+        tvshow.genres = await TvshowDB.getAssignedGenres(id);
         tvshow.ratings = await RatingDB.getRatings(id);
         tvshow.links = await LinkDB.getLinks(id);
         
@@ -78,28 +78,28 @@ export class TvshowDB {
     // ========================================
     // Genre Methods
     // ========================================
-    static async getGenres(tvshowId: number): Promise<Genre[]> {
-        return await ArtifactDB.getGenres(tvshowId, 'tvshow_genre', 'tvshow_tvshow_genre');
+     static async getGenreDefinitions(): Promise<Genre[]> {
+        return await ArtifactDB.getGenreDefinitions('tvshow_genre');
     }
 
-    static async getAllGenres(): Promise<Genre[]> {
-        return await ArtifactDB.getAllGenres('tvshow_genre');
+    static addGenreDefinition(genreId: number, title: string): Promise<void> {
+        return ArtifactDB.addGenreDefinition(genreId, title, 'tvshow_genre');
     }
 
-    static async addGenre(tvshowId: number, genreId: number): Promise<void> {
-        return await ArtifactDB.addGenre(tvshowId, genreId, 'tvshow_tvshow_genre');
+    static async getAssignedGenres(tvshowId: number): Promise<Genre[]> {
+        return await ArtifactDB.getAssignedGenres(tvshowId, 'tvshow_genre', 'tvshow_tvshow_genre');
     }
 
-    static async updateGenres(tvshowId: number, genreIds: number[]): Promise<void> {
-        return await ArtifactDB.updateGenres(tvshowId, genreIds, TvshowDB.getGenres, 'tvshow_tvshow_genre');
+    static async assignGenre(tvshowId: number, genreId: number): Promise<void> {
+        return await ArtifactDB.assignGenre(tvshowId, genreId, 'tvshow_tvshow_genre');
     }
 
-    static async deleteGenre(tvshowId: number, genreId: number): Promise<void> {
-        return await ArtifactDB.deleteGenre(tvshowId, genreId, 'tvshow_tvshow_genre');
+    static async updateAssignedGenres(tvshowId: number, genreIds: number[]): Promise<void> {
+        return await ArtifactDB.updateAssignedGenres(tvshowId, genreIds, TvshowDB.getAssignedGenres, 'tvshow_tvshow_genre');
     }
 
-    static addTvshowGenre(genreId: number, title: string): Promise<void> {
-        return ArtifactDB.addArtifactGenre(genreId, title, 'tvshow_genre');
+    static async unassignGenre(tvshowId: number, genreId: number): Promise<void> {
+        return await ArtifactDB.unassignGenre(tvshowId, genreId, 'tvshow_tvshow_genre');
     }
 
     // ========================================
@@ -124,7 +124,7 @@ export class TvshowDB {
             async (row: Record<string, unknown>) => {
                 const releaseDate = new Date(parseInt(row.releaseDate as string, 10));
                 const tvshow = new Tvshow(row.artifactId as number, row.title as string, row.type as ArtifactType, releaseDate, row.duration as number);
-                tvshow.genres = await TvshowDB.getGenres(row.artifactId as number);
+                tvshow.genres = await TvshowDB.getAssignedGenres(row.artifactId as number);
                 tvshow.ratings = await RatingDB.getRatings(row.artifactId as number);
                 return tvshow;
             }
@@ -139,7 +139,7 @@ export class TvshowDB {
         
         // Add genres
         for (const genreId of genreIds) {
-            await TvshowDB.addGenre(tvshowId, genreId);
+            await TvshowDB.assignGenre(tvshowId, genreId);
         }
         
         // Add links
@@ -154,7 +154,7 @@ export class TvshowDB {
         
         // Create and return tvshow object
         const tvshow = new Tvshow(tvshowId, title, ArtifactType.TVSHOW, releaseDate, duration);
-        tvshow.genres = await TvshowDB.getGenres(tvshowId);
+        tvshow.genres = await TvshowDB.getAssignedGenres(tvshowId);
         tvshow.links = links;
         tvshow.ratings = ratings;
         return tvshow;

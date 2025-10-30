@@ -65,7 +65,34 @@ export class ArtifactDB {
     // ========================================
     // Genre Methods
     // ========================================
-    static async getGenres(artifactId: number, genreTableName: string, genreMapTableName: string): Promise<Genre[]> {
+    static async getGenreDefinitions(genreTableName: string): Promise<Genre[]> {
+        return await new Promise((resolve, reject) => {
+            db.all(`SELECT * FROM ${genreTableName} ORDER BY title`, async (error, rows: IGenreDB[]) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    const genres: Genre[] = rows.map((row: IGenreDB) => {
+                        return new Genre(row.id, row.title);
+                    });
+                    resolve(genres);
+                }
+            });
+        });
+    }
+
+    static async addGenreDefinition(genreId: number, title: string, genreTableName: string): Promise<void> {
+        return new Promise((resolve, reject) => {
+            db.run(`INSERT OR IGNORE INTO ${genreTableName} (id, title) VALUES (?, ?)`, [genreId, title], function (error) {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve();
+                }
+            });
+        });
+    }
+
+    static async getAssignedGenres(artifactId: number, genreTableName: string, genreMapTableName: string): Promise<Genre[]> {
         return await new Promise((resolve, reject) => {
             db.all(`SELECT ${genreTableName}.id as id, title FROM ${genreMapTableName}
                     INNER JOIN ${genreTableName} ON ${genreMapTableName}.genreId = ${genreTableName}.id
@@ -82,22 +109,7 @@ export class ArtifactDB {
         });
     }
 
-    static async getAllGenres(genreTableName: string): Promise<Genre[]> {
-        return await new Promise((resolve, reject) => {
-            db.all(`SELECT * FROM ${genreTableName} ORDER BY title`, async (error, rows: IGenreDB[]) => {
-                if (error) {
-                    reject(error);
-                } else {
-                    const genres: Genre[] = rows.map((row: IGenreDB) => {
-                        return new Genre(row.id, row.title);
-                    });
-                    resolve(genres);
-                }
-            });
-        });
-    }
-
-    static async addGenre(artifactId: number, genreId: number, genreMapTableName: string): Promise<void> {
+    static async assignGenre(artifactId: number, genreId: number, genreMapTableName: string): Promise<void> {
         return new Promise((resolve, reject) => {
             db.run(`INSERT OR IGNORE INTO ${genreMapTableName} (artifactId, genreId) VALUES (?, ?)`, [artifactId, genreId], function (error) {
                 if (error) {
@@ -109,7 +121,7 @@ export class ArtifactDB {
         });
     }
 
-    static async updateGenres(
+    static async updateAssignedGenres(
         artifactId: number,
         genreIds: number[],
         getGenresMethod: (artifactId: number) => Promise<Genre[]>,
@@ -120,30 +132,18 @@ export class ArtifactDB {
 
         const genresToRemove = existingGenreIds.filter(id => !genreIds.includes(id));
         for (const genreId of genresToRemove) {
-            await ArtifactDB.deleteGenre(artifactId, genreId, genreMapTableName);
+            await ArtifactDB.unassignGenre(artifactId, genreId, genreMapTableName);
         }
 
         const genresToAdd = genreIds.filter(id => !existingGenreIds.includes(id));
         for (const genreId of genresToAdd) {
-            await ArtifactDB.addGenre(artifactId, genreId, genreMapTableName);
+            await ArtifactDB.assignGenre(artifactId, genreId, genreMapTableName);
         }
     }
 
-    static async deleteGenre(artifactId: number, genreId: number, genreMapTableName: string): Promise<void> {
+    static async unassignGenre(artifactId: number, genreId: number, genreMapTableName: string): Promise<void> {
         return new Promise((resolve, reject) => {
             db.run(`DELETE FROM ${genreMapTableName} WHERE artifactId = ? AND genreId = ?`, [artifactId, genreId], function (error) {
-                if (error) {
-                    reject(error);
-                } else {
-                    resolve();
-                }
-            });
-        });
-    }
-
-    static async addArtifactGenre(genreId: number, title: string, genreTableName: string): Promise<void> {
-        return new Promise((resolve, reject) => {
-            db.run(`INSERT OR IGNORE INTO ${genreTableName} (id, title) VALUES (?, ?)`, [genreId, title], function (error) {
                 if (error) {
                     reject(error);
                 } else {

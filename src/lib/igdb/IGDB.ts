@@ -93,7 +93,7 @@ export class IGDB {
         const genres = await response.json();
         for (const genre of genres) {
             try {
-                await GameDB.addGameGenre(genre.id, genre.name);
+                await GameDB.addGenreDefinition(genre.id, genre.name);
             } catch (e) {
                 console.error(String(e));
             } 

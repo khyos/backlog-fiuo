@@ -23,7 +23,7 @@ export class GameDB {
         const game = new Game(row.id, row.title, row.type, releaseDate, row.duration);
         
         game.platforms = await GameDB.getPlatforms(id);
-        game.genres = await GameDB.getGenres(id);
+        game.genres = await GameDB.getAssignedGenres(id);
         game.ratings = await RatingDB.getRatings(id);
         game.links = await LinkDB.getLinks(id);
         
@@ -82,28 +82,29 @@ export class GameDB {
     // ========================================
     // Genre Methods
     // ========================================
-    static async getGenres(gameId: number): Promise<Genre[]> {
-        return await ArtifactDB.getGenres(gameId, 'game_genre', 'game_game_genre');
+    static async getGenreDefinitions(): Promise<Genre[]> {
+        return await ArtifactDB.getGenreDefinitions('game_genre');
     }
 
-    static async getAllGenres(): Promise<Genre[]> {
-        return await ArtifactDB.getAllGenres('game_genre');
+    static addGenreDefinition(genreId: number, title: string): Promise<void> {
+        return ArtifactDB.addGenreDefinition(genreId, title, 'game_genre');
     }
 
-    static async addGenre(gameId: number, genreId: number): Promise<void> {
-        return await ArtifactDB.addGenre(gameId, genreId, 'game_game_genre');
+    static async getAssignedGenres(gameId: number): Promise<Genre[]> {
+        return await ArtifactDB.getAssignedGenres(gameId, 'game_genre', 'game_game_genre');
     }
 
-    static async updateGenres(gameId: number, genreIds: number[]): Promise<void> {
-        return await ArtifactDB.updateGenres(gameId, genreIds, GameDB.getGenres, 'game_game_genre');
+    
+    static async assignGenre(gameId: number, genreId: number): Promise<void> {
+        return await ArtifactDB.assignGenre(gameId, genreId, 'game_game_genre');
     }
 
-    static async deleteGenre(gameId: number, genreId: number): Promise<void> {
-        return await ArtifactDB.deleteGenre(gameId, genreId, 'game_game_genre');
+    static async updateAssignedGenres(gameId: number, genreIds: number[]): Promise<void> {
+        return await ArtifactDB.updateAssignedGenres(gameId, genreIds, GameDB.getAssignedGenres, 'game_game_genre');
     }
 
-    static addGameGenre(genreId: number, title: string): Promise<void> {
-        return ArtifactDB.addArtifactGenre(genreId, title, 'game_genre');
+    static async unassignGenre(gameId: number, genreId: number): Promise<void> {
+        return await ArtifactDB.unassignGenre(gameId, genreId, 'game_game_genre');
     }
 
     // ========================================
@@ -118,7 +119,7 @@ export class GameDB {
             async (row: Record<string, unknown>) => {
                 const releaseDate = new Date(parseInt(row.releaseDate as string, 10));
                 const game = new Game(row.artifactId as number, row.title as string, row.type as ArtifactType, releaseDate, row.duration as number);
-                game.genres = await GameDB.getGenres(row.artifactId as number);
+                game.genres = await GameDB.getAssignedGenres(row.artifactId as number);
                 game.platforms = await GameDB.getPlatforms(row.artifactId as number);
                 game.ratings = await RatingDB.getRatings(row.artifactId as number);
                 return game;
@@ -134,7 +135,7 @@ export class GameDB {
         
         // Add genres
         for (const genreId of genreIds) {
-            await GameDB.addGenre(gameId, genreId);
+            await GameDB.assignGenre(gameId, genreId);
         }
         
         // Add platforms
@@ -154,7 +155,7 @@ export class GameDB {
         
         // Create and return game object
         const game = new Game(gameId, title, ArtifactType.GAME, releaseDate, duration);
-        game.genres = await GameDB.getGenres(gameId);
+        game.genres = await GameDB.getAssignedGenres(gameId);
         game.platforms = await GameDB.getPlatforms(gameId);
         game.links = links;
         game.ratings = ratings;

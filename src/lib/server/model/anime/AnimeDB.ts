@@ -22,7 +22,7 @@ export class AnimeDB {
         const releaseDate = new Date(parseInt(row.releaseDate, 10));
         const anime = new Anime(row.id, row.title, row.type, releaseDate, row.duration);
         
-        anime.genres = await AnimeDB.getGenres(id);
+        anime.genres = await AnimeDB.getAssignedGenres(id);
         anime.ratings = await RatingDB.getRatings(id);
         anime.links = await LinkDB.getLinks(id);
         
@@ -59,20 +59,28 @@ export class AnimeDB {
     // ========================================
     // Genre Methods
     // ========================================
-    static async getGenres(animeId: number): Promise<Genre[]> {
-        return await ArtifactDB.getGenres(animeId, 'anime_genre', 'anime_anime_genre');
+    static async getGenreDefinitions(): Promise<Genre[]> {
+        return await ArtifactDB.getGenreDefinitions('anime_genre');
     }
 
-    static async getAllGenres(): Promise<Genre[]> {
-        return await ArtifactDB.getAllGenres('anime_genre');
+    static addGenreDefinition(genreId: number, title: string): Promise<void> {
+        return ArtifactDB.addGenreDefinition(genreId, title, 'anime_genre');
     }
 
-    static async addGenre(animeId: number, genreId: number): Promise<void> {
-        return await ArtifactDB.addGenre(animeId, genreId, 'anime_anime_genre');
+    static async getAssignedGenres(animeId: number): Promise<Genre[]> {
+        return await ArtifactDB.getAssignedGenres(animeId, 'anime_genre', 'anime_anime_genre');
     }
 
-    static addAnimeGenre(genreId: number, title: string): Promise<void> {
-        return ArtifactDB.addArtifactGenre(genreId, title, 'anime_genre');
+    static async assignGenre(animeId: number, genreId: number): Promise<void> {
+        return await ArtifactDB.assignGenre(animeId, genreId, 'anime_anime_genre');
+    }
+
+    static async updateAssignedGenres(animeId: number, genreIds: number[]): Promise<void> {
+        return await ArtifactDB.updateAssignedGenres(animeId, genreIds, AnimeDB.getAssignedGenres, 'anime_anime_genre');
+    }
+
+    static async unassignGenre(animeId: number, genreId: number): Promise<void> {
+        return await ArtifactDB.unassignGenre(animeId, genreId, 'anime_anime_genre');
     }
 
     // ========================================
@@ -97,7 +105,7 @@ export class AnimeDB {
             async (row: Record<string, unknown>) => {
                 const releaseDate = new Date(parseInt(row.releaseDate as string, 10));
                 const anime = new Anime(row.artifactId as number, row.title as string, row.type as ArtifactType, releaseDate, row.duration as number);
-                anime.genres = await AnimeDB.getGenres(row.artifactId as number);
+                anime.genres = await AnimeDB.getAssignedGenres(row.artifactId as number);
                 anime.ratings = await RatingDB.getRatings(row.artifactId as number);
                 return anime;
             }
@@ -112,7 +120,7 @@ export class AnimeDB {
         
         // Add genres
         for (const genreId of genreIds) {
-            await AnimeDB.addGenre(animeId, genreId);
+            await AnimeDB.assignGenre(animeId, genreId);
         }
         
         // Add links
@@ -127,7 +135,7 @@ export class AnimeDB {
         
         // Create and return anime object
         const anime = new Anime(animeId, title, ArtifactType.ANIME, releaseDate, duration);
-        anime.genres = await AnimeDB.getGenres(animeId);
+        anime.genres = await AnimeDB.getAssignedGenres(animeId);
         anime.links = links;
         anime.ratings = ratings;
         return anime;

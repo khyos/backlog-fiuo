@@ -152,7 +152,7 @@ export class TMDB {
         const jsonResponse = await response.json();
         for (const genre of jsonResponse.genres) {
             try {
-                await MovieDB.addMovieGenre(genre.id, genre.name);
+                await MovieDB.addGenreDefinition(genre.id, genre.name);
             } catch (e: any) {
                 console.error(e.message);
             }   
@@ -233,7 +233,7 @@ export class TMDB {
         const jsonResponse = await response.json();
         for (const genre of jsonResponse.genres) {
             try {
-                await TvshowDB.addTvshowGenre(genre.id, genre.name);
+                await TvshowDB.addGenreDefinition(genre.id, genre.name);
             } catch (e: any) {
                 console.error(e.message);
             }   
