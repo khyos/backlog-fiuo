@@ -2,8 +2,27 @@ import { IGDB_CLIENT_ID, IGDB_CLIENT_SECRET } from "$env/static/private";
 import { GameDB } from "$lib/server/model/game/GameDB";
 import { PlatformDB } from "$lib/server/model/game/PlatformDB";
 
+export type IGDBSearchGameResult = {
+    id: number
+    name: string
+    url: string
+}
+
+export type IGDBGame = {
+    alertnative_names: number[]
+    cover: number
+    first_release_date: number
+    genres: number[]
+    id: number
+    name: string
+    platforms: number[]
+    storyline: string
+    summary: string
+    url: string
+}
+
 export class IGDB {
-    static async authenticateIGDB(): Promise<any> {
+    static async authenticateIGDB(): Promise<{ access_token: string }> {
         const response = await fetch("https://id.twitch.tv/oauth2/token", {
             method: 'POST',
             headers: {
@@ -15,7 +34,7 @@ export class IGDB {
         return await response.json();
     }
 
-    static getHeaders(access_token: string): any {
+    static getHeaders(access_token: string) {
         return {
             'Accept': 'application/json',
             'Client-ID': IGDB_CLIENT_ID,
@@ -23,7 +42,7 @@ export class IGDB {
         };
     }
 
-    static async getGame(gameId: string): Promise<any> {
+    static async getGame(gameId: string): Promise<IGDBGame> {
         const { access_token } = await this.authenticateIGDB();
         const response = await fetch("https://api.igdb.com/v4/games", {
             method: 'POST',
@@ -33,7 +52,7 @@ export class IGDB {
         return (await response.json())[0];
     }
 
-    static async searchGame(query: string): Promise<any> {
+    static async searchGame(query: string): Promise<IGDBSearchGameResult[]> {
         const { access_token } = await this.authenticateIGDB();
         const response = await fetch("https://api.igdb.com/v4/games", {
             method: 'POST',
@@ -64,7 +83,7 @@ export class IGDB {
         return null;
     }
 
-    static async initGenres(): Promise<any> {
+    static async initGenres(): Promise<void> {
         const { access_token } = await this.authenticateIGDB();
         const response = await fetch("https://api.igdb.com/v4/genres", {
             method: 'POST',
@@ -75,13 +94,13 @@ export class IGDB {
         for (const genre of genres) {
             try {
                 await GameDB.addGameGenre(genre.id, genre.name);
-            } catch (e: any) {
-                console.error(e.message);
-            }   
+            } catch (e) {
+                console.error(String(e));
+            } 
         }
     }
 
-    static async initPlatforms(): Promise<any> {
+    static async initPlatforms(): Promise<void> {
         const { access_token } = await this.authenticateIGDB();
         const response = await fetch("https://api.igdb.com/v4/platforms", {
             method: 'POST',
@@ -92,8 +111,8 @@ export class IGDB {
         for (const platform of platforms) {
             try {
                 await PlatformDB.addPlatform(platform.id, platform.name);
-            } catch (e: any) {
-                console.error(e.message);
+            } catch (e) {
+                console.error(String(e));
             }
         }
     }

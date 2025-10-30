@@ -277,7 +277,7 @@
                                 <div class="p-2">
                                     <p>Go to <a href="{site.url}" class="text-blue-600 hover:underline" target="_blank">{site.name}</a></p>
                                     {#each site.helpText as line}
-                                        <p class="mt-1">{@html line}</p>
+                                        <p class="mt-1">{line}</p>
                                     {/each}
                                 </div>
                             </Popover>

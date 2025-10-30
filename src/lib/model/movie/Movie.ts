@@ -25,6 +25,10 @@ export class Movie extends Artifact implements Serializable<IMovie> {
         return nbOfRatings > 0 ? meanRating / nbOfRatings : null;
     }
 
+    computeLastAndNextOngoing(): { last: Artifact | null; next: Artifact | null; } {
+        throw new Error('Not Compatible with this Artifact');
+    }
+
     toJSON() {
         return {
             ...super.toJSON(),

@@ -191,19 +191,19 @@
         }
     }
 
-    function handleSelectStatusChange(event: any, artifactId: number) {
+    function handleSelectStatusChange(event: Event, artifactId: number) {
         const target = event.target as HTMLSelectElement;
         const status: UserArtifactStatus | null = target.value === '' ? null : target.value as UserArtifactStatus;
         updateStatus(artifactId, status);
     }
 
-    function handleCheckboxStatusChange(event: any, artifact: Artifact) {
+    function handleCheckboxStatusChange(event: Event, artifact: Artifact) {
         const target = event.target as HTMLInputElement;
         const status: UserArtifactStatus | null = target.checked ? UserArtifactStatus.FINISHED : null;
         updateStatus(artifact.id, status);
     }
 
-    function handleScoreChange(event: any) {
+    function handleScoreChange(event: Event) {
         const target = event.target as HTMLInputElement;
         if (target.value === '') {
             updateScore(null);

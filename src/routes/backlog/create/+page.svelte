@@ -3,7 +3,10 @@
     import { BacklogRankingType } from "$lib/model/Backlog";
     import { Alert, Button, Input, Label, Select } from "flowbite-svelte";
 
-    let creationMessage: any = null;
+    let creationMessage: {
+        message: string;
+        color: string;
+    } | null = null;
     let selectedArtifactType: string = ArtifactType.GAME;
     let selectedRankingType: string = BacklogRankingType.RANK;
 
@@ -20,7 +23,7 @@
         { value: BacklogRankingType.WISHLIST, name: 'Wishlist' },
     ];
 
-    const createBacklog = (e: any) => {
+    const createBacklog = (e: SubmitEvent) => {
         e.preventDefault();
         document.getElementById("createButton")?.setAttribute("disabled", "");
         creationMessage = {

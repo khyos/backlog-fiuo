@@ -3,7 +3,7 @@ import { JWT_ACCESS_SECRET } from '$env/static/private';
 import type { Handle } from "@sveltejs/kit";
 import jwt from "jsonwebtoken";
 
-export const handle: Handle = async function handle({ event, resolve } : any) {
+export const handle: Handle = async function handle({ event, resolve }) {
 	const authCookie = event.cookies.get("AuthorizationToken");
 	if (authCookie) {
 		// Remove Bearer prefix
