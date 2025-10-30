@@ -4,6 +4,7 @@ import { Backlog, BacklogOrder, BacklogRankingType } from "$lib/model/Backlog";
 import { BacklogItem } from "$lib/model/BacklogItem";
 import { UserRights, type User } from "$lib/model/User";
 import { db, execQuery } from "../database";
+import { AnimeDB } from "./anime/AnimeDB";
 import { BacklogItemDB } from "./BacklogItemDB";
 import { GameDB } from "./game/GameDB";
 import { MovieDB } from "./movie/MovieDB";
@@ -115,7 +116,9 @@ export class BacklogDB {
         }
         
         let backlogItems: BacklogItem[] = [];
-        if (artifactType === ArtifactType.GAME) {
+        if (artifactType === ArtifactType.ANIME) {
+            backlogItems = await AnimeDB.getBacklogItems(backlogId, rankingType, finalBacklogOrder);
+        } else if (artifactType === ArtifactType.GAME) {
             backlogItems = await GameDB.getBacklogItems(backlogId, rankingType, finalBacklogOrder);
         } else if (artifactType === ArtifactType.MOVIE){
             backlogItems = await MovieDB.getBacklogItems(backlogId, rankingType, finalBacklogOrder);

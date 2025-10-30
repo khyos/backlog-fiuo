@@ -1,3 +1,5 @@
+import { Anime } from "$lib/model/anime/Anime";
+import { AnimeEpisode } from "$lib/model/anime/AnimeEpisode";
 import { Artifact, ArtifactType, type ArtifactAsyncInfo, type IArtifact } from "$lib/model/Artifact";
 import { Game, type IGame } from "$lib/model/game/Game";
 import { Movie } from "$lib/model/movie/Movie";
@@ -12,7 +14,12 @@ export async function getAsyncInfo(artifactType: ArtifactType, artifactId: numbe
         poster: null
     };
 
-    if (artifactType === ArtifactType.GAME) {
+    if (artifactType === ArtifactType.ANIME) {
+        const response = await fetch(`/api/anime/${artifactId}/mal`);
+        const info = await response.json();
+        asyncInfo.poster = info?.images?.jpg?.image_url;
+        asyncInfo.description = info?.synopsis;
+    } else if (artifactType === ArtifactType.GAME) {
         const response = await fetch(`/api/game/${artifactId}/poster`);
         asyncInfo.poster = await response.text();
     } else if (artifactType === ArtifactType.MOVIE) {
@@ -49,6 +56,10 @@ export const getArtifact = async (type: ArtifactType, id: number, bFetchUserInfo
 
 export const artifactFromJSON = (type: ArtifactType, json: IArtifact): Artifact => {
     switch (type) {
+        case ArtifactType.ANIME:
+            return Anime.fromJSON(json);
+        case ArtifactType.ANIME_EPISODE:
+            return AnimeEpisode.fromJSON(json);
         case ArtifactType.GAME:
             return Game.fromJSON(json as IGame);
         case ArtifactType.MOVIE:

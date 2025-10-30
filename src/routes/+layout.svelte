@@ -35,6 +35,13 @@
         { name: 'On Going', href: '/ongoing/tvshow' },
         { name: 'My List', href: '/mylist/tvshow' }
     ];
+
+    const animeMenu = [
+        { name: 'Search', href: '/anime' },
+        { name: 'Create', href: '/anime/create' },
+        { name: 'On Going', href: '/ongoing/anime' },
+        { name: 'My List', href: '/mylist/anime' }
+    ];
 </script>
 
 <Navbar class="px-0">
@@ -78,9 +85,15 @@
                 <DropdownItem href={item.href} class="hover:text-primary-600 dark:hover:text-primary-500">{item.name}</DropdownItem>
             {/each}
         </Dropdown>
-        <NavLi class="cursor-pointer">TV Shows<ChevronDownOutline class="w-5 h-5 ms-2 text-primary-800 dark:text-white inline"/></NavLi>
+        <NavLi class="cursor-pointer mr-4">TV Shows<ChevronDownOutline class="w-5 h-5 ms-2 text-primary-800 dark:text-white inline"/></NavLi>
         <Dropdown simple class="w-30">
             {#each tvShowMenu as item}
+                <DropdownItem href={item.href} class="hover:text-primary-600 dark:hover:text-primary-500">{item.name}</DropdownItem>
+            {/each}
+        </Dropdown>
+        <NavLi class="cursor-pointer">Anime<ChevronDownOutline class="w-5 h-5 ms-2 text-primary-800 dark:text-white inline"/></NavLi>
+        <Dropdown simple class="w-30">
+            {#each animeMenu as item}
                 <DropdownItem href={item.href} class="hover:text-primary-600 dark:hover:text-primary-500">{item.name}</DropdownItem>
             {/each}
         </Dropdown>

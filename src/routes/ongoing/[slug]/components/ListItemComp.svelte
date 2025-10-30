@@ -25,7 +25,7 @@
     <TableBodyCell>
         {artifact.lastAndNextOngoing.last?.numbering}
         <br />
-        <span class="font-normal">{artifact.lastAndNextOngoing.last?.title}</span>
+        <span class="font-normal truncate block max-w-xs" title={artifact.lastAndNextOngoing.last?.title}>{artifact.lastAndNextOngoing.last?.title}</span>
     </TableBodyCell>
     <TableBodyCell>
         <div style="display: inline-flex">
@@ -39,11 +39,11 @@
             {/if}
         </div>
         <br />
-        <span class="font-normal">{artifact.lastAndNextOngoing.next?.title}</span>
+        <span class="font-normal truncate block max-w-xs" title={artifact.lastAndNextOngoing.next?.title}>{artifact.lastAndNextOngoing.next?.title}</span>
     </TableBodyCell>
     <TableBodyCell>
         {#if artifact.lastAndNextOngoing.next}
-        <Button size="xs" onclick={() => updateStatus(artifact.lastAndNextOngoing.next.id)}>Seen</Button>
+            <Button size="xs" onclick={() => updateStatus(artifact.lastAndNextOngoing.next.id)}>Seen</Button>
         {/if}
     </TableBodyCell>
 </TableBodyRow>

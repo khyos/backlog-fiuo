@@ -40,7 +40,9 @@
     export let onFetchPrices: () => Promise<void>;
 
     const formatDurationDisplay = (duration: number) => {
-        if (backlogStoreInst.backlog.artifactType === ArtifactType.GAME || backlogStoreInst.backlog.artifactType === ArtifactType.TVSHOW) {
+        if (backlogStoreInst.backlog.artifactType === ArtifactType.GAME || backlogStoreInst.backlog.artifactType === ArtifactType.TVSHOW
+            || backlogStoreInst.backlog.artifactType === ArtifactType.ANIME
+        ) {
             if (duration === backlogStoreInst.backlogFilters.duration.absoluteMax) return "No limit";
             return `${duration}h`;
         } else if (backlogStoreInst.backlog.artifactType === ArtifactType.MOVIE) {

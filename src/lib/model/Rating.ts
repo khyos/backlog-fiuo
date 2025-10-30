@@ -3,6 +3,7 @@ import type { ArtifactType } from "./Artifact";
 import type { ISerializable, Serializable } from "./Serializable";
 
 export enum RatingType {
+    MAL = 'MAL',
     METACRITIC = 'METACRITIC',
     OPENCRITIC = 'OPENCRITIC',
     ROTTEN_TOMATOES_AUDIENCE = 'ROTTEN_TOMATOES_AUDIENCE',
@@ -13,6 +14,11 @@ export enum RatingType {
 
 export function getRatingColor(artifactType: ArtifactType, ratingType: RatingType, rating: number): ColorVariant {
     switch (ratingType) {
+        case RatingType.MAL:
+            if (rating >= 85) return "green";
+            if (rating >= 75) return "indigo";
+            if (rating >= 65) return "yellow";
+            return "red";
         case RatingType.SENSCRITIQUE:
             if (rating >= 75) return "green";
             if (rating >= 70) return "indigo";

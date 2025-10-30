@@ -1,11 +1,23 @@
-import type { IArtifactDB, ArtifactType } from "$lib/model/Artifact";
+import type { IArtifactDB, ArtifactType, Artifact } from "$lib/model/Artifact";
 import { SERIALIZE_TYPE, UserArtifact, UserArtifactStatus, type IUserArtifactDB } from "$lib/model/UserArtifact";
 import { UserList } from "$lib/model/UserList";
 import { type IUserListItemDB } from "$lib/model/UserListItem";
 import { artifactFromJSON } from "$lib/services/ArtifactService";
+import { BacklogOrder, BacklogRankingType } from "$lib/model/Backlog";
+import { BacklogItem } from "$lib/model/BacklogItem";
+import { Genre } from "$lib/model/Genre";
 import { db, execQuery } from "../database";
+import { BacklogItemDB } from "./BacklogItemDB";
+
+export interface IGenreDB {
+    id: number;
+    title: string;
+}
 
 export class ArtifactDB {
+    // ========================================
+    // Basic Getters
+    // ========================================
     static async getArtifacts(artifactType: ArtifactType, page: number, pageSize: number, search: string = ''): Promise<IArtifactDB[]> {
         const query = search
             ? `SELECT * FROM artifact WHERE type = ? AND LOWER(title) LIKE ? ORDER BY (LOWER(title) = ?) desc, length(title) ASC LIMIT ? OFFSET ?`
@@ -26,6 +38,124 @@ export class ArtifactDB {
         });
     }
 
+    static async getArtifactById(id: number): Promise<IArtifactDB | null> {
+        return await new Promise((resolve, reject) => {
+            db.get(`SELECT * FROM artifact WHERE id = ?`, [id], (error, row: IArtifactDB) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve(row || null);
+                }
+            });
+        });
+    }
+
+    static async getChildrenByParentId(parentId: number): Promise<IArtifactDB[]> {
+        return await new Promise((resolve, reject) => {
+            db.all(`SELECT * FROM artifact WHERE parent_artifact_id = ? ORDER BY child_index ASC`, [parentId], (error, rows: IArtifactDB[]) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve(rows || []);
+                }
+            });
+        });
+    }
+
+    // ========================================
+    // Genre Methods
+    // ========================================
+    static async getGenres(artifactId: number, genreTableName: string, genreMapTableName: string): Promise<Genre[]> {
+        return await new Promise((resolve, reject) => {
+            db.all(`SELECT ${genreTableName}.id as id, title FROM ${genreMapTableName}
+                    INNER JOIN ${genreTableName} ON ${genreMapTableName}.genreId = ${genreTableName}.id
+                    WHERE artifactId = ?`, [artifactId], async (error, rows: IGenreDB[]) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    const genres: Genre[] = rows.map((row: IGenreDB) => {
+                        return new Genre(row.id, row.title);
+                    });
+                    resolve(genres);
+                }
+            });
+        });
+    }
+
+    static async getAllGenres(genreTableName: string): Promise<Genre[]> {
+        return await new Promise((resolve, reject) => {
+            db.all(`SELECT * FROM ${genreTableName} ORDER BY title`, async (error, rows: IGenreDB[]) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    const genres: Genre[] = rows.map((row: IGenreDB) => {
+                        return new Genre(row.id, row.title);
+                    });
+                    resolve(genres);
+                }
+            });
+        });
+    }
+
+    static async addGenre(artifactId: number, genreId: number, genreMapTableName: string): Promise<void> {
+        return new Promise((resolve, reject) => {
+            db.run(`INSERT OR IGNORE INTO ${genreMapTableName} (artifactId, genreId) VALUES (?, ?)`, [artifactId, genreId], function (error) {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve();
+                }
+            });
+        });
+    }
+
+    static async updateGenres(
+        artifactId: number,
+        genreIds: number[],
+        getGenresMethod: (artifactId: number) => Promise<Genre[]>,
+        genreMapTableName: string
+    ): Promise<void> {
+        const existingGenres = await getGenresMethod(artifactId);
+        const existingGenreIds = existingGenres.map(genre => genre.id);
+
+        const genresToRemove = existingGenreIds.filter(id => !genreIds.includes(id));
+        for (const genreId of genresToRemove) {
+            await ArtifactDB.deleteGenre(artifactId, genreId, genreMapTableName);
+        }
+
+        const genresToAdd = genreIds.filter(id => !existingGenreIds.includes(id));
+        for (const genreId of genresToAdd) {
+            await ArtifactDB.addGenre(artifactId, genreId, genreMapTableName);
+        }
+    }
+
+    static async deleteGenre(artifactId: number, genreId: number, genreMapTableName: string): Promise<void> {
+        return new Promise((resolve, reject) => {
+            db.run(`DELETE FROM ${genreMapTableName} WHERE artifactId = ? AND genreId = ?`, [artifactId, genreId], function (error) {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve();
+                }
+            });
+        });
+    }
+
+    static async addArtifactGenre(genreId: number, title: string, genreTableName: string): Promise<void> {
+        return new Promise((resolve, reject) => {
+            db.run(`INSERT OR IGNORE INTO ${genreTableName} (id, title) VALUES (?, ?)`, [genreId, title], function (error) {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve();
+                }
+            });
+        });
+    }
+
+    // ========================================
+    // User-related Methods
+    // ========================================
     static async getUserList(userId: number, artifactType: ArtifactType): Promise<UserList> {
         const query = `SELECT *
                        FROM artifact
@@ -120,6 +250,41 @@ export class ArtifactDB {
         });
     }
 
+    static async getUserOngoingArtifacts(
+        userId: number, 
+        artifactType: ArtifactType, 
+        fetchOnhold: boolean = false
+    ): Promise<IArtifactDB[]> {
+        const statusCondition = fetchOnhold
+            ? `AND (user_artifact.status = 'ongoing' OR user_artifact.status = 'onhold')`
+            : `AND user_artifact.status = 'ongoing'`;
+        
+        const query = `
+            SELECT 
+                artifact.*
+            FROM 
+                artifact
+            JOIN 
+                user_artifact ON artifact.id = user_artifact.artifactId
+            WHERE 
+                artifact.type = ?
+                AND user_artifact.userId = ?
+                ${statusCondition}
+        `;
+
+        return await new Promise((resolve, reject) => {
+            db.all(query, [artifactType, userId], async (error, rows: IArtifactDB[]) => {
+                if (error) {
+                    reject(error);
+                } else if (!rows) {
+                    resolve([]);
+                } else {
+                    resolve(rows);
+                }
+            });
+        });
+    }
+
     static async getUserInfo(userId: number, artifactId: number): Promise<UserArtifact | null> {
         return await new Promise((resolve, reject) => {
             db.get(`SELECT * FROM user_artifact WHERE userId = ? AND artifactId = ?`, [userId, artifactId], async (error, row: IUserArtifactDB) => {
@@ -161,6 +326,125 @@ export class ArtifactDB {
                             row.endDate ? new Date(row.endDate) : null
                         ));
                     resolve(userArtifacts);
+                }
+            });
+        });
+    }
+
+    static async getBacklogItems(
+        backlogId: number,
+        rankingType: BacklogRankingType,
+        backlogOrder: BacklogOrder,
+        artifactType: ArtifactType,
+        createArtifactFunction: (row: Record<string, unknown>) => Promise<any> // eslint-disable-line @typescript-eslint/no-explicit-any
+    ): Promise<BacklogItem[]> {
+        let rank = '';
+        if (rankingType === BacklogRankingType.ELO) {
+            rank = ', RANK() OVER (ORDER BY elo DESC) AS rank';
+        } else if (rankingType === BacklogRankingType.WISHLIST) {
+            rank = ', RANK() OVER (ORDER BY releaseDate ASC) AS rank';
+        }
+
+        let sqlOrder = 'rank ASC, dateAdded ASC';
+        if (backlogOrder === BacklogOrder.ELO) {
+            sqlOrder = 'elo DESC, dateAdded ASC';
+        } else if (backlogOrder === BacklogOrder.DATE_ADDED) {
+            sqlOrder = 'dateAdded ASC';
+        } else if (backlogOrder === BacklogOrder.DATE_RELEASE) {
+            sqlOrder = 'releaseDate ASC';
+        }
+
+        return await new Promise((resolve, reject) => {
+            db.all(`SELECT *, CAST(strftime('%s', dateAdded) AS INTEGER) AS dateAdded${rank}
+                    FROM backlog_items
+                    INNER JOIN artifact ON backlog_items.artifactId = artifact.id
+                    WHERE backlogId = ?
+                    ORDER BY ${sqlOrder}`, [backlogId], async (error, rows: Record<string, unknown>[]) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    const backlogItems: BacklogItem[] = await Promise.all(rows.map(async row => {
+                        const artifact = await createArtifactFunction(row);
+                        const tags = await BacklogItemDB.getTags(row.backlogId as number, artifactType, row.artifactId as number);
+                        return new BacklogItem(row.rank as number, row.elo as number, row.dateAdded as number, artifact, tags);
+                    }));
+                    resolve(backlogItems);
+                }
+            });
+        });
+    }
+
+    // ========================================
+    // Create Operations
+    // ========================================
+    static async createArtifact(
+        title: string,
+        artifactType: ArtifactType,
+        description: string = '',
+        releaseDate: Date = new Date(),
+        duration: number = 0
+    ): Promise<number> {
+        return await new Promise((resolve, reject) => {
+            const query = `INSERT INTO artifact (title, description, type, releaseDate, duration) VALUES (?, ?, ?, ?, ?)`;
+            const params = [title, description, artifactType, releaseDate.getTime().toString(), duration];
+
+            db.run(query, params, function (error) {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve(this.lastID);
+                }
+            });
+        });
+    }
+
+    // ========================================
+    // Update Operations
+    // ========================================
+    static async updateArtifact(
+        id: number,
+        title: string,
+        releaseDate: Date = new Date(7258118400000),
+        duration: number = 0
+    ): Promise<void> {
+        return await new Promise((resolve, reject) => {
+            db.run(`UPDATE artifact SET title = ?, releaseDate = ?, duration = ? WHERE id = ?`, 
+                [title, releaseDate.getTime().toString(), duration, id], function (error) {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve();
+                }
+            });
+        });
+    }
+
+    static async updateArtifactWithIndex(
+        id: number,
+        childIndex: number,
+        title: string,
+        releaseDate: Date = new Date(7258118400000),
+        duration: number = 0
+    ): Promise<void> {
+        return await new Promise((resolve, reject) => {
+            db.run(`UPDATE artifact SET child_index = ?, title = ?, releaseDate = ?, duration = ? WHERE id = ?`, 
+                [childIndex, title, releaseDate.getTime().toString(), duration, id], function (error) {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve();
+                }
+            });
+        });
+    }
+
+    static async updateDuration(artifactId: number, duration: number = 0) {
+        return await new Promise((resolve, reject) => {
+            db.run(`UPDATE artifact SET duration = ? WHERE id = ?`, [duration, artifactId], async function (error) {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve(null);
                 }
             });
         });
@@ -282,18 +566,73 @@ export class ArtifactDB {
         });
     }
 
-    static async updateDuration(artifactId: number, duration: number = 0) {
+    // ========================================
+    // Delete Operations
+    // ========================================
+    static async deleteArtifactAndChildren(
+        artifact: Artifact,
+        genreMapTableName: string
+    ): Promise<void> {
+        const id = artifact.id;
+        const artifactIdsToDelete = artifact.getArtifactIds();
+        const questionMarks = new Array(artifactIdsToDelete.length).fill('?').join(',');
+        await db.run(`DELETE FROM artifact WHERE id IN (${questionMarks})`, artifactIdsToDelete);
+        await db.run(`DELETE FROM user_artifact WHERE artifactId IN (${questionMarks})`, [artifactIdsToDelete]);
+        await db.run(`DELETE FROM ${genreMapTableName} WHERE artifactId = ?`, [id]);
+        await db.run(`DELETE FROM rating WHERE artifactId = ?`, [id]);
+        await db.run(`DELETE FROM link WHERE artifactId = ?`, [id]);
+        await db.run(`DELETE FROM backlog_items WHERE artifactId = ?`, [id]);
+        await db.run(`DELETE FROM backlog_item_tag WHERE artifactId = ?`, [id]);
+    }
+
+    static async deleteChildArtifact(artifactId: number): Promise<void> {
+        await db.run(`DELETE FROM artifact WHERE id = ?`, [artifactId]);
+        await db.run(`DELETE FROM user_artifact WHERE artifactId = ?`, [artifactId]);
+    }
+
+    // ========================================
+    // Utility Methods
+    // ========================================
+    static async fetchChildren<T, C>(
+        parents: T[],
+        createChildFunction: (row: IArtifactDB) => C,
+        getParentId: (parent: T) => number,
+        addChildToParent: (parent: T, child: C) => void
+    ): Promise<void> {
+        if (parents.length === 0) return;
+
         return await new Promise((resolve, reject) => {
-            db.run(`UPDATE artifact SET duration = ? WHERE id = ?`, [duration, artifactId], async function (error) {
+            const questionMarks = new Array(parents.length).fill('?').join(',');
+            const parentIds = parents.map(getParentId);
+            const parentsMap = new Map<number, T>();
+            
+            parents.forEach(parent => {
+                parentsMap.set(getParentId(parent), parent);
+            });
+
+            db.all(`SELECT * FROM artifact WHERE parent_artifact_id IN (${questionMarks}) ORDER BY child_index`, 
+                parentIds, async (error, rows: IArtifactDB[]) => {
                 if (error) {
                     reject(error);
                 } else {
-                    resolve(null);
+                    for (const row of rows) {
+                        const child = createChildFunction(row);
+                        if (row.parent_artifact_id) {
+                            const parent = parentsMap.get(row.parent_artifact_id);
+                            if (parent) {
+                                addChildToParent(parent, child);
+                            }
+                        }
+                    }
+                    resolve();
                 }
             });
         });
     }
 
+    // ========================================
+    // Table Creation Methods
+    // ========================================
     static createArtifactTable() {
         execQuery(`CREATE TABLE IF NOT EXISTS artifact (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -316,6 +655,23 @@ export class ArtifactDB {
             startDate TIMESTAMP,
             endDate TIMESTAMP,
             PRIMARY KEY (userId, artifactId)
+        )`);
+    }
+
+    static createGenreTable(genreTableName: string): void {
+        execQuery(`CREATE TABLE IF NOT EXISTS ${genreTableName} (
+            id INTEGER PRIMARY KEY,
+            title TEXT NOT NULL
+        )`);
+    }
+
+    static createGenreMapTable(genreMapTableName: string): void {
+        execQuery(`CREATE TABLE IF NOT EXISTS ${genreMapTableName} (
+            artifactId INTEGER NOT NULL,
+            genreId INTEGER NOT NULL,
+            PRIMARY KEY (artifactId, genreId),
+            FOREIGN KEY (artifactId) REFERENCES artifact(id),
+            FOREIGN KEY (genreId) REFERENCES ${genreMapTableName.split('_')[0]}_genre(id)
         )`);
     }
 }

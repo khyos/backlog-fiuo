@@ -8,6 +8,7 @@ import { User, UserRights } from '$lib/model/User';
 import type { Backlog } from '$lib/model/Backlog';
 import type { Tag } from '$lib/model/Tag';
 import { TvshowDB } from '$lib/server/model/tvshow/TvshowDB';
+import { AnimeDB } from '$lib/server/model/anime/AnimeDB';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const backlogId = parseInt(params.slug);
@@ -50,7 +51,10 @@ function extractUniqueTagsFromBacklog(backlog: Backlog) {
 }
 
 async function fetchGenres(artifactType: ArtifactType) {
-	if (artifactType === ArtifactType.GAME) {
+	if (artifactType === ArtifactType.ANIME) {
+		return await AnimeDB.getAllGenres();
+	}
+	else if (artifactType === ArtifactType.GAME) {
 		return await GameDB.getAllGenres();
 	} 
 	else if (artifactType === ArtifactType.MOVIE) {

@@ -3,12 +3,15 @@ import { BacklogOrder, BacklogRankingType } from "$lib/model/Backlog"
 import type { BacklogItem } from "$lib/model/BacklogItem";
 import type { Game } from "$lib/model/game/Game";
 
+const ANIME_RELEASE_DATE_MIN = 1917;
+const ANIME_RELEASE_DATE_MAX = 2025;
 const GAME_RELEASE_DATE_MIN = 1970;
 const GAME_RELEASE_DATE_MAX = 2025;
 const MOVIE_RELEASE_DATE_MIN = 1895;
 const MOVIE_RELEASE_DATE_MAX = 2025;
 const TVSHOW_RELEASE_DATE_MIN = 1930;
 const TVSHOW_RELEASE_DATE_MAX = 2025;
+const ANIME_MAX_DURATION = 400;
 const GAME_MAX_DURATION = 200;
 const MOVIE_MAX_DURATION = 240;
 const TVSHOW_MAX_DURATION = 400;
@@ -93,7 +96,15 @@ export function createBacklogFilters(artifactType: ArtifactType, rankingType: Ba
             excluded: []
         }
     }
-    if (artifactType === ArtifactType.GAME) {
+    if (artifactType === ArtifactType.ANIME) {
+        filters.duration.max = ANIME_MAX_DURATION;
+        filters.duration.absoluteMax = ANIME_MAX_DURATION;
+        filters.duration.unit = 'hours';
+        filters.releaseDate.min = ANIME_RELEASE_DATE_MIN;
+        filters.releaseDate.max = ANIME_RELEASE_DATE_MAX;
+        filters.releaseDate.absoluteMin = ANIME_RELEASE_DATE_MIN;
+        filters.releaseDate.absoluteMax = ANIME_RELEASE_DATE_MAX;
+    } else if (artifactType === ArtifactType.GAME) {
         filters.duration.max = GAME_MAX_DURATION;
         filters.duration.absoluteMax = GAME_MAX_DURATION;
         filters.duration.unit = 'hours';
@@ -196,7 +207,9 @@ export function filterBacklogItems(items: BacklogItem[], artifactType: ArtifactT
     }
     if (filters.duration.max < filters.duration.absoluteMax) {
         let maxDurationInSeconds: number;
-        if (artifactType === ArtifactType.GAME || artifactType === ArtifactType.TVSHOW) {
+        if (artifactType === ArtifactType.GAME || artifactType === ArtifactType.TVSHOW
+            || artifactType === ArtifactType.ANIME
+        ) {
             maxDurationInSeconds = filters.duration.max * 3600;
         } else if (artifactType === ArtifactType.MOVIE) {
             maxDurationInSeconds = filters.duration.max * 60;
