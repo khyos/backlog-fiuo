@@ -11,6 +11,7 @@
         { value: ArtifactType.GAME, name: 'Game' },
         { value: ArtifactType.MOVIE, name: 'Movie' },
         { value: ArtifactType.TVSHOW, name: 'TV Show' },
+        { value: ArtifactType.ANIME, name: 'Anime' },
     ];
 
     let types = [

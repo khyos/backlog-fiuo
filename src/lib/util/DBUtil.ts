@@ -1,4 +1,5 @@
 import { IGDB } from "$lib/igdb/IGDB";
+import { MAL } from "$lib/mal/MAL";
 import { createDatabase } from "$lib/server/database";
 import { ArtifactDB } from "$lib/server/model/ArtifactDB";
 import { BacklogDB } from "$lib/server/model/BacklogDB";
@@ -7,6 +8,7 @@ import { RatingDB } from "$lib/server/model/RatingDB";
 import { TagDB } from "$lib/server/model/TagDB";
 import { UserDB } from "$lib/server/model/UserDB";
 import { UserRatingDB } from "$lib/server/model/UserRatingDB";
+import { AnimeDB } from "$lib/server/model/anime/AnimeDB";
 import { GameDB } from "$lib/server/model/game/GameDB";
 import { PlatformDB } from "$lib/server/model/game/PlatformDB";
 import { MovieDB } from "$lib/server/model/movie/MovieDB";
@@ -18,6 +20,8 @@ export class DBUtil {
         createDatabase();
         ArtifactDB.createArtifactTable();
         ArtifactDB.createUserArtifactTable();
+        AnimeDB.createAnimeGenreTable();
+        AnimeDB.createAnimeAnimeGenreTable();
         BacklogDB.createBacklogTable();
         BacklogDB.createBacklogItemsTable();
         BacklogDB.createBacklogItemTagTable();
@@ -37,6 +41,7 @@ export class DBUtil {
 
         await IGDB.initGenres();
         await IGDB.initPlatforms();
+        await MAL.initGenres();
         await TMDB.initMovieGenres();
         await TMDB.initTvshowGenres();
     }

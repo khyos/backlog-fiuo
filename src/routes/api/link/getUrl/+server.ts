@@ -32,6 +32,8 @@ const getURLFromId = async function(artifactType: ArtifactType | null, type: Lin
         case LinkType.ITAD:
             finalUrl = await ITAD.getSlugFromId(url);
             return `https://isthereanydeal.com/game/${finalUrl}`;
+        case LinkType.MAL:
+            return `https://myanimelist.net/anime/${url}`;
         case LinkType.METACRITIC:
             if (artifactType === ArtifactType.GAME) {
                 return `https://www.metacritic.com/game/${url}`;
@@ -55,7 +57,7 @@ const getURLFromId = async function(artifactType: ArtifactType | null, type: Lin
                 return `https://www.senscritique.com/jeuvideo/${url}`;
             } else if (artifactType === ArtifactType.MOVIE) {
                 return `https://www.senscritique.com/film/${url}`;
-            } else if (artifactType === ArtifactType.TVSHOW) {
+            } else if (artifactType === ArtifactType.TVSHOW || artifactType === ArtifactType.ANIME) {
                 return `https://www.senscritique.com/serie/${url}`;
             }
             break;

@@ -92,7 +92,7 @@ export async function PUT({ params, request, locals }: RequestEvent) {
                     }
 
                     const duration = tmdbMovie.runtime * 60;
-                    await MovieDB.refreshData(movieId, title, releaseDate, duration);
+                    await MovieDB.updateMovie(movieId, title, releaseDate, duration);
                 } catch {
                     return error(500, "Failed to Update TMDB");
                 }

@@ -5,12 +5,27 @@ import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { User } from '$lib/model/User';
 import { TvshowDB } from '$lib/server/model/tvshow/TvshowDB';
+import { AnimeDB } from '$lib/server/model/anime/AnimeDB';
 import { ArtifactDB } from '$lib/server/model/ArtifactDB';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
-	const artifactType = params.slug;
-	if (!artifactType) {
+	const artifactTypeSlug = params.slug;
+	if (!artifactTypeSlug) {
 		error(400, 'Invalid type');
+	}
+
+	// Convert string to ArtifactType enum
+	let artifactType: ArtifactType;
+	if (artifactTypeSlug === 'game') {
+		artifactType = ArtifactType.GAME;
+	} else if (artifactTypeSlug === 'movie') {
+		artifactType = ArtifactType.MOVIE;
+	} else if (artifactTypeSlug === 'tvshow') {
+		artifactType = ArtifactType.TVSHOW;
+	} else if (artifactTypeSlug === 'anime') {
+		artifactType = ArtifactType.ANIME;
+	} else {
+		error(400, 'Invalid artifact type');
 	}
 
 	const user = User.deserialize(locals.user);
@@ -40,6 +55,9 @@ async function fetchGenres(artifactType: ArtifactType) {
 	}
 	else if (artifactType === ArtifactType.TVSHOW) {
 		return await TvshowDB.getAllGenres();
+	}
+	else if (artifactType === ArtifactType.ANIME) {
+		return await AnimeDB.getAllGenres();
 	}
 	return [];
 }

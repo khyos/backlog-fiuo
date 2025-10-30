@@ -6,6 +6,8 @@ import { Tag, type ITag } from "./Tag";
 import { UserArtifact, UserArtifactStatus, type IUserArtifact } from "./UserArtifact";
 
 export enum ArtifactType {
+    ANIME = 'anime',
+    ANIME_EPISODE = 'anime_episode',
     COMICS = 'comics',
     GAME = 'game',
     MOVIE = 'movie',

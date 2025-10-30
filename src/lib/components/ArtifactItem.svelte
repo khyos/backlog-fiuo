@@ -50,6 +50,7 @@
     $: artifact = artifactItemStoreInst.artifact;
     $: platforms = artifact.type === ArtifactType.GAME ? (artifact as Game).platforms : [];
     $: artifactMeanRating = artifact.meanRating;
+    $: artifactDepth = ArtifactTypeUtil.getChildrenDepth(artifact.type);
     
     // User info
     export let userConnected: boolean = false;
@@ -237,15 +238,15 @@
         }
     }
 
-    let expandedChidren: Set<number> = new Set();
+    let expandedChildren: Set<number> = new Set();
 
     function toggleChild(childId: number) {
-        if (expandedChidren.has(childId)) {
-            expandedChidren.delete(childId);
+        if (expandedChildren.has(childId)) {
+            expandedChildren.delete(childId);
         } else {
-            expandedChidren.add(childId);
+            expandedChildren.add(childId);
         }
-        expandedChidren = expandedChidren;
+        expandedChildren = expandedChildren;
     }
 </script>
 
@@ -396,7 +397,7 @@
                 </div>
             {/if}
             
-            {#if artifact.children.length > 0}
+            {#if artifactDepth === 2 && artifact.children.length > 0}
                 <div class="children-container">
                     <div class="flex items-center mb-2">
                         <ChevronDoubleRightOutline class="w-4 h-4 mr-2 text-purple-500" />
@@ -410,14 +411,14 @@
                                 on:click={() => toggleChild(firstLevelChild.id)}
                             >
                                 <span class="font-medium">{firstLevelChild.title}</span>
-                                {#if expandedChidren.has(firstLevelChild.id)}
+                                {#if expandedChildren.has(firstLevelChild.id)}
                                     <ChevronDownOutline class="w-5 h-5 text-gray-600" />
                                 {:else}
                                     <ChevronRightOutline class="w-5 h-5 text-gray-600" />
                                 {/if}
                             </button>
                             
-                            {#if expandedChidren.has(firstLevelChild.id)}
+                            {#if expandedChildren.has(firstLevelChild.id)}
                                 <div class="secondLevelChildren-list p-3 bg-gray-50">
                                     {#if firstLevelChild.children.length > 0}
                                     <table class="w-full text-sm">
@@ -467,6 +468,56 @@
                             {/if}
                         </div>
                     {/each}
+                </div>
+            {:else if artifactDepth === 1 && artifact.children.length > 0}
+                <div class="children-container">
+                    <div class="flex items-center mb-2">
+                        <ChevronDoubleRightOutline class="w-4 h-4 mr-2 text-purple-500" />
+                        <P weight="medium" class="text-lg">{ArtifactTypeUtil.getChildName(artifact.type, 0)}</P>
+                    </div>
+                    
+                    <div class="secondLevelChildren-list p-3 bg-gray-50">
+                        <table class="w-full text-sm">
+                            <thead class="bg-gray-50 border-b">
+                                <tr>
+                                    <th class="p-2 text-left">Index</th>
+                                    <th class="p-2 text-left">{ArtifactTypeUtil.getChildName(artifact.type, 1)}</th>
+                                    <th class="p-2 text-left">Duration</th>
+                                    {#if userConnected}
+                                    <th class="p-2 text-left">
+                                        <Checkbox
+                                            checked={artifact.userInfo?.status === UserArtifactStatus.FINISHED}
+                                            onchange={(event) => handleCheckboxStatusChange(event, artifact)}
+                                        />
+                                    </th>
+                                    {/if}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {#each artifact.children as secondLevelChild, index}
+                                    <tr class="border-b last:border-b-0 border-gray-300 hover:bg-gray-100">
+                                        <td class="p-2">{index + 1}</td>
+                                        <td class="p-2">{secondLevelChild.title}</td>
+                                        <td class="p-2">
+                                            {#if secondLevelChild.duration}
+                                                {TimeUtil.formatDuration(secondLevelChild.duration)}
+                                            {:else}
+                                                <span class="text-gray-500 italic">N/A</span>
+                                            {/if}
+                                        </td>
+                                        {#if userConnected}
+                                        <td class="p-2">
+                                            <Checkbox
+                                                checked={secondLevelChild.userInfo?.status === UserArtifactStatus.FINISHED}
+                                                onchange={(event) => handleCheckboxStatusChange(event, secondLevelChild)}
+                                            />
+                                        </td>
+                                        {/if}
+                                    </tr>
+                                {/each}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             {/if}
         </div>
