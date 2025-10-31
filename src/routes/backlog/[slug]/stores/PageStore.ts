@@ -5,7 +5,7 @@ import { get, writable } from 'svelte/store';
 import { backlogStore } from './BacklogStore';
 
 export type BacklogPageStore = {
-    backlogsForSelect?: SelectOptionType<any>[],
+    backlogsForSelect?: SelectOptionType<number>[],
     openDrawer: boolean;
     isCopiedToastVisible: boolean;
     selectedTab: 'filters' | 'add' | 'order';

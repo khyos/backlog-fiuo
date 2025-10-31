@@ -18,26 +18,28 @@ import { TMDB } from "$lib/tmdb/TMDB";
 export class DBUtil {
     static async initDb(): Promise<void> {
         createDatabase();
-        ArtifactDB.createArtifactTable();
-        ArtifactDB.createUserArtifactTable();
-        AnimeDB.createAnimeGenreTable();
-        AnimeDB.createAnimeAnimeGenreTable();
-        BacklogDB.createBacklogTable();
-        BacklogDB.createBacklogItemsTable();
-        BacklogDB.createBacklogItemTagTable();
-        GameDB.createGamePlatformTable();
-        GameDB.createGameGenreTable();
-        GameDB.createGameGameGenreTable();
-        LinkDB.createLinkTable();
-        MovieDB.createMovieGenreTable();
-        MovieDB.createMovieMovieGenreTable();
-        PlatformDB.createPlatformTable();
-        RatingDB.createRatingTable();
-        TagDB.createTagTable();
-        TvshowDB.createTvshowGenreTable();
-        TvshowDB.createTvshowTvshowGenreTable();
-        UserDB.createUserTable();
-        UserRatingDB.createUserRatingTable();
+        await Promise.all([
+            ArtifactDB.createArtifactTable(),
+            ArtifactDB.createUserArtifactTable(),
+            AnimeDB.createAnimeGenreTable(),
+            AnimeDB.createAnimeAnimeGenreTable(),
+            BacklogDB.createBacklogTable(),
+            BacklogDB.createBacklogItemsTable(),
+            BacklogDB.createBacklogItemTagTable(),
+            GameDB.createGamePlatformTable(),
+            GameDB.createGameGenreTable(),
+            GameDB.createGameGameGenreTable(),
+            LinkDB.createLinkTable(),
+            MovieDB.createMovieGenreTable(),
+            MovieDB.createMovieMovieGenreTable(),
+            PlatformDB.createPlatformTable(),
+            RatingDB.createRatingTable(),
+            TagDB.createTagTable(),
+            TvshowDB.createTvshowGenreTable(),
+            TvshowDB.createTvshowTvshowGenreTable(),
+            UserDB.createUserTable(),
+            UserRatingDB.createUserRatingTable()
+        ]);
 
         await IGDB.initGenres();
         await IGDB.initPlatforms();

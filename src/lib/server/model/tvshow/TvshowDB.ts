@@ -7,7 +7,7 @@ import { Rating } from "$lib/model/Rating";
 import { Tvshow } from "$lib/model/tvshow/Tvshow";
 import { TvshowEpisode } from "$lib/model/tvshow/TvshowEpisode";
 import { TvshowSeason } from "$lib/model/tvshow/TvshowSeason";
-import { db } from "$lib/server/database";
+import { runDbInsert } from "$lib/server/database";
 import { ArtifactDB } from "../ArtifactDB";
 import { BacklogItemDB } from "../BacklogItemDB";
 import { LinkDB } from "../LinkDB";
@@ -128,7 +128,7 @@ export class TvshowDB {
             const tvshow = new Tvshow(row.artifactId, row.title, row.type, releaseDate, row.duration);
             tvshow.genres = await TvshowDB.getAssignedGenres(row.artifactId);
             tvshow.ratings = await RatingDB.getRatings(row.artifactId);
-            const tags = await BacklogItemDB.getTags(row.backlogId, ArtifactType.ANIME, row.artifactId);
+            const tags = await BacklogItemDB.getTags(row.backlogId, ArtifactType.TVSHOW, row.artifactId);
             return new BacklogItem(row.rank, row.elo, row.dateAdded, tvshow, tags);
         }));
 
@@ -164,32 +164,20 @@ export class TvshowDB {
         return tvshow;
     }
 
-    static async createTvshowSeason(tvshowId: number, seasonNumber: number, title: string, releaseDate: Date = new Date(7258118400000), duration: number = 0): Promise<Tvshow> {
-        return await new Promise((resolve, reject) => {
-            db.run(`INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES (?, ?, ?, ?, ?, ?)`, [title, ArtifactType.TVSHOW_SEASON, tvshowId, seasonNumber, releaseDate, duration], async function (error) {
-                if (error) {
-                    reject(error);
-                } else {
-                    const tvshowSeasonId = this.lastID;
-                    const tvshowSeason = new TvshowSeason(tvshowSeasonId, seasonNumber, title, ArtifactType.TVSHOW_SEASON, releaseDate, duration);
-                    resolve(tvshowSeason);
-                }
-            });
-        });
+    static async createTvshowSeason(tvshowId: number, seasonNumber: number, title: string, releaseDate: Date = new Date(7258118400000), duration: number = 0): Promise<TvshowSeason> {
+        const tvshowSeasonId = await runDbInsert(
+            `INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES (?, ?, ?, ?, ?, ?)`,
+            [title, ArtifactType.TVSHOW_SEASON, tvshowId, seasonNumber, releaseDate.getTime().toString(), duration]
+        );
+        return new TvshowSeason(tvshowSeasonId, seasonNumber, title, ArtifactType.TVSHOW_SEASON, releaseDate, duration);
     }
 
-    static async createTvshowEpisode(tvshowSeasonId: number, episodeNumber: number, title: string, releaseDate: Date = new Date(7258118400000), duration: number = 0): Promise<Tvshow> {
-        return await new Promise((resolve, reject) => {
-            db.run(`INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES (?, ?, ?, ?, ?, ?)`, [title, ArtifactType.TVSHOW_EPISODE, tvshowSeasonId, episodeNumber, releaseDate, duration], async function (error) {
-                if (error) {
-                    reject(error);
-                } else {
-                    const tvshowSeasonId = this.lastID;
-                    const tvshowSeason = new TvshowEpisode(tvshowSeasonId, episodeNumber, title, ArtifactType.TVSHOW_EPISODE, releaseDate, duration);
-                    resolve(tvshowSeason);
-                }
-            });
-        });
+    static async createTvshowEpisode(tvshowSeasonId: number, episodeNumber: number, title: string, releaseDate: Date = new Date(7258118400000), duration: number = 0): Promise<TvshowEpisode> {
+        const tvshowEpisodeId = await runDbInsert(
+            `INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES (?, ?, ?, ?, ?, ?)`,
+            [title, ArtifactType.TVSHOW_EPISODE, tvshowSeasonId, episodeNumber, releaseDate.getTime().toString(), duration]
+        );
+        return new TvshowEpisode(tvshowEpisodeId, episodeNumber, title, ArtifactType.TVSHOW_EPISODE, releaseDate, duration);
     }
 
     // ========================================
@@ -224,11 +212,11 @@ export class TvshowDB {
     // ========================================
     // Table Creation Methods
     // ========================================
-    static createTvshowGenreTable(): void {
-        ArtifactDB.createGenreTable('tvshow_genre');
+    static async createTvshowGenreTable() {
+        await ArtifactDB.createGenreTable('tvshow_genre');
     }
 
-    static createTvshowTvshowGenreTable(): void {
-        ArtifactDB.createGenreMapTable('tvshow_tvshow_genre');
+    static async createTvshowTvshowGenreTable() {
+        await ArtifactDB.createGenreMapTable('tvshow_tvshow_genre');
     }
 }

@@ -1,3 +1,4 @@
+import type { SearchResult } from '$lib/types/SearchResult';
 import { got } from 'got';
 import { JSDOM } from 'jsdom';
 
@@ -42,24 +43,24 @@ export class RottenTomatoes {
 
     private static getLastPart(url: string) {
         const parts = url.split('/').filter(part => !!part);
-        return parts.pop();
+        return parts.pop()!;
     }
 
-    static async searchMovie(query: string): Promise<any> {
+    static async searchMovie(query: string): Promise<SearchResult[] | null> {
         return await this.searchArtifact(query, 'movie');
     }
 
-    static async searchTvshow(query: string): Promise<any> {
+    static async searchTvshow(query: string): Promise<SearchResult[] | null> {
         return await this.searchArtifact(query, 'tvSeries');
     }
 
-    static async searchArtifact(query: string, type: string): Promise<any> {
+    static async searchArtifact(query: string, type: string): Promise<SearchResult[] | null> {
         const response = await got(`https://www.rottentomatoes.com/search?search=${query}`);
         let dom;
         try {
             dom = new JSDOM(response.body);
-            const links = dom.window.document.querySelectorAll(`search-page-result[type=${type}] search-page-media-row>a[data-qa=info-name]`);
-            const results = [];
+            const links: NodeListOf<HTMLAnchorElement> = dom.window.document.querySelectorAll(`search-page-result[type=${type}] search-page-media-row>a[data-qa=info-name]`);
+            const results: SearchResult[] = [];
             for (const link of links) {
                 results.push({
                     id: RottenTomatoes.getLastPart(link.href),

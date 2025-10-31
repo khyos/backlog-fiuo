@@ -3,7 +3,7 @@ import { AuthorizationStatus } from "$lib/model/AuthorizationStatus";
 import { Backlog, BacklogOrder, BacklogRankingType } from "$lib/model/Backlog";
 import { BacklogItem } from "$lib/model/BacklogItem";
 import { UserRights, type User } from "$lib/model/User";
-import { db, execQuery } from "../database";
+import { getDbRow, getDbRows, runDbInsert, runDbQuery } from "../database";
 import { AnimeDB } from "./anime/AnimeDB";
 import { BacklogItemDB } from "./BacklogItemDB";
 import { GameDB } from "./game/GameDB";
@@ -32,31 +32,16 @@ export interface IBacklogItemDB {
 
 export class BacklogDB {
     static async createBacklog(userId: number, title: string, artifactType: ArtifactType, rankingType: BacklogRankingType): Promise<Backlog | null> {
-        return await new Promise((resolve, reject) => {
-            db.run(`INSERT INTO backlog (userId, title, artifactType, rankingType) VALUES (?, ?, ?, ?)`, [userId, title, artifactType, rankingType], async function (error) {
-                if (error) {
-                    reject(error);
-                } else {
-                    const backlogId = this.lastID;
-                    resolve(new Backlog(backlogId, userId, rankingType, title, artifactType));
-                }
-            });
-        });
+        const backlogId = await runDbInsert(`INSERT INTO backlog (userId, title, artifactType, rankingType) VALUES (?, ?, ?, ?)`, [userId, title, artifactType, rankingType]);
+        return new Backlog(backlogId, userId, rankingType, title, artifactType);
     }
     
     static async getBacklogById(id: number): Promise<Backlog | null> {
-        return await new Promise((resolve, reject) => {
-            db.get(`SELECT * FROM backlog WHERE id = ?`, [id], async (error, row: IBacklogDB) => {
-                if (error) {
-                    reject(error);
-                } else if (!row) {
-                    resolve(null);
-                } else {
-                    const backlog = new Backlog(row.id, row.userId, row.rankingType, row.title, row.artifactType);
-                    resolve(backlog);
-                }
-            });
-        });
+        const row = await getDbRow<IBacklogDB>(`SELECT * FROM backlog WHERE id = ?`, [id]);
+        if (!row) {
+            return null;
+        }
+        return new Backlog(row.id, row.userId, row.rankingType, row.title, row.artifactType);
     }
 
     static async getBacklogByIdWithItems(id: number): Promise<Backlog | null> {
@@ -86,30 +71,13 @@ export class BacklogDB {
             pageSize,
             page * pageSize
         ];
-        return await new Promise((resolve, reject) => {
-            db.all(query, params, async (error, rows: IBacklogDB[]) => {
-                if (error) {
-                    reject(error);
-                } else if (!rows) {
-                    resolve([]);
-                } else {
-                    const backlogs: Backlog[] = rows.map((row) => new Backlog(row.id, row.userId, row.rankingType, row.title, row.artifactType)); 
-                    resolve(backlogs);
-                }
-            });
-        });
+        const rows = await getDbRows<IBacklogDB>(query, params);
+        return rows.map((row) => new Backlog(row.id, row.userId, row.rankingType, row.title, row.artifactType));
     }
 
     static async getBacklogMaxRank(backlogId: number): Promise<number> {
-        return await new Promise((resolve, reject) => {
-            db.get(`SELECT MAX(rank) as maxRank FROM backlog_items WHERE backlogId = ?`, [backlogId], async (error, row: { maxRank: number }) => {
-                if (error) {
-                    reject(error);
-                } else {
-                    resolve(row.maxRank || 0);
-                }
-            });
-        });
+        const row = await getDbRow<{ maxRank: number }>(`SELECT MAX(rank) as maxRank FROM backlog_items WHERE backlogId = ?`, [backlogId]);
+        return row?.maxRank || 0;
     }
 
     static async getBacklogItems(backlogId: number, artifactType: ArtifactType, rankingType: BacklogRankingType, backlogOrder?: BacklogOrder): Promise<BacklogItem[]> {
@@ -142,35 +110,21 @@ export class BacklogDB {
     }
 
     static async hasBacklogItem(backlogId: number, artifactId: number): Promise<boolean> {
-        return await new Promise((resolve, reject) => {
-            db.get(`SELECT * FROM backlog_items WHERE backlogId = ? AND artifactId = ?`, [backlogId, artifactId], async (error, row: IBacklogItemDB) => {
-                if (error) {
-                    reject(error);
-                } else {
-                    resolve(row != null);
-                }
-            });
-        });
+        const row = await getDbRow<IBacklogItemDB>(`SELECT * FROM backlog_items WHERE backlogId = ? AND artifactId = ?`, [backlogId, artifactId]);
+        return row != null;
     }
 
-    static addBacklogItem(backlogId: number, artifactId: number, rank: number): Promise<number> {
-        return new Promise((resolve, reject) => {
-            db.run(`INSERT INTO backlog_items (backlogId, artifactId, rank) VALUES (?, ?, ?)`, [backlogId, artifactId, rank], function (error) {
-                if (error) {
-                    reject(error);
-                } else {
-                    resolve(this.lastID);
-                }
-            });
-        });
+    static async addBacklogItem(backlogId: number, artifactId: number, rank: number): Promise<number> {
+        return await runDbInsert(`INSERT INTO backlog_items (backlogId, artifactId, rank) VALUES (?, ?, ?)`, [backlogId, artifactId, rank]);
     }
 
     static async deleteBacklogItem(backlogId: number, artifactId: number): Promise<void> {
-        await db.get(`SELECT * FROM backlog_items WHERE backlogId = ? AND artifactId = ?`, [backlogId, artifactId], function (error, row: IBacklogItemDB) {
-            db.run(`DELETE FROM backlog_items WHERE backlogId = ? AND artifactId = ?`, [backlogId, artifactId]);
-            db.run(`DELETE FROM backlog_item_tag WHERE backlogId = ? AND artifactId = ?`, [backlogId, artifactId]);
-            db.run(`UPDATE backlog_items SET rank = rank - 1 WHERE backlogId = ? AND rank > ?`, [backlogId, row.rank]);
-        });
+        const row = await getDbRow<IBacklogItemDB>(`SELECT * FROM backlog_items WHERE backlogId = ? AND artifactId = ?`, [backlogId, artifactId]);
+        if (row) {
+            await runDbQuery(`DELETE FROM backlog_items WHERE backlogId = ? AND artifactId = ?`, [backlogId, artifactId]);
+            await runDbQuery(`DELETE FROM backlog_item_tag WHERE backlogId = ? AND artifactId = ?`, [backlogId, artifactId]);
+            await runDbQuery(`UPDATE backlog_items SET rank = rank - 1 WHERE backlogId = ? AND rank > ?`, [backlogId, row.rank]);
+        }
     }
 
     static async moveItemToOtherBacklog(fromBacklogId: number, toBacklogId: number, artifactId: number, keepTags: boolean) : Promise<void> {
@@ -191,39 +145,37 @@ export class BacklogDB {
         await this.deleteBacklogItem(fromBacklogId, artifactId);
     }
 
-    static async moveBacklogItem(backlogId: number, srcRank: number, targetRank: number) {
-        await db.get(`SELECT * FROM backlog_items WHERE backlogId = ? AND rank = ?`, [backlogId, srcRank], function (error, row: IBacklogItemDB) {
-            if (!error && row) {
-                if (srcRank < targetRank) {
-                    db.run(`UPDATE backlog_items SET rank = rank - 1 WHERE backlogId = ? AND rank > ? AND rank <= ?`, [backlogId, srcRank, targetRank]);
-                } else {
-                    db.run(`UPDATE backlog_items SET rank = rank + 1 WHERE backlogId = ? AND rank >= ? AND rank < ?`, [backlogId, targetRank, srcRank]);
-                }
-                db.run(`UPDATE backlog_items SET rank = ? WHERE backlogId = ? AND artifactId = ?`, [targetRank, backlogId, row.artifactId]);
+    static async moveBacklogItem(backlogId: number, srcRank: number, targetRank: number): Promise<void> {
+        const row = await getDbRow<IBacklogItemDB>(`SELECT * FROM backlog_items WHERE backlogId = ? AND rank = ?`, [backlogId, srcRank]);
+        if (row) {
+            if (srcRank < targetRank) {
+                await runDbQuery(`UPDATE backlog_items SET rank = rank - 1 WHERE backlogId = ? AND rank > ? AND rank <= ?`, [backlogId, srcRank, targetRank]);
+            } else {
+                await runDbQuery(`UPDATE backlog_items SET rank = rank + 1 WHERE backlogId = ? AND rank >= ? AND rank < ?`, [backlogId, targetRank, srcRank]);
             }
-        });
-       
+            await runDbQuery(`UPDATE backlog_items SET rank = ? WHERE backlogId = ? AND artifactId = ?`, [targetRank, backlogId, row.artifactId]);
+        }
     }
 
-    static async eloFight(backlogId: number, winnerArtifactId: number, loserArtifactId: number) {
-        await db.get(`SELECT * FROM backlog_items WHERE backlogId = ? AND artifactId = ?`, [backlogId, winnerArtifactId], function (error, winnerRow: IBacklogItemDB) {
-            db.get(`SELECT * FROM backlog_items WHERE backlogId = ? AND artifactId = ?`, [backlogId, loserArtifactId], function (error2, loserRow: IBacklogItemDB) {
-                if (!error && !error2 && winnerRow && loserRow) {
-                    const winnerElo = winnerRow.elo;
-                    const loserElo = loserRow.elo;
-                    const winnerExpected = 1 / (1 + Math.pow(10, (loserElo - winnerElo) / 400));
-                    const loserExpected = 1 / (1 + Math.pow(10, (winnerElo - loserElo) / 400));
-                    const winnerNewElo = winnerElo + Math.round(32 * (1 - winnerExpected));
-                    const loserNewElo = loserElo + Math.round(32 * (0 - loserExpected));
-                    db.run(`UPDATE backlog_items SET elo = ? WHERE backlogId = ? AND artifactId = ?`, [winnerNewElo, backlogId, winnerArtifactId]);
-                    db.run(`UPDATE backlog_items SET elo = ? WHERE backlogId = ? AND artifactId = ?`, [loserNewElo, backlogId, loserArtifactId]);
-                }
-            });
-        });
+    static async eloFight(backlogId: number, winnerArtifactId: number, loserArtifactId: number): Promise<void> {
+        const winnerRow = await getDbRow<IBacklogItemDB>(`SELECT * FROM backlog_items WHERE backlogId = ? AND artifactId = ?`, [backlogId, winnerArtifactId]);
+        const loserRow = await getDbRow<IBacklogItemDB>(`SELECT * FROM backlog_items WHERE backlogId = ? AND artifactId = ?`, [backlogId, loserArtifactId]);
+        
+        if (winnerRow && loserRow) {
+            const winnerElo = winnerRow.elo;
+            const loserElo = loserRow.elo;
+            const winnerExpected = 1 / (1 + Math.pow(10, (loserElo - winnerElo) / 400));
+            const loserExpected = 1 / (1 + Math.pow(10, (winnerElo - loserElo) / 400));
+            const winnerNewElo = winnerElo + Math.round(32 * (1 - winnerExpected));
+            const loserNewElo = loserElo + Math.round(32 * (0 - loserExpected));
+            
+            await runDbQuery(`UPDATE backlog_items SET elo = ? WHERE backlogId = ? AND artifactId = ?`, [winnerNewElo, backlogId, winnerArtifactId]);
+            await runDbQuery(`UPDATE backlog_items SET elo = ? WHERE backlogId = ? AND artifactId = ?`, [loserNewElo, backlogId, loserArtifactId]);
+        }
     }
 
-    static deleteBacklog(id: number) {
-        db.run(`DELETE FROM backlog WHERE id = ?`, [id]);
+    static async deleteBacklog(id: number): Promise<void> {
+        await runDbQuery(`DELETE FROM backlog WHERE id = ?`, [id]);
     }
 
     static async canEditBacklog(user: User, backlogId: number): Promise<AuthorizationStatus> {
@@ -241,18 +193,18 @@ export class BacklogDB {
     }
 
 
-    static createBacklogTable() {
-        execQuery(`CREATE TABLE IF NOT EXISTS backlog (
+    static async createBacklogTable() {
+        await runDbQuery(`CREATE TABLE IF NOT EXISTS backlog (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             userId INTEGER NOT NULL,
-            type TEXT NOT NULL,
+            rankingType TEXT NOT NULL,
             title TEXT NOT NULL,
             artifactType TEXT NOT NULL
         )`);
     }
 
-    static createBacklogItemsTable() {
-        execQuery(`CREATE TABLE IF NOT EXISTS backlog_items (
+    static async createBacklogItemsTable() {
+        await runDbQuery(`CREATE TABLE IF NOT EXISTS backlog_items (
             backlogId INTEGER NOT NULL,
             artifactId INTEGER NOT NULL,
             dateAdded TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -262,8 +214,8 @@ export class BacklogDB {
         )`);
     }
 
-    static createBacklogItemTagTable() {
-        execQuery(`CREATE TABLE IF NOT EXISTS backlog_item_tag (
+    static async createBacklogItemTagTable() {
+        await runDbQuery(`CREATE TABLE IF NOT EXISTS backlog_item_tag (
             backlogId INTEGER NOT NULL,
             artifactId INTEGER NOT NULL,
             tagId TEXT NOT NULL,

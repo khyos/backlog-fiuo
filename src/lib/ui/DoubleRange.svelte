@@ -8,23 +8,25 @@
     export let minValue: number;
     export let maxValue: number;
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
     $: minValue, checkMinValue();
+    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
     $: maxValue, checkMaxValue();
 
     function checkMinValue() {
-        if (minValue >= maxValue) {
+        if (minValue > maxValue) {
             minValue = maxValue;
         }
     }
 
     function checkMaxValue() {
-        if (maxValue <= minValue) {
+        if (maxValue < minValue) {
             maxValue = minValue;
         }
     }
 </script>
 
 <div class='doubleRangeWrap'>
-    <Range class='minRange appearance-auto' bind:size={size} bind:min={min} bind:max={max} bind:step={step} bind:value={minValue} />
-    <Range class='maxRange appearance-auto' bind:size={size} bind:min={min} bind:max={max} bind:step={step} bind:value={maxValue} />
+    <Range class='minRange appearance-auto' {size} {min} {max} {step} bind:value={minValue} />
+    <Range class='maxRange appearance-auto' {size} {min} {max} {step} bind:value={maxValue} />
 </div>

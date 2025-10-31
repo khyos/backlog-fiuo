@@ -80,7 +80,7 @@ export class MovieDB {
             const movie = new Movie(row.artifactId, row.title, row.type, releaseDate, row.duration);
             movie.genres = await MovieDB.getAssignedGenres(row.artifactId);
             movie.ratings = await RatingDB.getRatings(row.artifactId);
-            const tags = await BacklogItemDB.getTags(row.backlogId, ArtifactType.ANIME, row.artifactId);
+            const tags = await BacklogItemDB.getTags(row.backlogId, ArtifactType.MOVIE, row.artifactId);
             return new BacklogItem(row.rank, row.elo, row.dateAdded, movie, tags);
         }));
 
@@ -136,11 +136,11 @@ export class MovieDB {
     // ========================================
     // Table Creation Methods
     // ========================================
-    static createMovieGenreTable(): void {
-        ArtifactDB.createGenreTable('movie_genre');
+    static async createMovieGenreTable() {
+        await ArtifactDB.createGenreTable('movie_genre');
     }
 
-    static createMovieMovieGenreTable(): void {
-        ArtifactDB.createGenreMapTable('movie_movie_genre');
+    static async createMovieMovieGenreTable() {
+        await ArtifactDB.createGenreMapTable('movie_movie_genre');
     }
 }

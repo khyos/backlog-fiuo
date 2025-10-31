@@ -12,6 +12,7 @@
         PlusOutline,
     } from "flowbite-svelte-icons";
     import type { Artifact } from "$lib/model/Artifact";
+    import { UserArtifactStatus } from "$lib/model/UserArtifact";
     import { addUserListItem } from "$lib/services/UserListService";
     import { userListStore, refreshUserList } from "../stores/UserListStore";
     
@@ -30,9 +31,11 @@
             });
     };
 
-    const addUserListItemCb = async (e: any) => {
-        const artifactId = e.currentTarget.getAttribute("data-id");
-        await addUserListItem($userListStore.userList.userId, artifactId, status);
+    const addUserListItemCb = async (e: MouseEvent) => {
+        const artifactIdStr = (e.currentTarget as HTMLElement)?.getAttribute("data-id");
+        if (!artifactIdStr) return;
+        const artifactId = parseInt(artifactIdStr, 10);
+        await addUserListItem($userListStore.userList.userId, artifactId, UserArtifactStatus.WISHLIST);
         refreshUserList();
     };
 
@@ -46,12 +49,12 @@
         placeholder="Search"
         autocomplete="off"
         bind:value={searchArtifactTerm}
-        on:input={fetchArtifacts}
+        oninput={fetchArtifacts}
     />
     {#if searchedArtifacts?.length > 0}
         <Listgroup>
             {#each searchedArtifacts as artifact (artifact.id)}
-                {#if $userListStore.userList.userListItems.find((uli) => uli.artifact.id === artifact.id) != null}
+                {#if $userListStore.userList.artifacts.find((a) => a.id === artifact.id) != null}
                     <ListgroupItem>
                         <div style="display: inline-flex;">
                             {artifact.title}<CheckCircleOutline />
@@ -63,7 +66,7 @@
                         <Button
                             size="xs"
                             data-id={artifact.id}
-                            on:click={addUserListItemCb}
+                            onclick={addUserListItemCb}
                         >
                             <PlusOutline size="xs" />
                         </Button>

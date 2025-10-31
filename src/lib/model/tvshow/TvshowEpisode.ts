@@ -4,6 +4,7 @@ import type { TvshowSeason } from "./TvshowSeason";
 
 export const SERIALIZE_TYPE = 'TvshowEpisode';
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface ITvshowEpisode extends IArtifact {
 }
 

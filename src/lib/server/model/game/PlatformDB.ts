@@ -1,21 +1,14 @@
-import { db, execQuery } from "$lib/server/database";
+import { runDbInsert, runDbQuery } from "$lib/server/database";
 
 export class PlatformDB {
-    static createPlatformTable() {
-        execQuery(`CREATE TABLE IF NOT EXISTS platform (
+    static async createPlatformTable() {
+        await runDbQuery(`CREATE TABLE IF NOT EXISTS platform (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             title TEXT NOT NULL
         )`);
     }
 
-    static addPlatform(platformId: number, title: string): Promise<void> {
-        return new Promise((resolve, reject) => {
-            db.run(`INSERT OR IGNORE INTO platform (id, title) VALUES (?, ?)`, [platformId, title], async function (error) {
-                if (error) {
-                    reject(error);
-                }
-            });
-            resolve();
-        });
+    static async addPlatform(platformId: number, title: string): Promise<void> {
+        await runDbInsert(`INSERT OR IGNORE INTO platform (id, title) VALUES (?, ?)`, [platformId, title]);
     }
 }

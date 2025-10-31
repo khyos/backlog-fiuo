@@ -249,7 +249,8 @@
                             <Button class="p-1" size="xs" id="{site.id}HelpId"><QuestionCircleOutline /></Button>
                             <Popover class="text-sm max-w-md" triggeredBy="#{site.id}HelpId">
                                 <div class="p-2">
-                                    <p>Go to <a href="{site.url}" class="text-blue-600 hover:underline" target="_blank">{site.name}</a></p>
+                                    <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
+                                    <p>Go to <a href="{site.url}" class="text-blue-600 hover:underline" rel="noopener noreferrer" target="_blank">{site.name}</a></p>
                                     {#each site.helpText as line (line)}
                                         <p class="mt-1">{line}</p>
                                     {/each}

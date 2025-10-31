@@ -5,7 +5,7 @@
 
     let creationMessage: {
         message: string;
-        color: string;
+        color: "blue" | "red" | "green";
     } | null = null;
     let selectedArtifactType: string = ArtifactType.GAME;
     let selectedRankingType: string = BacklogRankingType.RANK;

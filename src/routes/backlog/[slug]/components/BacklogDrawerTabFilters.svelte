@@ -25,7 +25,7 @@
 
     const originalOrderByType = get(backlogStore).backlogFilters.orderBy.type;
 
-    $: orderBacklogByItems = [
+    const orderBacklogByItems = [
         { value: originalOrderByType, name: BacklogOrderLabel[originalOrderByType] },
         { value: BacklogOrder.DATE_ADDED, name: BacklogOrderLabel[BacklogOrder.DATE_ADDED] },
         { value: BacklogOrder.RATING, name: BacklogOrderLabel[BacklogOrder.RATING] },

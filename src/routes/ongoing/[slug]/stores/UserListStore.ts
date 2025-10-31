@@ -1,3 +1,4 @@
+import { ArtifactType } from '$lib/model/Artifact';
 import { UserArtifactStatus } from '$lib/model/UserArtifact';
 import { UserList, type IUserList } from '$lib/model/UserList';
 import { updateDate, updateStatus as updateStatusAPI } from '$lib/services/ArtifactService';
@@ -7,7 +8,9 @@ export type UserListStore = {
     userList: UserList
 };
 
-export const userListStore = writable<UserListStore>({});
+export const userListStore = writable<UserListStore>({
+    userList: new UserList(-1, ArtifactType.GAME, [])
+});
 
 export const initializeStore = (initUserList: IUserList) => {
     const userList = UserList.fromJSON(initUserList);

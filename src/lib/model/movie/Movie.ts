@@ -3,6 +3,7 @@ import type { Serializable } from "../Serializable";
 
 export const SERIALIZE_TYPE = 'Movie';
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface IMovie extends IArtifact {
 }
 
