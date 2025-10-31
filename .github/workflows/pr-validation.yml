@@ -1,0 +1,63 @@
+name: PR Validation
+
+on:
+  pull_request:
+    branches: [ main ]
+  pull_request_target:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    environment: Actions
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up your environment
+      # Example for Node.js:
+      uses: actions/setup-node@v3
+      with:
+        node-version: '24'
+    
+    - name: Install dependencies
+      run: npm install
+    
+    - name: Build
+      env:
+        DB_PATH: data/db.db
+        JWT_ACCESS_SECRET: ${{ secrets.JWT_ACCESS_SECRET }}
+        IGDB_CLIENT_ID: ${{ secrets.IGDB_CLIENT_ID }}
+        IGDB_CLIENT_SECRET: ${{ secrets.IGDB_CLIENT_SECRET }}
+        ITA_APP_ID: ${{ secrets.ITA_APP_ID }}
+        OPEN_CRITIC_RAPID_API_KEY: ${{ secrets.OPEN_CRITIC_RAPID_API_KEY }}
+        TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
+        TMDB_READ_ACCESS_TOKEN: ${{ secrets.TMDB_READ_ACCESS_TOKEN }}
+      run: npm run build
+
+    - name: Run checks
+      env:
+        DB_PATH: data/db.db
+        JWT_ACCESS_SECRET: ${{ secrets.JWT_ACCESS_SECRET }}
+        IGDB_CLIENT_ID: ${{ secrets.IGDB_CLIENT_ID }}
+        IGDB_CLIENT_SECRET: ${{ secrets.IGDB_CLIENT_SECRET }}
+        ITA_APP_ID: ${{ secrets.ITA_APP_ID }}
+        OPEN_CRITIC_RAPID_API_KEY: ${{ secrets.OPEN_CRITIC_RAPID_API_KEY }}
+        TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
+        TMDB_READ_ACCESS_TOKEN: ${{ secrets.TMDB_READ_ACCESS_TOKEN }}
+      run: npm run check
+
+    - name: Run linter
+      run: npm run lint
+    
+    - name: Run tests
+      env:
+        DB_PATH: data/db.db
+        JWT_ACCESS_SECRET: ${{ secrets.JWT_ACCESS_SECRET }}
+        IGDB_CLIENT_ID: ${{ secrets.IGDB_CLIENT_ID }}
+        IGDB_CLIENT_SECRET: ${{ secrets.IGDB_CLIENT_SECRET }}
+        ITA_APP_ID: ${{ secrets.ITA_APP_ID }}
+        OPEN_CRITIC_RAPID_API_KEY: ${{ secrets.OPEN_CRITIC_RAPID_API_KEY }}
+        TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
+        TMDB_READ_ACCESS_TOKEN: ${{ secrets.TMDB_READ_ACCESS_TOKEN }}
+      run: npm test

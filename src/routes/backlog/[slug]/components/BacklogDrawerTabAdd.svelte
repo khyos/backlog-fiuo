@@ -31,8 +31,10 @@
             });
     };
 
-    const addBacklogItemCb = async (e: any) => {
-        const artifactId = e.currentTarget.getAttribute("data-id");
+    const addBacklogItemCb = async (e: MouseEvent) => {
+        const artifactIdStr = (e.currentTarget as HTMLElement)?.getAttribute("data-id");
+        if (!artifactIdStr) return;
+        const artifactId = parseInt(artifactIdStr);
         await addBacklogItem($backlogStore.backlog.id, artifactId);
         refreshBacklog();
     };

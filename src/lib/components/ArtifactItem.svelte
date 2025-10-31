@@ -44,6 +44,7 @@
         ChevronDoubleRightOutline
     } from "flowbite-svelte-icons";
     import { onMount } from "svelte";
+    import { SvelteSet } from "svelte/reactivity";
 
     // Common properties that all artifact types share
     $: artifactItemStoreInst = $artifactItemStore;
@@ -238,7 +239,7 @@
         }
     }
 
-    let expandedChildren: Set<number> = new Set();
+    let expandedChildren = new SvelteSet<number>();
 
     function toggleChild(childId: number) {
         if (expandedChildren.has(childId)) {

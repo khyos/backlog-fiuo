@@ -1,4 +1,5 @@
 import { ITA_APP_ID } from "$env/static/private";
+import type { SearchResult } from "$lib/types/SearchResult";
 
 export type ITAD_Price = {
     id: string,
@@ -38,7 +39,7 @@ export class ITAD {
         return (await response.json()).slug;
     }
 
-    static async searchGame(query: string): Promise<any> {
+    static async searchGame(query: string): Promise<SearchResult[]> {
         const response = await fetch(`https://api.isthereanydeal.com/games/search/v1?key=${ITA_APP_ID}&title=${query}`, {
             method: 'GET'
         });
