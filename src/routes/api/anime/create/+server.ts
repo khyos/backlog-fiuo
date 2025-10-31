@@ -37,7 +37,7 @@ export async function POST({ request, locals }: RequestEvent) {
 
     // Add MAL rating if available
     if (malAnime.score) {
-        ratings.push(new Rating(RatingType.MAL, Math.round(malAnime.score * 10)));
+        ratings.push(new Rating(RatingType.MAL, malAnime.score));
     }
 
     // Add SensCritique link and rating if provided
@@ -54,7 +54,7 @@ export async function POST({ request, locals }: RequestEvent) {
     const genreIds: number[] = [];
     if (malAnime.genres) {
         for (const genre of malAnime.genres) {
-            genreIds.push(genre.id);
+            genreIds.push(genre.mal_id);
         }
     }
 

@@ -50,7 +50,7 @@
     />
     {#if searchedArtifacts?.length > 0}
         <Listgroup>
-            {#each searchedArtifacts as artifact}
+            {#each searchedArtifacts as artifact (artifact.id)}
                 {#if $backlogStore.backlog.backlogItems.find((bi) => bi.artifact.id === artifact.id) != null}
                     <ListgroupItem class="flex justify-between items-center w-full">
                         <div class="flex-auto overflow-hidden text-ellipsis">{artifact.title}</div>

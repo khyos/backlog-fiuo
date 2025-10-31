@@ -1,4 +1,4 @@
-import { Tag } from "$lib/model/Tag";
+import { Tag, TagType } from "$lib/model/Tag";
 import { db } from "../database";
 
 export class BacklogItemDB {
@@ -6,7 +6,7 @@ export class BacklogItemDB {
         return new Promise((resolve, reject) => {
             db.all(`SELECT * FROM backlog_item_tag
                     INNER JOIN tag ON backlog_item_tag.tagId = tag.id
-                    WHERE backlogId = ? AND artifactId = ? AND artifactType = ?`, [backlogId, artifactId, artifactType], (error, rows: any[]) => {
+                    WHERE backlogId = ? AND artifactId = ? AND artifactType = ?`, [backlogId, artifactId, artifactType], (error, rows: { tagId: string; title: TagType; }[]) => {
                 if (error) {
                     reject(error);
                 } else {

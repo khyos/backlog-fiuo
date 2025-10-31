@@ -1,3 +1,4 @@
+import type { IRatingDB } from "$lib/model/Rating";
 import { db, execQuery } from "../database";
 
 export class UserRatingDB {
@@ -7,7 +8,7 @@ export class UserRatingDB {
 
     static async updateRating(artifactId: number, username: string, rating: number | null): Promise<null> {
         return await new Promise((resolve) => {
-            db.get(`SELECT * FROM rating WHERE artifactId = ? AND username = ?`, [artifactId, username], async (error, row: any) => {
+            db.get(`SELECT * FROM rating WHERE artifactId = ? AND username = ?`, [artifactId, username], async (error, row: IRatingDB) => {
                 if (error || !row) {
                     UserRatingDB.addRating(artifactId, username, rating);
                 } else {

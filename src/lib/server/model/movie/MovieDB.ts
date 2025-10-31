@@ -6,6 +6,7 @@ import { Link } from "$lib/model/Link";
 import { Rating } from "$lib/model/Rating";
 import { Movie } from "$lib/model/movie/Movie";
 import { ArtifactDB } from "../ArtifactDB";
+import { BacklogItemDB } from "../BacklogItemDB";
 import { LinkDB } from "../LinkDB";
 import { RatingDB } from "../RatingDB";
 
@@ -67,20 +68,23 @@ export class MovieDB {
     // ========================================
     // User-related Methods
     // ========================================
-    static async getBacklogItems(backlogId: number, rankingType: BacklogRankingType, backlogOrder: BacklogOrder): Promise<BacklogItem[]> {
-        return await ArtifactDB.getBacklogItems(
+     static async getBacklogItems(backlogId: number, rankingType: BacklogRankingType, backlogOrder: BacklogOrder): Promise<BacklogItem[]> {
+        const dbBacklockItems = await ArtifactDB.getBacklogItems(
             backlogId,
             rankingType,
-            backlogOrder,
-            ArtifactType.MOVIE,
-            async (row: Record<string, unknown>) => {
-                const releaseDate = new Date(parseInt(row.releaseDate as string, 10));
-                const movie = new Movie(row.artifactId as number, row.title as string, row.type as ArtifactType, releaseDate, row.duration as number);
-                movie.genres = await MovieDB.getAssignedGenres(row.artifactId as number);
-                movie.ratings = await RatingDB.getRatings(row.artifactId as number);
-                return movie;
-            }
+            backlogOrder
         );
+
+        const backlogItems: BacklogItem[] = await Promise.all(dbBacklockItems.map(async row => {
+            const releaseDate = new Date(parseInt(row.releaseDate, 10));
+            const movie = new Movie(row.artifactId, row.title, row.type, releaseDate, row.duration);
+            movie.genres = await MovieDB.getAssignedGenres(row.artifactId);
+            movie.ratings = await RatingDB.getRatings(row.artifactId);
+            const tags = await BacklogItemDB.getTags(row.backlogId, ArtifactType.ANIME, row.artifactId);
+            return new BacklogItem(row.rank, row.elo, row.dateAdded, movie, tags);
+        }));
+
+        return backlogItems;
     }
 
     // ========================================

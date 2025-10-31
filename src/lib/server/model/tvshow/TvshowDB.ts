@@ -9,6 +9,7 @@ import { TvshowEpisode } from "$lib/model/tvshow/TvshowEpisode";
 import { TvshowSeason } from "$lib/model/tvshow/TvshowSeason";
 import { db } from "$lib/server/database";
 import { ArtifactDB } from "../ArtifactDB";
+import { BacklogItemDB } from "../BacklogItemDB";
 import { LinkDB } from "../LinkDB";
 import { RatingDB } from "../RatingDB";
 
@@ -116,19 +117,22 @@ export class TvshowDB {
     }
 
     static async getBacklogItems(backlogId: number, rankingType: BacklogRankingType, backlogOrder: BacklogOrder): Promise<BacklogItem[]> {
-        return await ArtifactDB.getBacklogItems(
+        const dbBacklockItems = await ArtifactDB.getBacklogItems(
             backlogId,
             rankingType,
-            backlogOrder,
-            ArtifactType.TVSHOW,
-            async (row: Record<string, unknown>) => {
-                const releaseDate = new Date(parseInt(row.releaseDate as string, 10));
-                const tvshow = new Tvshow(row.artifactId as number, row.title as string, row.type as ArtifactType, releaseDate, row.duration as number);
-                tvshow.genres = await TvshowDB.getAssignedGenres(row.artifactId as number);
-                tvshow.ratings = await RatingDB.getRatings(row.artifactId as number);
-                return tvshow;
-            }
+            backlogOrder
         );
+
+        const backlogItems: BacklogItem[] = await Promise.all(dbBacklockItems.map(async row => {
+            const releaseDate = new Date(parseInt(row.releaseDate, 10));
+            const tvshow = new Tvshow(row.artifactId, row.title, row.type, releaseDate, row.duration);
+            tvshow.genres = await TvshowDB.getAssignedGenres(row.artifactId);
+            tvshow.ratings = await RatingDB.getRatings(row.artifactId);
+            const tags = await BacklogItemDB.getTags(row.backlogId, ArtifactType.ANIME, row.artifactId);
+            return new BacklogItem(row.rank, row.elo, row.dateAdded, tvshow, tags);
+        }));
+
+        return backlogItems;
     }
 
     // ========================================

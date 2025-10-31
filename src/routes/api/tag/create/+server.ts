@@ -2,6 +2,7 @@ import { TagType } from "$lib/model/Tag";
 import { TagDB } from "$lib/server/model/TagDB";
 import { error, json } from "@sveltejs/kit";
 import type { RequestEvent } from "./$types";
+import { ErrorUtil } from "$lib/util/ErrorUtil";
 
 export async function POST({ request }: RequestEvent) {
 	const { id, artifactType } = await request.json();
@@ -12,6 +13,6 @@ export async function POST({ request }: RequestEvent) {
         const tag = await TagDB.createTag(id, artifactType, TagType.DEFAULT);
         return json(tag.toJSON());
     } catch (e) {
-        return error(500, e instanceof Error ? e.message : 'Unknown Error');
+        return error(500, ErrorUtil.getErrorMessage(e));
     }
 }

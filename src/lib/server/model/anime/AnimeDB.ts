@@ -8,6 +8,7 @@ import { Anime } from "$lib/model/anime/Anime";
 import { AnimeEpisode } from "$lib/model/anime/AnimeEpisode";
 import { db } from "$lib/server/database";
 import { ArtifactDB } from "../ArtifactDB";
+import { BacklogItemDB } from "../BacklogItemDB";
 import { LinkDB } from "../LinkDB";
 import { RatingDB } from "../RatingDB";
 
@@ -97,19 +98,22 @@ export class AnimeDB {
     }
 
     static async getBacklogItems(backlogId: number, rankingType: BacklogRankingType, backlogOrder: BacklogOrder): Promise<BacklogItem[]> {
-        return await ArtifactDB.getBacklogItems(
+        const dbBacklockItems = await ArtifactDB.getBacklogItems(
             backlogId,
             rankingType,
-            backlogOrder,
-            ArtifactType.ANIME,
-            async (row: Record<string, unknown>) => {
-                const releaseDate = new Date(parseInt(row.releaseDate as string, 10));
-                const anime = new Anime(row.artifactId as number, row.title as string, row.type as ArtifactType, releaseDate, row.duration as number);
-                anime.genres = await AnimeDB.getAssignedGenres(row.artifactId as number);
-                anime.ratings = await RatingDB.getRatings(row.artifactId as number);
-                return anime;
-            }
+            backlogOrder
         );
+
+        const backlogItems: BacklogItem[] = await Promise.all(dbBacklockItems.map(async row => {
+            const releaseDate = new Date(parseInt(row.releaseDate, 10));
+            const anime = new Anime(row.artifactId, row.title, row.type, releaseDate, row.duration);
+            anime.genres = await AnimeDB.getAssignedGenres(row.artifactId);
+            anime.ratings = await RatingDB.getRatings(row.artifactId);
+            const tags = await BacklogItemDB.getTags(row.backlogId, ArtifactType.ANIME, row.artifactId);
+            return new BacklogItem(row.rank, row.elo, row.dateAdded, anime, tags);
+        }));
+
+        return backlogItems;
     }
 
     // ========================================

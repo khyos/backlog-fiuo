@@ -43,12 +43,7 @@ export async function PATCH({ params, request, locals }: RequestEvent) {
 
 const setLinkInfo = async (animeId: number, type: LinkType, url: string): Promise<string> => {
     const finalUrl = url;
-    if (type === LinkType.MAL) {
-        const malRating = await MAL.getAnimeRating(url);
-        if (malRating) {
-            await RatingDB.addRating(animeId, RatingType.MAL, malRating);
-        }
-    } else if (type === LinkType.SENSCRITIQUE) {
+    if (type === LinkType.SENSCRITIQUE) {
         const scRating = await SensCritique.getTvshowRating(url);
         if (scRating) {
             await RatingDB.addRating(animeId, RatingType.SENSCRITIQUE, scRating);
@@ -94,6 +89,12 @@ const updateMAL = async (animeId: number, malId: string) => {
         }
 
         const malAnime = await MAL.getAnime(malId);
+        if (!malAnime) {
+            return error(500, "MAL Anime not found");
+        }
+        if (malAnime.score) {
+            await RatingDB.updateRating(animeId, RatingType.MAL, malAnime.score);
+        }
         const releaseDate = MAL.parseAiredDate(malAnime.aired);
         const durationPerEpisode = (MAL.parsePerEpisodeDuration(malAnime.duration) ?? 20) * 60;
 

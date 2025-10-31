@@ -4,10 +4,9 @@ import { UserList } from "$lib/model/UserList";
 import { type IUserListItemDB } from "$lib/model/UserListItem";
 import { artifactFromJSON } from "$lib/services/ArtifactService";
 import { BacklogOrder, BacklogRankingType } from "$lib/model/Backlog";
-import { BacklogItem } from "$lib/model/BacklogItem";
 import { Genre } from "$lib/model/Genre";
 import { db, execQuery } from "../database";
-import { BacklogItemDB } from "./BacklogItemDB";
+import type { IBacklogItemDB } from "./BacklogDB";
 
 export interface IGenreDB {
     id: number;
@@ -334,10 +333,8 @@ export class ArtifactDB {
     static async getBacklogItems(
         backlogId: number,
         rankingType: BacklogRankingType,
-        backlogOrder: BacklogOrder,
-        artifactType: ArtifactType,
-        createArtifactFunction: (row: Record<string, unknown>) => Promise<any> // eslint-disable-line @typescript-eslint/no-explicit-any
-    ): Promise<BacklogItem[]> {
+        backlogOrder: BacklogOrder
+    ): Promise<IBacklogItemDB[]> {
         let rank = '';
         if (rankingType === BacklogRankingType.ELO) {
             rank = ', RANK() OVER (ORDER BY elo DESC) AS rank';
@@ -359,16 +356,11 @@ export class ArtifactDB {
                     FROM backlog_items
                     INNER JOIN artifact ON backlog_items.artifactId = artifact.id
                     WHERE backlogId = ?
-                    ORDER BY ${sqlOrder}`, [backlogId], async (error, rows: Record<string, unknown>[]) => {
+                    ORDER BY ${sqlOrder}`, [backlogId], async (error, rows: IBacklogItemDB[]) => {
                 if (error) {
                     reject(error);
                 } else {
-                    const backlogItems: BacklogItem[] = await Promise.all(rows.map(async row => {
-                        const artifact = await createArtifactFunction(row);
-                        const tags = await BacklogItemDB.getTags(row.backlogId as number, artifactType, row.artifactId as number);
-                        return new BacklogItem(row.rank as number, row.elo as number, row.dateAdded as number, artifact, tags);
-                    }));
-                    resolve(backlogItems);
+                    resolve(rows);
                 }
             });
         });

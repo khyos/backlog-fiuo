@@ -10,6 +10,26 @@ import { GameDB } from "./game/GameDB";
 import { MovieDB } from "./movie/MovieDB";
 import { TvshowDB } from "./tvshow/TvshowDB";
 
+export interface IBacklogDB {
+    id: number;
+    userId: number;
+    rankingType: BacklogRankingType;
+    title: string;
+    artifactType: ArtifactType;
+}
+
+export interface IBacklogItemDB {
+    backlogId: number;
+    artifactId: number;
+    dateAdded: number;
+    duration: number;
+    elo: number;
+    rank: number;
+    releaseDate: string;
+    title: string;
+    type: ArtifactType;
+}
+
 export class BacklogDB {
     static async createBacklog(userId: number, title: string, artifactType: ArtifactType, rankingType: BacklogRankingType): Promise<Backlog | null> {
         return await new Promise((resolve, reject) => {
@@ -26,7 +46,7 @@ export class BacklogDB {
     
     static async getBacklogById(id: number): Promise<Backlog | null> {
         return await new Promise((resolve, reject) => {
-            db.get(`SELECT * FROM backlog WHERE id = ?`, [id], async (error, row: any) => {
+            db.get(`SELECT * FROM backlog WHERE id = ?`, [id], async (error, row: IBacklogDB) => {
                 if (error) {
                     reject(error);
                 } else if (!row) {
@@ -40,19 +60,12 @@ export class BacklogDB {
     }
 
     static async getBacklogByIdWithItems(id: number): Promise<Backlog | null> {
-        return await new Promise((resolve, reject) => {
-            db.get(`SELECT * FROM backlog WHERE id = ?`, [id], async (error, row: any) => {
-                if (error) {
-                    reject(error);
-                } else if (!row) {
-                    resolve(null);
-                } else {
-                    const backlog = new Backlog(row.id, row.userId, row.rankingType, row.title, row.artifactType);
-                    backlog.backlogItems = await BacklogDB.getBacklogItems(row.id as number, row.artifactType, row.rankingType);
-                    resolve(backlog);
-                }
-            });
-        });
+        const backlog = await BacklogDB.getBacklogById(id);
+        if (!backlog) {
+            return null;
+        }
+        backlog.backlogItems = await BacklogDB.getBacklogItems(backlog.id, backlog.artifactType, backlog.rankingType);
+        return backlog;
     }
 
     static async getBacklogs(userId: number, page: number, pageSize: number, artifactType: string | null, search: string = ''): Promise<Backlog[]> {
@@ -74,13 +87,13 @@ export class BacklogDB {
             page * pageSize
         ];
         return await new Promise((resolve, reject) => {
-            db.all(query, params, async (error, rows: any) => {
+            db.all(query, params, async (error, rows: IBacklogDB[]) => {
                 if (error) {
                     reject(error);
                 } else if (!rows) {
                     resolve([]);
                 } else {
-                    const backlogs: Backlog[] = rows.map((row: any) => new Backlog(row.id, row.userId, row.rankingType, row.title, row.artifactType)); 
+                    const backlogs: Backlog[] = rows.map((row) => new Backlog(row.id, row.userId, row.rankingType, row.title, row.artifactType)); 
                     resolve(backlogs);
                 }
             });
@@ -89,7 +102,7 @@ export class BacklogDB {
 
     static async getBacklogMaxRank(backlogId: number): Promise<number> {
         return await new Promise((resolve, reject) => {
-            db.get(`SELECT MAX(rank) as maxRank FROM backlog_items WHERE backlogId = ?`, [backlogId], async (error, row: any) => {
+            db.get(`SELECT MAX(rank) as maxRank FROM backlog_items WHERE backlogId = ?`, [backlogId], async (error, row: { maxRank: number }) => {
                 if (error) {
                     reject(error);
                 } else {
@@ -130,7 +143,7 @@ export class BacklogDB {
 
     static async hasBacklogItem(backlogId: number, artifactId: number): Promise<boolean> {
         return await new Promise((resolve, reject) => {
-            db.get(`SELECT * FROM backlog_items WHERE backlogId = ? AND artifactId = ?`, [backlogId, artifactId], async (error, row: any) => {
+            db.get(`SELECT * FROM backlog_items WHERE backlogId = ? AND artifactId = ?`, [backlogId, artifactId], async (error, row: IBacklogItemDB) => {
                 if (error) {
                     reject(error);
                 } else {
@@ -153,7 +166,7 @@ export class BacklogDB {
     }
 
     static async deleteBacklogItem(backlogId: number, artifactId: number): Promise<void> {
-        await db.get(`SELECT * FROM backlog_items WHERE backlogId = ? AND artifactId = ?`, [backlogId, artifactId], function (error, row: any) {
+        await db.get(`SELECT * FROM backlog_items WHERE backlogId = ? AND artifactId = ?`, [backlogId, artifactId], function (error, row: IBacklogItemDB) {
             db.run(`DELETE FROM backlog_items WHERE backlogId = ? AND artifactId = ?`, [backlogId, artifactId]);
             db.run(`DELETE FROM backlog_item_tag WHERE backlogId = ? AND artifactId = ?`, [backlogId, artifactId]);
             db.run(`UPDATE backlog_items SET rank = rank - 1 WHERE backlogId = ? AND rank > ?`, [backlogId, row.rank]);
@@ -179,7 +192,7 @@ export class BacklogDB {
     }
 
     static async moveBacklogItem(backlogId: number, srcRank: number, targetRank: number) {
-        await db.get(`SELECT * FROM backlog_items WHERE backlogId = ? AND rank = ?`, [backlogId, srcRank], function (error, row: any) {
+        await db.get(`SELECT * FROM backlog_items WHERE backlogId = ? AND rank = ?`, [backlogId, srcRank], function (error, row: IBacklogItemDB) {
             if (!error && row) {
                 if (srcRank < targetRank) {
                     db.run(`UPDATE backlog_items SET rank = rank - 1 WHERE backlogId = ? AND rank > ? AND rank <= ?`, [backlogId, srcRank, targetRank]);
@@ -193,8 +206,8 @@ export class BacklogDB {
     }
 
     static async eloFight(backlogId: number, winnerArtifactId: number, loserArtifactId: number) {
-        await db.get(`SELECT * FROM backlog_items WHERE backlogId = ? AND artifactId = ?`, [backlogId, winnerArtifactId], function (error, winnerRow: any) {
-            db.get(`SELECT * FROM backlog_items WHERE backlogId = ? AND artifactId = ?`, [backlogId, loserArtifactId], function (error2, loserRow: any) {
+        await db.get(`SELECT * FROM backlog_items WHERE backlogId = ? AND artifactId = ?`, [backlogId, winnerArtifactId], function (error, winnerRow: IBacklogItemDB) {
+            db.get(`SELECT * FROM backlog_items WHERE backlogId = ? AND artifactId = ?`, [backlogId, loserArtifactId], function (error2, loserRow: IBacklogItemDB) {
                 if (!error && !error2 && winnerRow && loserRow) {
                     const winnerElo = winnerRow.elo;
                     const loserElo = loserRow.elo;

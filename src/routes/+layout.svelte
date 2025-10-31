@@ -75,25 +75,25 @@
         <NavLi href="/backlog" class="mr-4">Backlogs</NavLi>
         <NavLi class="cursor-pointer mr-4">Games<ChevronDownOutline class="w-5 h-5 ms-2 text-primary-800 dark:text-white inline"/></NavLi>
         <Dropdown simple class="w-30">
-            {#each gameMenu as item}
+            {#each gameMenu as item (item.name)}
                 <DropdownItem href={item.href} class="hover:text-primary-600 dark:hover:text-primary-500">{item.name}</DropdownItem>
             {/each}
         </Dropdown>
         <NavLi class="cursor-pointer mr-4">Movies<ChevronDownOutline class="w-5 h-5 ms-2 text-primary-800 dark:text-white inline"/></NavLi>
         <Dropdown simple class="w-30">
-            {#each movieMenu as item}
+            {#each movieMenu as item (item.name)}
                 <DropdownItem href={item.href} class="hover:text-primary-600 dark:hover:text-primary-500">{item.name}</DropdownItem>
             {/each}
         </Dropdown>
         <NavLi class="cursor-pointer mr-4">TV Shows<ChevronDownOutline class="w-5 h-5 ms-2 text-primary-800 dark:text-white inline"/></NavLi>
         <Dropdown simple class="w-30">
-            {#each tvShowMenu as item}
+            {#each tvShowMenu as item (item.name)}
                 <DropdownItem href={item.href} class="hover:text-primary-600 dark:hover:text-primary-500">{item.name}</DropdownItem>
             {/each}
         </Dropdown>
         <NavLi class="cursor-pointer">Anime<ChevronDownOutline class="w-5 h-5 ms-2 text-primary-800 dark:text-white inline"/></NavLi>
         <Dropdown simple class="w-30">
-            {#each animeMenu as item}
+            {#each animeMenu as item (item.name)}
                 <DropdownItem href={item.href} class="hover:text-primary-600 dark:hover:text-primary-500">{item.name}</DropdownItem>
             {/each}
         </Dropdown>

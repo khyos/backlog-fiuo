@@ -50,7 +50,7 @@
     />
     {#if searchedArtifacts?.length > 0}
         <Listgroup>
-            {#each searchedArtifacts as artifact}
+            {#each searchedArtifacts as artifact (artifact.id)}
                 {#if $userListStore.userList.userListItems.find((uli) => uli.artifact.id === artifact.id) != null}
                     <ListgroupItem>
                         <div style="display: inline-flex;">

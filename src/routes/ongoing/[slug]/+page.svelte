@@ -22,7 +22,7 @@
         <TableHeadCell></TableHeadCell>
     </TableHead>
     <TableBody>
-        {#each $userListStore.userList.artifacts as artifact}
+        {#each $userListStore.userList.artifacts as artifact (artifact.id)}
             <ListItemComp
                 {artifact}
             />

@@ -3,6 +3,7 @@ import { User, UserRights } from "$lib/model/User";
 import { SensCritique } from "$lib/senscritique/SensCritique";
 import { error, json } from "@sveltejs/kit";
 import type { RequestEvent } from "./$types";
+import { ErrorUtil } from "$lib/util/ErrorUtil";
 
 export async function GET({ url, locals }: RequestEvent) {
     const user = User.deserialize(locals.user);
@@ -14,18 +15,18 @@ export async function GET({ url, locals }: RequestEvent) {
     let malResults;
     try {
         malResults = await MAL.searchAnime(query);
-    } catch (e) {
+    } catch (error) {
         malResults = {
-            error: e instanceof Error ? e.toString() : 'Unknown Error'
+            error: ErrorUtil.getErrorMessage(error)
         }
     }
 
     let scResults;
     try {
         scResults = await SensCritique.searchTvshow(query); // Assuming they have anime/tv shows
-    } catch (e) {
+    } catch (error) {
         scResults = {
-            error: e instanceof Error ? e.toString() : 'Unknown Error'
+            error: ErrorUtil.getErrorMessage(error)
         }
     }
 

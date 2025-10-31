@@ -1,5 +1,5 @@
 import { ArtifactType } from "$lib/model/Artifact";
-import type { Price } from "$lib/types/Price";
+import type { Price } from "$lib/types/itad/Price";
 
 export async function fetchPrices(artifactType: ArtifactType, artifactIds: number[]): Promise<Record<string, Price>> {
     if (artifactType === ArtifactType.GAME) {

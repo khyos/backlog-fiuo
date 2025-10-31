@@ -377,7 +377,7 @@
                     <P weight="medium" class="text-lg">Genres</P>
                 </div>
                 <div class="flex flex-wrap gap-2 ml-6">
-                    {#each artifact.genres as genre}
+                    {#each artifact.genres as genre (genre.id)}
                         <Badge color="blue" class="font-medium">{genre.title}</Badge>
                     {/each}
                 </div>
@@ -390,7 +390,7 @@
                         <P weight="medium" class="text-lg">Platforms</P>
                     </div>
                     <div class="flex flex-wrap gap-2 ml-6">
-                        {#each platforms as platform}
+                        {#each platforms as platform (platform.id)}
                             <Badge color="purple" class="font-medium">{platform.title}</Badge>
                         {/each}
                     </div>
@@ -404,7 +404,7 @@
                         <P weight="medium" class="text-lg">{ArtifactTypeUtil.getChildName(artifact.type, 0)}</P>
                     </div>
                     
-                    {#each artifact.children as firstLevelChild}
+                    {#each artifact.children as firstLevelChild (firstLevelChild.id)}
                         <div class="child-item mb-4 border rounded-lg border-gray-300">
                             <button 
                                 class="w-full flex items-center justify-between p-3 hover:bg-gray-100 transition-colors"
@@ -438,7 +438,7 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {#each firstLevelChild.children as secondLevelChild, index}
+                                            {#each firstLevelChild.children as secondLevelChild, index (secondLevelChild.id)}
                                                 <tr class="border-b last:border-b-0 border-gray-300 hover:bg-gray-100">
                                                     <td class="p-2">{index + 1}</td>
                                                     <td class="p-2">{secondLevelChild.title}</td>
@@ -494,7 +494,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                {#each artifact.children as secondLevelChild, index}
+                                {#each artifact.children as secondLevelChild, index (secondLevelChild.id)}
                                     <tr class="border-b last:border-b-0 border-gray-300 hover:bg-gray-100">
                                         <td class="p-2">{index + 1}</td>
                                         <td class="p-2">{secondLevelChild.title}</td>
@@ -534,7 +534,7 @@
                     {/if}
                 </div>
                 <div class="space-y-2 ml-6">
-                    {#each artifact.ratings as rating}
+                    {#each artifact.ratings as rating (rating.type)}
                         <div class="flex justify-between items-center">
                             <span class="text-gray-700 dark:text-gray-300">{rating.type}</span>
                             <Badge color={getRatingColor(artifact.type, rating.type, rating.rating)}>{rating.rating}</Badge>
@@ -574,7 +574,7 @@
                     {/if}
                 </div>
                 <div class="space-y-2 ml-6">
-                    {#each artifact.links as link}
+                    {#each artifact.links as link (link.type)}
                         <div class="flex items-center justify-between bg-gray-50 dark:bg-gray-800 p-2 rounded">
                             <button
                                 on:click={(event) => handleLinkClick(event, artifact.type, link.type, link.url)}

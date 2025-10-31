@@ -241,7 +241,7 @@
     <!-- Search results and form -->
     <form on:submit={createMovie} class="space-y-6">
         <div class="grid md:grid-cols-2 gap-6">
-            {#each sites as site}
+            {#each sites as site (site.id)}
                 <div class="p-4 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800">
                     <div class="flex flex-col space-y-3">
                         <div class="flex items-center gap-2">
@@ -250,7 +250,7 @@
                             <Popover class="text-sm max-w-md" triggeredBy="#{site.id}HelpId">
                                 <div class="p-2">
                                     <p>Go to <a href="{site.url}" class="text-blue-600 hover:underline" target="_blank">{site.name}</a></p>
-                                    {#each site.helpText as line}
+                                    {#each site.helpText as line (line)}
                                         <p class="mt-1">{line}</p>
                                     {/each}
                                 </div>

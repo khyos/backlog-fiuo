@@ -4,10 +4,17 @@ import { db, execQuery } from "../database";
 import bcrypt from "bcrypt";
 import jwt from 'jsonwebtoken';
 
+export interface UserInDB {
+    id: number;
+    username: string;
+    password: string;
+    role: UserRole;
+}
+
 export class UserDB {
     static async getByUsername(username: string): Promise<User | null> {
         return await new Promise((resolve, reject) => {
-            db.get(`SELECT * FROM user WHERE username = ?`, [username], async (error, row: any) => {
+            db.get(`SELECT * FROM user WHERE username = ?`, [username], async (error, row: UserInDB) => {
                 if (error) {
                     reject(error);
                 } else if (!row) {
@@ -22,7 +29,7 @@ export class UserDB {
 
     static async signIn(username: string, password: string): Promise<string> {
         return await new Promise((resolve, reject) => {
-            db.get(`SELECT * FROM user WHERE username = ?`, [username], async (error, row: any) => {
+            db.get(`SELECT * FROM user WHERE username = ?`, [username], async (error, row: UserInDB) => {
                 if (error) {
                     reject(error);
                 } else if (!row) {

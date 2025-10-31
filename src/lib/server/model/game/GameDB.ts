@@ -8,6 +8,7 @@ import { Game } from "$lib/model/game/Game";
 import { Platform, type IPlatformDB } from "$lib/model/game/Platform";
 import { db, execQuery } from "$lib/server/database";
 import { ArtifactDB } from "../ArtifactDB";
+import { BacklogItemDB } from "../BacklogItemDB";
 import { LinkDB } from "../LinkDB";
 import { RatingDB } from "../RatingDB";
 
@@ -111,20 +112,23 @@ export class GameDB {
     // User-related Methods
     // ========================================
     static async getBacklogItems(backlogId: number, rankingType: BacklogRankingType, backlogOrder: BacklogOrder): Promise<BacklogItem[]> {
-        return await ArtifactDB.getBacklogItems(
+        const dbBacklockItems = await ArtifactDB.getBacklogItems(
             backlogId,
             rankingType,
-            backlogOrder,
-            ArtifactType.GAME,
-            async (row: Record<string, unknown>) => {
-                const releaseDate = new Date(parseInt(row.releaseDate as string, 10));
-                const game = new Game(row.artifactId as number, row.title as string, row.type as ArtifactType, releaseDate, row.duration as number);
-                game.genres = await GameDB.getAssignedGenres(row.artifactId as number);
-                game.platforms = await GameDB.getPlatforms(row.artifactId as number);
-                game.ratings = await RatingDB.getRatings(row.artifactId as number);
-                return game;
-            }
+            backlogOrder
         );
+
+        const backlogItems: BacklogItem[] = await Promise.all(dbBacklockItems.map(async row => {
+            const releaseDate = new Date(parseInt(row.releaseDate, 10));
+            const game = new Game(row.artifactId, row.title, row.type, releaseDate, row.duration);
+            game.genres = await GameDB.getAssignedGenres(row.artifactId);
+            game.platforms = await GameDB.getPlatforms(row.artifactId);
+            game.ratings = await RatingDB.getRatings(row.artifactId);
+            const tags = await BacklogItemDB.getTags(row.backlogId, ArtifactType.GAME, row.artifactId);
+            return new BacklogItem(row.rank, row.elo, row.dateAdded, game, tags);
+        }));
+
+        return backlogItems;
     }
 
     // ========================================

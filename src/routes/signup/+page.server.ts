@@ -1,6 +1,7 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { UserDB } from '$lib/server/model/UserDB';
+import { ErrorUtil } from '$lib/util/ErrorUtil';
 
 export const load: PageServerLoad = (event) => {
 	const user = event.locals.user;
@@ -24,18 +25,18 @@ export const actions: Actions = {
 
         try {
             await UserDB.signUp(username as string, password as string);
-        } catch (error: any) {
+        } catch (e) {
             return fail(401, {
-                error: error.message
+                error: ErrorUtil.getErrorMessage(e)
             });
         }
 
 		let token: string;
         try {
             token = await UserDB.signIn(username as string, password as string);
-        } catch (error: any) {
+        } catch (e) {
             return fail(401, {
-                error: error.message
+                error: ErrorUtil.getErrorMessage(e)
             });
         }
 

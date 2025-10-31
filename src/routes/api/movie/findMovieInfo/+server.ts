@@ -5,6 +5,7 @@ import { SensCritique } from "$lib/senscritique/SensCritique";
 import { TMDB } from "$lib/tmdb/TMDB";
 import { error, json } from "@sveltejs/kit";
 import type { RequestEvent } from "./$types";
+import { ErrorUtil } from "$lib/util/ErrorUtil";
 
 export async function GET({ url, locals }: RequestEvent) {
     const user = User.deserialize(locals.user);
@@ -18,7 +19,7 @@ export async function GET({ url, locals }: RequestEvent) {
         tmdbResults = await TMDB.searchMovie(query);
     } catch (e) {
         tmdbResults = {
-            error: e instanceof Error ? e.toString() : 'Unknown Error'
+            error: ErrorUtil.getErrorMessage(e)
         }
     }
     let scResults;
@@ -26,7 +27,7 @@ export async function GET({ url, locals }: RequestEvent) {
         scResults = await SensCritique.searchMovie(query);
     } catch (e) {
         scResults = {
-            error: e instanceof Error ? e.toString() : 'Unknown Error'
+            error: ErrorUtil.getErrorMessage(e)
         }
     }
     let mcResults;
@@ -34,7 +35,7 @@ export async function GET({ url, locals }: RequestEvent) {
         mcResults = await MetaCritic.searchMovie(query);
     } catch (e) {
         mcResults = {
-            error: e instanceof Error ? e.toString() : 'Unknown Error'
+            error: ErrorUtil.getErrorMessage(e)
         }
     }
     let rtResults;
@@ -42,7 +43,7 @@ export async function GET({ url, locals }: RequestEvent) {
         rtResults = await RottenTomatoes.searchMovie(query);
     } catch (e) {
         rtResults = {
-            error: e instanceof Error ? e.toString() : 'Unknown Error'
+            error: ErrorUtil.getErrorMessage(e)
         }
     }
 

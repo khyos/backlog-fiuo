@@ -108,7 +108,7 @@
         </div>
     {:else}
         <Listgroup class="mt-1">
-            {#each data.backlogs as backlog}
+            {#each data.backlogs as backlog (backlog.id)}
                 <ListgroupItem>
                     <div class="flex justify-between items-center w-full">
                         <button 

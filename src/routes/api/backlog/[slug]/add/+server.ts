@@ -2,6 +2,7 @@ import { User } from "$lib/model/User";
 import { BacklogDB } from "$lib/server/model/BacklogDB";
 import { error, json } from "@sveltejs/kit";
 import type { RequestEvent } from "../$types";
+import { ErrorUtil } from "$lib/util/ErrorUtil";
 
 export async function POST({ params, request, locals }: RequestEvent) {
 	const user = User.deserialize(locals.user);
@@ -16,6 +17,6 @@ export async function POST({ params, request, locals }: RequestEvent) {
         const backlogItemId = await BacklogDB.addBacklogItem(backlogId, artifactId, rank + 1);
         return json({ backlogItemId });
     } catch (e) {
-        return error(500, e instanceof Error ? e.message : 'Unknown Error');
+        return error(500, ErrorUtil.getErrorMessage(e));
     }
 }

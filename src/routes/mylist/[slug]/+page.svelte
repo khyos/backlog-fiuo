@@ -50,7 +50,7 @@
         {/if}
     </TableHead>
     <TableBody>
-        {#each $filteredArtifacts as artifact}
+        {#each $filteredArtifacts as artifact (artifact.id)}
             <ListItemComp
                 {artifact}
             />

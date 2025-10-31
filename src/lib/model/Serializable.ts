@@ -7,6 +7,6 @@ export interface Serializable<T extends ISerializable> {
 }
 
 export interface SerializableStatic<T extends ISerializable> {
-    new(...args: any[]): Serializable<T>
+    new(...args: unknown[]): Serializable<T>
     fromJSON(json: T | null): Serializable<T> | null
 }

@@ -74,6 +74,7 @@ export function getAnimeLinkTypes() {
 export const SERIALIZE_TYPE = 'Link';
 
 export interface ILinkDB {
+    artifactId: number
     type: LinkType
     url: string
 }

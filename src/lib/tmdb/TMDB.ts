@@ -17,7 +17,10 @@ class ReleaseDates {
 
 export class TMDB {
 
-    static getHeaders(): any {
+    static getHeaders(): {
+        'Accept': string;
+        'Authorization': string;
+    } {
         return {
             'Accept': 'application/json',
             'Authorization': `Bearer ${TMDB_READ_ACCESS_TOKEN}`

@@ -3,7 +3,7 @@
     import { AwardOutline, ChevronDownOutline, TagSolid } from "flowbite-svelte-icons";
     import { draggable, dropzone } from "./dnd";
     import { BacklogRankingType } from "$lib/model/Backlog";
-    import type { Price } from "$lib/types/Price";
+    import type { Price } from "$lib/types/itad/Price";
     import { startOrderByFight } from "$lib/stores/OrderByFightStore";
     import type { BacklogItem } from "$lib/model/BacklogItem";
     import { showMoveToBacklog, showMoveToRank } from "../stores/PageStore";
@@ -55,7 +55,7 @@
             </Badge>
             <a class='mr-1' href={`/${backlogStoreInst.backlog.artifactType}/${backlogItem.artifact.id}`}>{backlogItem.artifact.title}</a>
             <div class="{showFullTags ? '' : 'hidden md:block'}">
-                {#each backlogItem.tags as tag}
+                {#each backlogItem.tags as tag (tag.id)}
                     <Badge class="ml-1 pr-0">
                         {tag.id}
                         {#if canEdit}

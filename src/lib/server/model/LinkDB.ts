@@ -44,7 +44,7 @@ export class LinkDB {
         return await new Promise((resolve, reject) => {
             const questionMarks = new Array(artifactIds.length).fill('?').join(',');
             db.all(`SELECT * FROM link
-                    WHERE type = ? AND artifactId IN (${questionMarks})`, [type, ...artifactIds], async (error, rows: any[]) => {
+                    WHERE type = ? AND artifactId IN (${questionMarks})`, [type, ...artifactIds], async (error, rows: ILinkDB[]) => {
                 if (error) {
                     reject(error);
                 } else {

@@ -8,6 +8,7 @@ import { SensCritique } from "$lib/senscritique/SensCritique";
 import { Steam } from "$lib/steam/Steam";
 import { error, json } from "@sveltejs/kit";
 import type { RequestEvent } from "./$types";
+import { ErrorUtil } from "$lib/util/ErrorUtil";
 
 export async function GET({ url, locals }: RequestEvent) {
     const user = User.deserialize(locals.user);
@@ -21,7 +22,7 @@ export async function GET({ url, locals }: RequestEvent) {
         igdbResults = await IGDB.searchGame(query);
     } catch (e) {
         igdbResults = {
-            error: e instanceof Error ? e.toString() : 'Unknown Error'
+            error: ErrorUtil.getErrorMessage(e)
         }
     }
     let hltbResults;
@@ -29,7 +30,7 @@ export async function GET({ url, locals }: RequestEvent) {
         hltbResults = await HLTB.searchGame(query);
     } catch (e) {
         hltbResults = {
-            error: e instanceof Error ? e.toString() : 'Unknown Error'
+            error: ErrorUtil.getErrorMessage(e)
         }
     }
     let scResults;
@@ -37,7 +38,7 @@ export async function GET({ url, locals }: RequestEvent) {
         scResults = await SensCritique.searchGame(query);
     } catch (e) {
         scResults = {
-            error: e instanceof Error ? e.toString() : 'Unknown Error'
+            error: ErrorUtil.getErrorMessage(e)
         }
     }
     let mcResults;
@@ -45,7 +46,7 @@ export async function GET({ url, locals }: RequestEvent) {
         mcResults = await MetaCritic.searchGame(query);
     } catch (e) {
         mcResults = {
-            error: e instanceof Error ? e.toString() : 'Unknown Error'
+            error: ErrorUtil.getErrorMessage(e)
         }
     }
     let ocResults;
@@ -53,7 +54,7 @@ export async function GET({ url, locals }: RequestEvent) {
         ocResults = await OpenCritic.searchGame(query);
     } catch (e) {
         ocResults = {
-            error: e instanceof Error ? e.toString() : 'Unknown Error'
+            error: ErrorUtil.getErrorMessage(e)
         }
     }
     let steamResults;
@@ -61,7 +62,7 @@ export async function GET({ url, locals }: RequestEvent) {
         steamResults = await Steam.searchGame(query);
     } catch (e) {
         steamResults = {
-            error: e instanceof Error ? e.toString() : 'Unknown Error'
+            error: ErrorUtil.getErrorMessage(e)
         }
     }
     let itadResults;
@@ -69,7 +70,7 @@ export async function GET({ url, locals }: RequestEvent) {
         itadResults = await ITAD.searchGame(query);
     } catch (e) {
         itadResults = {
-            error: e instanceof Error ? e.toString() : 'Unknown Error'
+            error: ErrorUtil.getErrorMessage(e)
         }
     }
 

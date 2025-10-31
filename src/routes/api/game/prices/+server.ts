@@ -3,7 +3,7 @@ import { LinkType } from "$lib/model/Link";
 import { LinkDB } from "$lib/server/model/LinkDB";
 import { json } from "@sveltejs/kit";
 import type { RequestEvent } from "./$types";
-import type { Price } from "$lib/types/Price";
+import type { Price } from "$lib/types/itad/Price";
 
 export async function POST({ request }: RequestEvent) {
     const { artifactIds } = await request.json();

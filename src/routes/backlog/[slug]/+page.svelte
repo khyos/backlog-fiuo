@@ -18,7 +18,7 @@
     import type { PageData } from "./$types";
     import { deleteBacklogItem, moveBacklogItemToOtherBacklog as moveBacklogItemToOtherBacklogAPI } from "$lib/services/BacklogService";
     import { fetchPrices } from "$lib/services/PricesService";
-    import type { Price } from "$lib/types/Price";
+    import type { Price } from "$lib/types/itad/Price";
     import BacklogDrawer from "./components/BacklogDrawer.svelte";
     import { TimeUtil } from "$lib/util/TimeUtil";
     import BacklogItemComp from "./components/BacklogItemComp.svelte";
@@ -120,7 +120,7 @@
         <Button size="xs" class="mr-1" onclick={copyAiPrompt}>AI</Button>
         <Button size="xs" onclick={toggleDrawer}>Filters / Add</Button>
     </div>
-    {#each $filteredBacklogItems as backlogItem}
+    {#each $filteredBacklogItems as backlogItem (backlogItem.artifact.id)}
         <ListgroupItem>
             <BacklogItemComp
                 {backlogItem}
@@ -162,7 +162,7 @@
             onclick={createTag}><PlusOutline size="sm" /></Button
         >
     </div>
-    {#each tagStoreInst.searchedTags as tag}
+    {#each tagStoreInst.searchedTags as tag (tag.id)}
         <Button size="xs" class="m-1" onclick={() => addTag(tag.id)}
             >{tag.id}</Button
         >
