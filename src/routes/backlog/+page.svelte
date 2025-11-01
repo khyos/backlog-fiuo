@@ -4,7 +4,7 @@
     import type { PageData } from "./$types";
 
 	export let data: PageData;
-    export let searchTerm = '';
+    let searchTerm = '';
     let isSearching = false;
 
     async function searchBacklogs() {	

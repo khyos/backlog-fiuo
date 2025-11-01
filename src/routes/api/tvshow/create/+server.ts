@@ -63,7 +63,7 @@ export async function POST({ request, locals }: RequestEvent) {
         }
     }
 
-    const genres = tmdbTvshow.genres.map((genre: any) => genre.id);
+    const genres = tmdbTvshow.genres.map((genre) => genre.id);
     const tvshow = await TvshowDB.createTvshow(title, releaseDate, undefined, genres, links, ratings);
 
     let duration = 0;

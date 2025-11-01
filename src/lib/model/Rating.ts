@@ -1,4 +1,3 @@
-import type { ColorVariant } from "flowbite-svelte";
 import type { ArtifactType } from "./Artifact";
 import type { ISerializable, Serializable } from "./Serializable";
 
@@ -12,7 +11,7 @@ export enum RatingType {
     STEAM = 'STEAM'
 }
 
-export function getRatingColor(artifactType: ArtifactType, ratingType: RatingType, rating: number): ColorVariant {
+export function getRatingColor(artifactType: ArtifactType, ratingType: RatingType, rating: number) {
     switch (ratingType) {
         case RatingType.MAL:
             if (rating >= 85) return "green";

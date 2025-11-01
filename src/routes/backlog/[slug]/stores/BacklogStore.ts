@@ -1,15 +1,19 @@
-import { Backlog, type IBacklog } from '$lib/model/Backlog';
+import { Backlog, BacklogRankingType, type IBacklog } from '$lib/model/Backlog';
 import { fetchBacklog } from '$lib/services/BacklogService';
 import { derived, get, writable } from 'svelte/store';
 import { createBacklogFilters, filterBacklogItems, type BacklogFilters } from '../BacklogFilters';
 import { showCopiedToast } from './PageStore';
+import { ArtifactType } from '$lib/model/Artifact';
 
 export type BacklogStore = {
     backlog: Backlog,
     backlogFilters: BacklogFilters,
 };
 
-export const backlogStore = writable<BacklogStore>({});
+export const backlogStore = writable<BacklogStore>({
+    backlog: new Backlog(-1, -1, BacklogRankingType.RANK, '', ArtifactType.GAME),
+    backlogFilters: createBacklogFilters(ArtifactType.GAME, BacklogRankingType.RANK)
+});
 
 export const filteredBacklogItems = derived(backlogStore, $store => {
     if ($store.backlog && $store.backlogFilters) {

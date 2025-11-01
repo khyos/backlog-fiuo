@@ -38,8 +38,6 @@
     let genres = data.genres.map(genre => Genre.fromJSON(genre));
     let platforms = data.platforms.map(platform => Platform.fromJSON(platform));
 
-    $: tagStoreInst = $tagStore;
-
     let backlogItemsForSelect = data.backlog.backlogItems.map((bi) => {
         return {
             value: bi.rank,
@@ -49,14 +47,16 @@
     let moveToRankSelected: number;
 
     let keepTagsSelected: boolean = false;
-    let moveToBacklogSelected: any;
+    let moveToBacklogSelected: number;
 
     let totalTime = data.backlog.backlogItems.reduce((acc, item) => {
         return acc + item.artifact.duration;
     }, 0);
 
-    const deleteBacklogItemCb = async (e: any) => {
-        const artifactId = e.target.getAttribute("data-id");
+    const deleteBacklogItemCb = async (e: MouseEvent) => {
+        const artifactIdStr = (e.currentTarget as HTMLElement)?.getAttribute("data-id");
+        if (!artifactIdStr) return;
+        const artifactId = parseInt(artifactIdStr);
         await deleteBacklogItem(data.backlog.id, artifactId);
         refreshBacklog();
     };
@@ -144,7 +144,7 @@
 />
 
 <!-- The Modals remain in the main file -->
-<Modal size="xs" title="Add Tag" bind:open={tagStoreInst.showAddTag} autoclose>
+<Modal size="xs" title="Add Tag" bind:open={$tagStore.showAddTag} autoclose>
     <div style="display: flex; align-items: center;" class="mb-2">
         <Input
             type="text"
@@ -153,16 +153,16 @@
             autocomplete="off"
             class="mr-1"
             style="flex-grow: 1;"
-            bind:value={tagStoreInst.searchTagTerm}
+            bind:value={$tagStore.searchTagTerm}
             oninput={fetchTags}
         />
         <Button
             size="xs"
-            disabled={tagStoreInst.searchTagTerm.length < 2}
+            disabled={$tagStore.searchTagTerm.length < 2}
             onclick={createTag}><PlusOutline size="sm" /></Button
         >
     </div>
-    {#each tagStoreInst.searchedTags as tag (tag.id)}
+    {#each $tagStore.searchedTags as tag (tag.id)}
         <Button size="xs" class="m-1" onclick={() => addTag(tag.id)}
             >{tag.id}</Button
         >
@@ -170,17 +170,17 @@
 </Modal>
 
 <Modal size="xs" title="Move to Rank" bind:open={$pageStore.showMoveToRank} autoclose>
-    Move <Badge class="mr-2 gap-1" color="blue"># {$pageStore.selectedBacklogItem.rank}</Badge><b>{$pageStore.selectedBacklogItem.artifact.title}</b> to
+    Move <Badge class="mr-2 gap-1" color="blue"># {$pageStore.selectedBacklogItem!.rank}</Badge><b>{$pageStore.selectedBacklogItem!.artifact.title}</b> to
     <Select class="mt-2" items={backlogItemsForSelect} bind:value={moveToRankSelected} />
     <Button class="mt-2" onclick={() => {
-        moveBacklogItem($pageStore.selectedBacklogItem.rank, moveToRankSelected).then(() => {
+        moveBacklogItem($pageStore.selectedBacklogItem!.rank, moveToRankSelected).then(() => {
             hideMoveToRank();
         });
     }}>Move</Button>
 </Modal>
 
 <Modal size="xs" title="Move to Backlog" bind:open={$pageStore.showMoveToBacklog} autoclose>
-    Move <Badge class="mr-2 gap-1" color="blue"># {$pageStore.selectedBacklogItem.rank}</Badge><b>{$pageStore.selectedBacklogItem.artifact.title}</b> to
+    Move <Badge class="mr-2 gap-1" color="blue"># {$pageStore.selectedBacklogItem!.rank}</Badge><b>{$pageStore.selectedBacklogItem!.artifact.title}</b> to
     <Select class="mt-2" items={$pageStore.backlogsForSelect} bind:value={moveToBacklogSelected} />
     <Checkbox bind:checked={keepTagsSelected}>Keep tags</Checkbox>
     <Button class="mt-2" onclick={() => {

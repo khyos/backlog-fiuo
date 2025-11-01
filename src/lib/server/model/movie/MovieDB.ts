@@ -80,7 +80,7 @@ export class MovieDB {
             const movie = new Movie(row.artifactId, row.title, row.type, releaseDate, row.duration);
             movie.genres = await MovieDB.getAssignedGenres(row.artifactId);
             movie.ratings = await RatingDB.getRatings(row.artifactId);
-            const tags = await BacklogItemDB.getTags(row.backlogId, ArtifactType.ANIME, row.artifactId);
+            const tags = await BacklogItemDB.getTags(row.backlogId, ArtifactType.MOVIE, row.artifactId);
             return new BacklogItem(row.rank, row.elo, row.dateAdded, movie, tags);
         }));
 

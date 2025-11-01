@@ -19,6 +19,7 @@
             {:else if artifact.userInfo?.status === UserArtifactStatus.ON_HOLD}
             <CirclePauseSolid size="sm" color="orange" class="mr-1" style='margin-top:auto; margin-bottom:auto'/>
             {/if}
+            <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
             <a class='mr-1' href={`/${userListStoreInst.userList.artifactType}/${artifact.id}`}>{artifact.title}</a>
         </div>
     </TableBodyCell>
@@ -43,7 +44,7 @@
     </TableBodyCell>
     <TableBodyCell>
         {#if artifact.lastAndNextOngoing.next}
-            <Button size="xs" onclick={() => updateStatus(artifact.lastAndNextOngoing.next.id)}>Seen</Button>
+            <Button size="xs" onclick={() => updateStatus(artifact.lastAndNextOngoing.next!.id)}>Seen</Button>
         {/if}
     </TableBodyCell>
 </TableBodyRow>

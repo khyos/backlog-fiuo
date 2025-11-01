@@ -1,3 +1,4 @@
+import type { SearchResult } from '$lib/types/SearchResult';
 import { got } from 'got';
 import { JSDOM } from 'jsdom';
 
@@ -41,7 +42,7 @@ export class MetaCritic {
 
     private static getLastPart(url: string) {
         const parts = url.split('/').filter(part => !!part);
-        return parts.pop();
+        return parts.pop()!;
     }
 
     static async searchGame(query: string) {
@@ -56,16 +57,19 @@ export class MetaCritic {
         return await MetaCritic.searchArtifact(query, 1);
     }
 
-    static async searchArtifact(query: string, category: number) {
+    static async searchArtifact(query: string, category: number): Promise<SearchResult[] | null> {
         const response = await got(`https://www.metacritic.com/search/${query}/?category=${category}`);
         let dom;
         try {
             dom = new JSDOM(response.body);
-            const results = [];
-            const cards =  dom.window.document.querySelectorAll('.c-pageSiteSearch-results .g-grid-container>a');
+            const results: SearchResult[] = [];
+            const cards: NodeListOf<HTMLAnchorElement> =  dom.window.document.querySelectorAll('.c-pageSiteSearch-results .g-grid-container>a');
             for (const card of cards) {
                 const nameContainer = card.querySelector('div:nth-child(2)>p');
                 const name = nameContainer?.innerHTML.trim();
+                if (!name) {
+                    throw new Error('Name not found in Metacritic search result');
+                }
                 const date = card?.querySelector('div:nth-child(2)>span>span')?.innerHTML.trim();
                 results.push({
                     id: MetaCritic.getLastPart(card.href),

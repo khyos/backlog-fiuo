@@ -1,4 +1,4 @@
-import { db, execQuery } from "$lib/server/database";
+import { execQuery, runDbInsert } from "$lib/server/database";
 
 export class PlatformDB {
     static createPlatformTable() {
@@ -8,14 +8,7 @@ export class PlatformDB {
         )`);
     }
 
-    static addPlatform(platformId: number, title: string): Promise<void> {
-        return new Promise((resolve, reject) => {
-            db.run(`INSERT OR IGNORE INTO platform (id, title) VALUES (?, ?)`, [platformId, title], async function (error) {
-                if (error) {
-                    reject(error);
-                }
-            });
-            resolve();
-        });
+    static async addPlatform(platformId: number, title: string): Promise<void> {
+        await runDbInsert(`INSERT OR IGNORE INTO platform (id, title) VALUES (?, ?)`, [platformId, title]);
     }
 }
