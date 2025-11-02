@@ -6,7 +6,7 @@ import { Link } from "$lib/model/Link";
 import { Rating } from "$lib/model/Rating";
 import { Anime } from "$lib/model/anime/Anime";
 import { AnimeEpisode } from "$lib/model/anime/AnimeEpisode";
-import { db } from "$lib/server/database";
+import { runDbInsert } from "$lib/server/database";
 import { ArtifactDB } from "../ArtifactDB";
 import { BacklogItemDB } from "../BacklogItemDB";
 import { LinkDB } from "../LinkDB";
@@ -146,17 +146,11 @@ export class AnimeDB {
     }
 
     static async createAnimeEpisode(animeId: number, episodeNumber: number, title: string, releaseDate: Date = new Date(7258118400000), duration: number = 0): Promise<AnimeEpisode> {
-        return await new Promise((resolve, reject) => {
-            db.run(`INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES (?, ?, ?, ?, ?, ?)`, [title, ArtifactType.ANIME_EPISODE, animeId, episodeNumber, releaseDate, duration], async function (error) {
-                if (error) {
-                    reject(error);
-                } else {
-                    const animeEpisodeId = this.lastID;
-                    const animeEpisode = new AnimeEpisode(animeEpisodeId, episodeNumber, title, ArtifactType.ANIME_EPISODE, releaseDate, duration);
-                    resolve(animeEpisode);
-                }
-            });
-        });
+        const animeEpisodeId = await runDbInsert(
+            `INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES (?, ?, ?, ?, ?, ?)`,
+            [title, ArtifactType.ANIME_EPISODE, animeId, episodeNumber, releaseDate.getTime().toString(), duration]
+        );
+        return new AnimeEpisode(animeEpisodeId, episodeNumber, title, ArtifactType.ANIME_EPISODE, releaseDate, duration);
     }
 
     // ========================================
@@ -187,11 +181,11 @@ export class AnimeDB {
     // ========================================
     // Table Creation Methods
     // ========================================
-    static createAnimeGenreTable(): void {
-        ArtifactDB.createGenreTable('anime_genre');
+    static async createAnimeGenreTable() {
+        await ArtifactDB.createGenreTable('anime_genre');
     }
 
-    static createAnimeAnimeGenreTable(): void {
-        ArtifactDB.createGenreMapTable('anime_anime_genre');
+    static async createAnimeAnimeGenreTable() {
+        await ArtifactDB.createGenreMapTable('anime_anime_genre');
     }
 }

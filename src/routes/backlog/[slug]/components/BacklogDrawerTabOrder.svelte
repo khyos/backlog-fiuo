@@ -77,7 +77,7 @@
 
             orderByFightStore.update(s => ({
                 ...s,
-                lowestValue: store.itemB.rank - 1
+                lowestValue: store.itemB!.rank - 1
             }));
 
             let backlogStoreInst = get(backlogStore);
@@ -108,7 +108,7 @@
 
             orderByFightStore.update(s => ({
                 ...s,
-                highestValue: store.itemB.rank + 2
+                highestValue: store.itemB!.rank + 2
             }));
 
             let backlogStoreInst = get(backlogStore);
@@ -140,7 +140,7 @@
         }
     }
 
-    const similarEloChange = (event: any) => {
+    const similarEloChange = (event: Event) => {
         const target = event.target as HTMLInputElement;
         updateSimilarElo(target.checked);
     }

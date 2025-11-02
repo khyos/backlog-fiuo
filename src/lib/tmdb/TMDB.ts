@@ -1,8 +1,51 @@
 import { TMDB_READ_ACCESS_TOKEN } from "$env/static/private";
 import { MovieDB } from "$lib/server/model/movie/MovieDB";
 import { TvshowDB } from "$lib/server/model/tvshow/TvshowDB";
+import type { SearchResult } from "$lib/types/SearchResult";
+import { ErrorUtil } from "$lib/util/ErrorUtil";
 import { TextUtil } from "$lib/util/TextUtil";
 
+type TMBDMovie = {
+    id: number,
+    title: string,
+    release_date: string,
+    poster_path: string,
+    origin_country?: string[],
+    original_title?: string,
+    runtime: number,
+    genres: {
+        id: number
+    }[]
+}
+
+type TMBDShow = {
+    id: number,
+    name: string,
+    first_air_date: string,
+    poster_path: string,
+    origin_country?: string[],
+    original_name?: string,
+    seasons: {
+        season_number: number,
+        name: string,
+        air_date: string
+    }[],
+    genres: {
+        id: number
+    }[]
+}
+
+type TMDBSeason = {
+    season_number: number,
+    name: string,
+    air_date: string,
+    episodes: {
+        episode_number: number,
+        name: string,
+        air_date: string,
+        runtime: number
+    }[]
+}
 
 class ReleaseDates {
     theatricalNoNote?: string
@@ -27,7 +70,7 @@ export class TMDB {
         };
     }
 
-    static async getMovie(movieId: string, locale:string = 'en-US'): Promise<any> {
+    static async getMovie(movieId: string, locale:string = 'en-US'): Promise<TMBDMovie> {
         const response = await fetch(`https://api.themoviedb.org/3/movie/${movieId}?language=${locale}`, {
             method: 'GET',
             headers: TMDB.getHeaders()
@@ -39,7 +82,7 @@ export class TMDB {
         return movie
     }
 
-    static async searchMovie(query: string): Promise<any> {
+    static async searchMovie(query: string): Promise<SearchResult[]> {
         const response = await fetch(`https://api.themoviedb.org/3/search/movie?query=${query}`, {
             method: 'GET',
             headers: TMDB.getHeaders()
@@ -57,7 +100,10 @@ export class TMDB {
         return results;
     }
 
-    static async getMovieReleaseDate(movieId: string, originCountry: string): Promise<Date | undefined> {
+    static async getMovieReleaseDate(movieId: string, originCountry?: string): Promise<Date | undefined> {
+        if (!originCountry) {
+            return undefined;
+        }
         const response = await fetch(`https://api.themoviedb.org/3/movie/${movieId}/release_dates`, {
             method: 'GET',
             headers: TMDB.getHeaders()
@@ -112,7 +158,7 @@ export class TMDB {
         return releaseDate ? new Date(releaseDate) : undefined;
     }
 
-    static async getMovieTitle(movieId: string, tmdbMovie: any): Promise<string> {
+    static async getMovieTitle(movieId: string, tmdbMovie: TMBDMovie): Promise<string> {
         if (tmdbMovie.origin_country?.[0] === 'FR' && tmdbMovie.original_title) {
             return tmdbMovie.original_title;
         }
@@ -147,7 +193,7 @@ export class TMDB {
         return frName || usName || originCountryName;
     }
 
-    static async initMovieGenres(): Promise<any> {
+    static async initMovieGenres(): Promise<void> {
         const response = await fetch("https://api.themoviedb.org/3/genre/movie/list?language=en", {
             method: 'GET',
             headers: TMDB.getHeaders()
@@ -156,13 +202,13 @@ export class TMDB {
         for (const genre of jsonResponse.genres) {
             try {
                 await MovieDB.addGenreDefinition(genre.id, genre.name);
-            } catch (e: any) {
-                console.error(e.message);
-            }   
+            } catch (e) {
+                console.error(ErrorUtil.getErrorMessage(e));
+            }
         }
     }
 
-    static async getTvshow(tvshowId: string, locale:string = 'en-US'): Promise<any> {
+    static async getTvshow(tvshowId: string, locale:string = 'en-US'): Promise<TMBDShow> {
         const response = await fetch(`https://api.themoviedb.org/3/tv/${tvshowId}?language=${locale}`, {
             method: 'GET',
             headers: TMDB.getHeaders()
@@ -174,7 +220,7 @@ export class TMDB {
         return tvshow;
     }
 
-    static async getTvshowSeasons(tvshowId: string, seasonIndex: number): Promise<any> {
+    static async getTvshowSeasons(tvshowId: string, seasonIndex: number): Promise<TMDBSeason> {
         const response = await fetch(`https://api.themoviedb.org/3/tv/${tvshowId}/season/${seasonIndex}?language=en-US`, {
             method: 'GET',
             headers: TMDB.getHeaders()
@@ -182,7 +228,7 @@ export class TMDB {
         return await response.json();
     }
 
-    static async searchTvshow(query: string): Promise<any> {
+    static async searchTvshow(query: string): Promise<SearchResult[]> {
         const response = await fetch(`https://api.themoviedb.org/3/search/tv?query=${query}`, {
             method: 'GET',
             headers: TMDB.getHeaders()
@@ -200,9 +246,9 @@ export class TMDB {
         return results;
     }
 
-    static async getTvshowTitle(tvshowId: string, tmdbMovie: any): Promise<string> {
-        if (tmdbMovie.origin_country?.[0] === 'FR' && tmdbMovie.original_name) {
-            return tmdbMovie.original_name;
+    static async getTvshowTitle(tvshowId: string, tmdbShow: TMBDShow): Promise<string> {
+        if (tmdbShow.origin_country?.[0] === 'FR' && tmdbShow.original_name) {
+            return tmdbShow.original_name;
         }
         const response = await fetch(`https://api.themoviedb.org/3/tv/${tvshowId}/translations`, {
             method: 'GET',
@@ -219,16 +265,16 @@ export class TMDB {
                 frName = translation.data.name;
             } else if (translation.iso_3166_1 === 'US') {
                 usName = translation.data.name;
-            } else if (translation.iso_3166_1.toLowerCase() === tmdbMovie.origin_country?.[0].toLowerCase()) {
+            } else if (translation.iso_3166_1.toLowerCase() === tmdbShow.origin_country?.[0].toLowerCase()) {
                 if (TextUtil.areEastAsianCharactersOverThreashold(translation.data.name)) {
                     originCountryName = translation.data.name;
                 }
             }
         }
-        return frName || usName || originCountryName || tmdbMovie.name;
+        return frName || usName || originCountryName || tmdbShow.name;
     }
 
-    static async initTvshowGenres(): Promise<any> {
+    static async initTvshowGenres(): Promise<void> {
         const response = await fetch("https://api.themoviedb.org/3/genre/tv/list?language=en", {
             method: 'GET',
             headers: TMDB.getHeaders()
@@ -237,8 +283,8 @@ export class TMDB {
         for (const genre of jsonResponse.genres) {
             try {
                 await TvshowDB.addGenreDefinition(genre.id, genre.name);
-            } catch (e: any) {
-                console.error(e.message);
+            } catch (e) {
+                console.error(ErrorUtil.getErrorMessage(e));
             }   
         }
     }

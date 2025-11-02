@@ -49,7 +49,7 @@ export class Tvshow extends Artifact implements Serializable<ITvshow> {
             if (childLastAndNextOnGoing.next) {
                 lastAndNextOnGoing.next = childLastAndNextOnGoing.next;
             }
-            if (lastAndNextOnGoing.last !== null && lastAndNextOnGoing.next !== null) {
+            if (lastAndNextOnGoing.last === null || lastAndNextOnGoing.next !== null) {
                 break;
             }
         }

@@ -14,9 +14,9 @@ export type OrderByFightStore = {
     highestValue: number
     lowestValue: number
     itemA?: BacklogItem
-    itemAPoster?: string
+    itemAPoster?: string | null
     itemB?: BacklogItem
-    itemBPoster?: string
+    itemBPoster?: string | null
     similarElo: boolean
 };
 
@@ -136,14 +136,15 @@ export const getRandomItemB = async () => {
     const store = get(orderByFightStore);
     let itemB;
     if (store.similarElo) {
-        const eloFilteredBacklog = backlog.backlogItems.filter(bi => bi.elo > store.itemA.elo - 100 && bi.elo < store.itemA.elo + 100);
+        const eloFilteredBacklog = backlog.backlogItems.filter(bi => bi.elo > store.itemA!.elo - 100 && bi.elo < store.itemA!.elo + 100);
         let randomIndex;
         if (eloFilteredBacklog.length > 1) {
             randomIndex = OrderUtil.getRandomIntegerBetween(0, eloFilteredBacklog.length - 1);
+            itemB = eloFilteredBacklog[randomIndex];
         } else {
             randomIndex = OrderUtil.getRandomIntegerBetween(store.highestValue - 1, store.lowestValue - 1);
+            itemB = backlog.backlogItems[randomIndex];
         }
-        itemB = eloFilteredBacklog[randomIndex];
     } else {
         const randomIndex = OrderUtil.getRandomIntegerBetween(store.highestValue - 1, store.lowestValue - 1);
         itemB = backlog.backlogItems[randomIndex];

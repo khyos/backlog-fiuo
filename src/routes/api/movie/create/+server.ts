@@ -66,7 +66,7 @@ export async function POST({ request, locals }: RequestEvent) {
     }
 
     const duration = tmdbMovie.runtime * 60;
-    const genres = tmdbMovie.genres.map((genre: any) => genre.id);
+    const genres = tmdbMovie.genres.map((genre) => genre.id);
     const movie = await MovieDB.createMovie(title, releaseDate, duration, genres, links, ratings);
     if (movie) {
         return json(movie.toJSON());

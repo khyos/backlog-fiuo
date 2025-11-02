@@ -193,7 +193,7 @@ export abstract class Artifact implements Serializable<IArtifact> {
         }
     }
 
-    toJSON() {
+    toJSON(): IArtifact {
         return {
             __type: SERIALIZE_TYPE,
             id: this.id,

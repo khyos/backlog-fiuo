@@ -20,7 +20,7 @@
     $: backlogStoreInst = $backlogStore;
     
     // Events
-    export let onDeleteBacklogItem: (e: any) => void;
+    export let onDeleteBacklogItem: (e: MouseEvent) => void;
     export let onMoveBacklogItem: (srcRank: number, targetRank: number) => Promise<void>;
 
     let showFullTags = false;
@@ -53,6 +53,7 @@
             <Badge color="blue" class="font-semibold flex items-center gap-1 mr-2" style="white-space: nowrap;">
                 # {backlogItem.rank}
             </Badge>
+            <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
             <a class='mr-1' href={`/${backlogStoreInst.backlog.artifactType}/${backlogItem.artifact.id}`}>{backlogItem.artifact.title}</a>
             <div class="{showFullTags ? '' : 'hidden md:block'}">
                 {#each backlogItem.tags as tag (tag.id)}

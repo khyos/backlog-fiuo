@@ -6,7 +6,7 @@ import { Link } from "$lib/model/Link";
 import { Rating } from "$lib/model/Rating";
 import { Game } from "$lib/model/game/Game";
 import { Platform, type IPlatformDB } from "$lib/model/game/Platform";
-import { db, execQuery } from "$lib/server/database";
+import { runDbQuery, getDbRows } from "$lib/server/database";
 import { ArtifactDB } from "../ArtifactDB";
 import { BacklogItemDB } from "../BacklogItemDB";
 import { LinkDB } from "../LinkDB";
@@ -45,39 +45,30 @@ export class GameDB {
     // Platform Methods
     // ========================================
     static async getPlatforms(gameId: number): Promise<Platform[]> {
-        return await new Promise((resolve, reject) => {
-            db.all(`SELECT platform.id as id, title FROM game_platform
+        const rows = await getDbRows<IPlatformDB>(
+            `SELECT platform.id as id, title FROM game_platform
                     INNER JOIN platform ON game_platform.platformId = platform.id
-                    WHERE artifactId = ? `, [gameId], async (error, rows: IPlatformDB[]) => {
-                if (error) {
-                    reject(error);
-                } else {
-                    const platforms: Platform[] = [];
-                    for (const row of rows) {
-                        const platform = new Platform(row.id, row.title);
-                        platforms.push(platform);
-                    }
-                    resolve(platforms);
-                }
-            });
-        });
+                    WHERE artifactId = ? `,
+            [gameId]
+        );
+        
+        const platforms: Platform[] = [];
+        for (const row of rows) {
+            const platform = new Platform(row.id, row.title);
+            platforms.push(platform);
+        }
+        return platforms;
     }
 
     static async getAllPlatforms(): Promise<Platform[]> {
-        return await new Promise((resolve, reject) => {
-            db.all(`SELECT * FROM platform ORDER BY title`, async (error, rows: IPlatformDB[]) => {
-                if (error) {
-                    reject(error);
-                } else {
-                    const platforms: Platform[] = [];
-                    for (const row of rows) {
-                        const platform = new Platform(row.id, row.title);
-                        platforms.push(platform);
-                    }
-                    resolve(platforms);
-                }
-            });
-        });
+        const rows = await getDbRows<IPlatformDB>(`SELECT * FROM platform ORDER BY title`);
+        
+        const platforms: Platform[] = [];
+        for (const row of rows) {
+            const platform = new Platform(row.id, row.title);
+            platforms.push(platform);
+        }
+        return platforms;
     }
 
     // ========================================
@@ -170,28 +161,14 @@ export class GameDB {
     // Update Operations
     // ========================================
     static async updateGame(gameId: number, title: string, releaseDate: Date = new Date(7258118400000)): Promise<void> {
-        return await new Promise((resolve, reject) => {
-            db.run(`UPDATE artifact SET title = ?, releaseDate = ? WHERE id = ?`, 
-                [title, releaseDate.getTime().toString(), gameId], function (error) {
-                if (error) {
-                    reject(error);
-                } else {
-                    resolve();
-                }
-            });
-        });
+        await runDbQuery(
+            `UPDATE artifact SET title = ?, releaseDate = ? WHERE id = ?`,
+            [title, releaseDate.getTime().toString(), gameId]
+        );
     }
 
     static async updateDuration(gameId: number, duration: number): Promise<void> {
-        return await new Promise((resolve, reject) => {
-            db.run(`UPDATE artifact SET duration = ? WHERE id = ?`, [duration, gameId], async function (error) {
-                if (error) {
-                    reject(error);
-                } else {
-                    resolve();
-                }
-            });
-        });
+        await runDbQuery(`UPDATE artifact SET duration = ? WHERE id = ?`, [duration, gameId]);
     }
 
     static async updatePlatforms(gameId: number, platformIds: number[]): Promise<void> {
@@ -200,7 +177,7 @@ export class GameDB {
 
         const platformsToRemove = existingPlatformsIds.filter(id => !platformIds.includes(id));
         for (const platformId of platformsToRemove) {
-            this.deletePlatform(gameId, platformId);
+            await this.deletePlatform(gameId, platformId);
         }
 
         const platformsToAdd = platformIds.filter(id => !existingPlatformsIds.includes(id));
@@ -209,12 +186,12 @@ export class GameDB {
         }
     }
 
-    static async addPlatform(gameId: number, platformId: number) {
-        db.run(`INSERT OR IGNORE INTO game_platform (artifactId, platformId) VALUES (?, ?)`, [gameId, platformId]);
+    static async addPlatform(gameId: number, platformId: number): Promise<void> {
+        await runDbQuery(`INSERT OR IGNORE INTO game_platform (artifactId, platformId) VALUES (?, ?)`, [gameId, platformId]);
     }
 
-    static deletePlatform(gameId: number, platformId: number) {
-        db.run(`DELETE FROM game_platform WHERE artifactId = ? AND platformId = ?`, [gameId, platformId]);
+    static async deletePlatform(gameId: number, platformId: number): Promise<void> {
+        await runDbQuery(`DELETE FROM game_platform WHERE artifactId = ? AND platformId = ?`, [gameId, platformId]);
     }
 
     // ========================================
@@ -224,26 +201,26 @@ export class GameDB {
         const game = await GameDB.getById(id);
         if (game) {
             await ArtifactDB.deleteArtifactAndChildren(game, 'game_game_genre');
-            await db.run(`DELETE FROM game_platform WHERE artifactId = ?`, [id]);
+            await runDbQuery(`DELETE FROM game_platform WHERE artifactId = ?`, [id]);
         }
     }
 
     // ========================================
     // Table Creation Methods
     // ========================================
-    static createGamePlatformTable() {
-        execQuery(`CREATE TABLE IF NOT EXISTS game_platform (
+    static async createGamePlatformTable() {
+        await runDbQuery(`CREATE TABLE IF NOT EXISTS game_platform (
             artifactId INTEGER NOT NULL,
             platformId INTEGER NOT NULL,
             PRIMARY KEY (artifactId, platformId)
         )`);
     }
 
-    static createGameGenreTable(): void {
-        ArtifactDB.createGenreTable('game_genre');
+    static async createGameGenreTable() {
+        await ArtifactDB.createGenreTable('game_genre');
     }
 
-    static createGameGameGenreTable(): void {
-        ArtifactDB.createGenreMapTable('game_game_genre');
+    static async createGameGameGenreTable() {
+        await ArtifactDB.createGenreMapTable('game_game_genre');
     }
 }

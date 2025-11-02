@@ -9,6 +9,7 @@
 </script>
 
 <TableBodyRow>
+    <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
     <TableBodyCell><a class='mr-1' href={`/${userListStoreInst.userList.artifactType}/${artifact.id}`}>{artifact.title}</a></TableBodyCell>
     <TableBodyCell>{artifact.userInfo?.score}</TableBodyCell>
     <TableBodyCell>{artifact.userInfo?.status}</TableBodyCell>

@@ -70,7 +70,8 @@ export class SensCritique {
                 for (const card of cards) {
                     const link = card.querySelector('div:nth-child(2)>h3>a');
                     if (link instanceof HTMLAnchorElement) {
-                        const date = card.querySelector('div:nth-child(2)>p>*:nth-child(3)')?.innerText?.slice(-4);
+                        const dateContainer = card.querySelector('div:nth-child(2)>p>*:nth-child(3)') as HTMLElement;
+                        const date = dateContainer?.innerText?.slice(-4);
                         results.push({
                             id: link.href.split('/').slice(-2).join('/'),
                             name: link.innerText,
