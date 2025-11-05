@@ -140,20 +140,55 @@ export class TMDB {
                 defaultDates = countryDates;
             }
         }
-        let releaseDate = originCountryDates.theatricalNoNote || originCountryDates.fallbackDate;
-        if (!releaseDate) {
-            const frDate = frDates.getMostRelevant();
-            const usDate = usDates.getMostRelevant();
-            if (frDate && usDate) {
-                if (new Date(frDate).getTime() > new Date(usDate).getTime() + threeMonthsInMs) {
-                    releaseDate = usDate;
+        const originCountryDate = originCountryDates.theatricalNoNote || originCountryDates.fallbackDate;
+        const frDate = frDates.getMostRelevant();
+        const usDate = usDates.getMostRelevant();
+        const now = new Date().getTime();
+        let releaseDate;
+
+        if (originCountryDate) {
+            const originDate = new Date(originCountryDate).getTime();
+            // If origin date is recent (last 3 months) or in future
+            if (originDate > now - threeMonthsInMs) {
+                if (frDate) {
+                    const frDateTime = new Date(frDate).getTime();
+                    // If french date exists and is not older than 3 months compared to origin date
+                    if (frDateTime < originDate + threeMonthsInMs) {
+                        releaseDate = frDate;
+                    } else {
+                        releaseDate = originCountryDate;
+                    }
                 } else {
-                    releaseDate = frDate;
+                    releaseDate = originCountryDate;
                 }
             } else {
-                releaseDate = frDate || usDate;
+                releaseDate = originCountryDate;
             }
+        } else if (usDate) {
+            const usDateTime = new Date(usDate).getTime();
+            // If US date is recent (last 3 months) or in future
+            if (usDateTime > now - threeMonthsInMs) {
+                if (frDate) {
+                    const frDateTime = new Date(frDate).getTime();
+                    // If french date exists and is not older than 3 months compared to US date
+                    if (frDateTime < usDateTime + threeMonthsInMs) {
+                        releaseDate = frDate;
+                    } else {
+                        releaseDate = usDate;
+                    }
+                } else {
+                    releaseDate = usDate;
+                }
+            } else if (frDate) {
+                const frDateTime = new Date(frDate).getTime();
+                releaseDate = frDateTime > usDateTime ? usDate : frDate;
+            } else {
+                releaseDate = usDate;
+            }
+        } else if (frDate) {
+            releaseDate = frDate;
         }
+
         if (!releaseDate) {
             releaseDate = defaultDates.getMostRelevant();
         }
