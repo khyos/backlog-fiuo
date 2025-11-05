@@ -110,11 +110,15 @@ export class MAL {
         return episodes;
     }
 
-    // TODO: Handle rate limiting
     static async getAnimeEpisodesPage(animeId: string, page: number): Promise<{ episodes: MALAnimeEpisode[], has_next_page: boolean } | null> {
         try {
             const response = await fetch(`${this.JIKAN_BASE_URL}/anime/${animeId}/episodes?page=${page}`);
             if (!response.ok) {
+                if (response.status === 429) {
+                    // Handle rate limiting of 3 queries per second, 60 per minutes: wait one second and retry
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    return this.getAnimeEpisodesPage(animeId, page);
+                }
                 throw new Error(`MAL get anime episodes failed: ${response.status}`);
             }
             const result = await response.json();
