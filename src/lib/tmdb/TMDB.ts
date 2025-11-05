@@ -47,6 +47,8 @@ type TMDBSeason = {
     }[]
 }
 
+const threeMonthsInMs = 3 * 30 * 24 * 60 * 60 * 1000;
+
 class ReleaseDates {
     theatricalNoNote?: string
     theatricalWithNote?: string
@@ -143,7 +145,7 @@ export class TMDB {
             const frDate = frDates.getMostRelevant();
             const usDate = usDates.getMostRelevant();
             if (frDate && usDate) {
-                if (new Date(frDate).getTime() > new Date(usDate).getTime()) {
+                if (new Date(frDate).getTime() > new Date(usDate).getTime() + threeMonthsInMs) {
                     releaseDate = usDate;
                 } else {
                     releaseDate = frDate;

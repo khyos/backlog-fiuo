@@ -101,6 +101,8 @@ export async function PUT({ params, request, locals }: RequestEvent) {
                     const scRating = await SensCritique.getMovieRating(url);
                     if (scRating) {
                         await RatingDB.updateRating(movieId, RatingType.SENSCRITIQUE, scRating);
+                    } else {
+                        await RatingDB.deleteRating(movieId, RatingType.SENSCRITIQUE);
                     }
                 } catch {
                     return error(500, "Failed to Update SENSCRITIQUE");

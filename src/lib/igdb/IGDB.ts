@@ -6,6 +6,8 @@ export type IGDBSearchGameResult = {
     id: number
     name: string
     url: string
+    first_release_date?: number
+    date?: string
 }
 
 export type IGDBGame = {
@@ -57,9 +59,15 @@ export class IGDB {
         const response = await fetch("https://api.igdb.com/v4/games", {
             method: 'POST',
             headers: IGDB.getHeaders(access_token),
-            body: `fields name,url; search "${query}";`
+            body: `fields name,url,first_release_date; search "${query}";`
         });
-        return (await response.json());
+        const jsonReponse: IGDBSearchGameResult[] = await response.json();
+        jsonReponse.map((game) => {
+            if (game.first_release_date) {
+                game.date = new Date(game.first_release_date * 1000).getFullYear().toString();
+            }
+        });
+        return jsonReponse;
     }
 
     static async getUrlFromId(gameId: string): Promise<string> {

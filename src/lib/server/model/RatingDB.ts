@@ -6,6 +6,10 @@ export class RatingDB {
         return await runDbQuery(`INSERT INTO rating (artifactId, type, rating) VALUES (?, ?, ?)`, [artifactId, type, rating]);
     }
 
+    static async deleteRating(artifactId: number, type: string): Promise<void> {
+        return await runDbQuery(`DELETE FROM rating WHERE artifactId = ? AND type = ?`, [artifactId, type]);
+    }
+
     static async updateRating(artifactId: number, type: string, rating: number | null): Promise<void> {
         const row = await getDbRow<IRatingDB>(`SELECT * FROM rating WHERE artifactId = ? AND type = ?`, [artifactId, type]);
         if (!row) {
