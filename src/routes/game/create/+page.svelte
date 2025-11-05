@@ -14,6 +14,7 @@
         id: string;
         value: string;
         name: string;
+        date?: string;
         link?: string;
         url?: string;
     }
@@ -131,6 +132,9 @@
             for (const key in results) {
                 for (const result of results[key]) {
                     result.value = result.id;
+                    if (result.date) {
+                        result.name = `${result.name} (${new Date(result.date).getFullYear()})`
+                    }
                 }
             }
             

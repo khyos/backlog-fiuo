@@ -21,7 +21,14 @@ export class SensCritique {
         try {
             dom = new JSDOM(response.body);
             const ratingDiv = dom.window.document.querySelector('[data-testid=Rating]');
-            const ratingText = ratingDiv?.textContent
+            if (!ratingDiv) {
+                return null;
+            }
+            const previousSibling = ratingDiv.previousElementSibling;
+            if (previousSibling && previousSibling.getAttribute('data-testid') === 'user-infos-hover') {
+                return null;
+            }
+            const ratingText = ratingDiv.textContent;
             if (!ratingText) {
                 return null;
             }
@@ -70,7 +77,7 @@ export class SensCritique {
                 for (const card of cards) {
                     const link = card.querySelector('div:nth-child(2)>h3>a');
                     if (link instanceof HTMLAnchorElement) {
-                        const dateContainer = card.querySelector('div:nth-child(2)>p>*:nth-child(3)') as HTMLElement;
+                        const dateContainer = card.querySelector('div:nth-child(2)>p>*:last-child') as HTMLElement;
                         const date = dateContainer?.innerText?.slice(-4);
                         results.push({
                             id: link.href.split('/').slice(-2).join('/'),

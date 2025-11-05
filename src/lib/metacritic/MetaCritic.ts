@@ -63,7 +63,7 @@ export class MetaCritic {
         try {
             dom = new JSDOM(response.body);
             const results: SearchResult[] = [];
-            const cards: NodeListOf<HTMLAnchorElement> =  dom.window.document.querySelectorAll('.c-pageSiteSearch-results .g-grid-container>a');
+            const cards: NodeListOf<HTMLAnchorElement> = dom.window.document.querySelectorAll('.c-pageSiteSearch-results .g-grid-container>a');
             for (const card of cards) {
                 const nameContainer = card.querySelector('div:nth-child(2)>p');
                 const name = nameContainer?.innerHTML.trim();
