@@ -99,25 +99,23 @@ const updateMAL = async (animeId: number, malId: string) => {
         const durationPerEpisode = (MAL.parsePerEpisodeDuration(malAnime.duration) ?? 20) * 60;
 
         let duration = 0;
-        if (malAnime.episodes) {
-            const malAnimeEpisodes = await MAL.getAnimeEpisodes(malId);
-            for (const episode of malAnimeEpisodes) {
-                const episodeNumber = episode.mal_id;
-                const episodeReleaseDate = episode.aired ? new Date(episode.aired) : undefined;
-                const episodeTitle = episode.title;
-                const animeEpisode = anime.children.find(child => child.childIndex === episodeNumber)
-                if (!animeEpisode) {
-                    await AnimeDB.createAnimeEpisode(anime.id, episodeNumber, episodeTitle, episodeReleaseDate, durationPerEpisode);
-                } else {
-                    await AnimeDB.updateAnimeEpisode(animeEpisode.id, episodeNumber, episodeTitle, episodeReleaseDate, durationPerEpisode);
-                }
-                duration += durationPerEpisode;
+        const malAnimeEpisodes = await MAL.getAnimeEpisodes(malId);
+        for (const episode of malAnimeEpisodes) {
+            const episodeNumber = episode.mal_id;
+            const episodeReleaseDate = episode.aired ? new Date(episode.aired) : undefined;
+            const episodeTitle = episode.title;
+            const animeEpisode = anime.children.find(child => child.childIndex === episodeNumber)
+            if (!animeEpisode) {
+                await AnimeDB.createAnimeEpisode(anime.id, episodeNumber, episodeTitle, episodeReleaseDate, durationPerEpisode);
+            } else {
+                await AnimeDB.updateAnimeEpisode(animeEpisode.id, episodeNumber, episodeTitle, episodeReleaseDate, durationPerEpisode);
             }
-            for (const animeEpisode of anime.children) {
-                const episode = malAnimeEpisodes.find(child => child.mal_id === animeEpisode.childIndex);
-                if (!episode) {
-                    await AnimeDB.deleteAnimeEpisode(animeEpisode.id);
-                }
+            duration += durationPerEpisode;
+        }
+        for (const animeEpisode of anime.children) {
+            const episode = malAnimeEpisodes.find(child => child.mal_id === animeEpisode.childIndex);
+            if (!episode) {
+                await AnimeDB.deleteAnimeEpisode(animeEpisode.id);
             }
         }
        
