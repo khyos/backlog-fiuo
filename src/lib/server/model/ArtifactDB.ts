@@ -240,6 +240,61 @@ export class ArtifactDB {
                 ORDER BY ${sqlOrder}`, [backlogId]);
     }
 
+    static async getVirtualWishlistItems(
+        userId: number,
+        artifactType: ArtifactType,
+        backlogOrder: BacklogOrder
+    ): Promise<IBacklogItemDB[]> {
+        let sqlOrder = 'COALESCE(elo_table.elo, 1200) DESC, user_artifact.startDate ASC';
+        // Default case: use RANK() for ELO-based sorting to handle ties
+        let rankColumn = 'RANK() OVER (ORDER BY COALESCE(elo_table.elo, 1200) DESC) AS rank';
+        let extraJoin = '';
+        
+        if (backlogOrder === BacklogOrder.DATE_ADDED) {
+            sqlOrder = 'user_artifact.startDate ASC';
+            rankColumn = 'ROW_NUMBER() OVER (ORDER BY user_artifact.startDate ASC) AS rank';
+        } else if (backlogOrder === BacklogOrder.RANK) {
+            // For manual ranking, use the stored rank values
+            sqlOrder = 'COALESCE(rank_table.rank, 999999) ASC, COALESCE(elo_table.elo, 1200) DESC';
+            rankColumn = 'COALESCE(rank_table.rank, 999999) AS rank';
+            extraJoin = 'LEFT JOIN user_artifact_wishlist_rank rank_table ON user_artifact.artifactId = rank_table.artifactId AND user_artifact.userId = rank_table.userId';
+        } else if (backlogOrder === BacklogOrder.ELO) {
+            sqlOrder = 'COALESCE(elo_table.elo, 1200) DESC, user_artifact.startDate ASC';
+            // For ELO mode, use RANK() to handle ties - items with same ELO get same rank
+            rankColumn = 'RANK() OVER (ORDER BY COALESCE(elo_table.elo, 1200) DESC) AS rank';
+        }
+
+        return await getDbRows<IBacklogItemDB>(`SELECT artifact.id AS artifactId, artifact.title, artifact.type, artifact.releaseDate, artifact.duration,
+                CAST(strftime('%s', COALESCE(user_artifact.startDate, CURRENT_TIMESTAMP)) AS INTEGER) AS dateAdded,
+                COALESCE(elo_table.elo, 1200) AS elo,
+                -1 AS backlogId,
+                ${rankColumn}
+                FROM artifact
+                INNER JOIN user_artifact ON artifact.id = user_artifact.artifactId
+                LEFT JOIN user_artifact_wishlist_elo elo_table ON user_artifact.artifactId = elo_table.artifactId AND user_artifact.userId = elo_table.userId
+                ${extraJoin}
+                WHERE user_artifact.userId = ? AND user_artifact.status = 'wishlist' AND artifact.type = ? 
+                AND CAST(artifact.releaseDate AS INTEGER) <= CAST(strftime('%s', 'now') AS INTEGER) * 1000
+                ORDER BY ${sqlOrder}`, [userId, artifactType]);
+    }
+
+    static async getVirtualFutureItems(
+        userId: number,
+        artifactType: ArtifactType
+    ): Promise<IBacklogItemDB[]> {
+        // Future items are always ordered by release date (earliest first)
+        return await getDbRows<IBacklogItemDB>(`SELECT artifact.id AS artifactId, artifact.title, artifact.type, artifact.releaseDate, artifact.duration,
+                CAST(strftime('%s', COALESCE(user_artifact.startDate, CURRENT_TIMESTAMP)) AS INTEGER) AS dateAdded,
+                1200 AS elo,
+                -2 AS backlogId,
+                ROW_NUMBER() OVER (ORDER BY artifact.releaseDate ASC) AS rank
+                FROM artifact
+                INNER JOIN user_artifact ON artifact.id = user_artifact.artifactId
+                WHERE user_artifact.userId = ? AND user_artifact.status = 'wishlist' AND artifact.type = ? 
+                AND CAST(artifact.releaseDate AS INTEGER) > CAST(strftime('%s', 'now') AS INTEGER) * 1000
+                ORDER BY artifact.releaseDate ASC`, [userId, artifactType]);
+    }
+
     // ========================================
     // Create Operations
     // ========================================

@@ -1,5 +1,5 @@
 import { Backlog, BacklogRankingType, type IBacklog } from '$lib/model/Backlog';
-import { fetchBacklog } from '$lib/services/BacklogService';
+import { fetchBacklog, fetchVirtualWishlistBacklog, fetchVirtualFutureBacklog } from '$lib/services/BacklogService';
 import { derived, get, writable } from 'svelte/store';
 import { createBacklogFilters, filterBacklogItems, type BacklogFilters } from '../BacklogFilters';
 import { showCopiedToast } from './PageStore';
@@ -29,16 +29,37 @@ export const initializeStore = (initBacklog: IBacklog) => {
         backlog: backlog,
         backlogFilters: backlogFilters
     })
+    return backlog;
 }
 
 export const refreshBacklog = () => {
     const store = get(backlogStore);
-    return fetchBacklog(store.backlog.id).then((backlog) => {
-        backlogStore.update(s => ({
-            ...s,
-            backlog: Backlog.fromJSON(backlog)
-        }));
-    });
+    
+    // Check if this is a virtual wishlist (id = -1)
+    if (store.backlog.id === -1) {
+        return fetchVirtualWishlistBacklog(store.backlog.artifactType).then((backlog: IBacklog) => {
+            backlogStore.update(s => ({
+                ...s,
+                backlog: Backlog.fromJSON(backlog)
+            }));
+        });
+    } 
+    // Check if this is a virtual future list (id = -2)
+    else if (store.backlog.id === -2) {
+        return fetchVirtualFutureBacklog(store.backlog.artifactType).then((backlog: IBacklog) => {
+            backlogStore.update(s => ({
+                ...s,
+                backlog: Backlog.fromJSON(backlog)
+            }));
+        });
+    } else {
+        return fetchBacklog(store.backlog.id).then((backlog) => {
+            backlogStore.update(s => ({
+                ...s,
+                backlog: Backlog.fromJSON(backlog)
+            }));
+        });
+    }
 }
 
 export const copyAiPrompt = () => {

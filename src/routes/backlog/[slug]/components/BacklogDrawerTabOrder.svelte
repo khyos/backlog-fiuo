@@ -11,7 +11,7 @@
     import { BacklogRankingType } from "$lib/model/Backlog";
     import { getRandomItemA, getRandomItemB, orderByFightStore, startOrderByFight, updateItemA, updateSimilarElo } from "$lib/stores/OrderByFightStore";
     import { get } from "svelte/store";
-    import { AwardOutline, CheckCircleOutline, RefreshOutline, ThumbsDownOutline, ThumbsUpOutline } from "flowbite-svelte-icons";
+    import { AwardOutline, CheckCircleOutline, RefreshOutline } from "flowbite-svelte-icons";
     import type { BacklogItem } from "$lib/model/BacklogItem";
     import { backlogStore, refreshBacklog } from "../stores/BacklogStore";
 
@@ -45,13 +45,24 @@
         }
         
         try {
-            await fetch(`/api/backlog/${backlogStoreInst.backlog.id}/elo`, {
-                method: "POST",
-                body: JSON.stringify({
-                    winnerArtifactId: winnerItem.artifact.id,
-                    loserArtifactId: loserItem.artifact.id,
-                }),
-            });
+            // Check if this is a virtual wishlist (id = -1)
+            if (backlogStoreInst.backlog.id === -1) {
+                await fetch(`/api/backlog/current/${backlogStoreInst.backlog.artifactType}/elo`, {
+                    method: "POST",
+                    body: JSON.stringify({
+                        winnerArtifactId: winnerItem.artifact.id,
+                        loserArtifactId: loserItem.artifact.id,
+                    }),
+                });
+            } else {
+                await fetch(`/api/backlog/${backlogStoreInst.backlog.id}/elo`, {
+                    method: "POST",
+                    body: JSON.stringify({
+                        winnerArtifactId: winnerItem.artifact.id,
+                        loserArtifactId: loserItem.artifact.id,
+                    }),
+                });
+            }
             
             await refreshBacklog();
             if (store.pickType === 'random') {
@@ -172,57 +183,71 @@
             </Card>
         {:else}
             {#if backlogStoreInst.backlog.rankingType === BacklogRankingType.RANK}
-                <div class="space-y-4">
-                    <Card class="p-2 relative">
-                        <div class="absolute top-2 right-2">
-                            <Badge color="blue" class="font-semibold">#{store.itemA.rank}</Badge>
+                <Heading tag="h5" class="mb-4 text-center">Which item should be ranked higher?</Heading>
+                <div class="grid grid-cols-2 gap-4">
+                    <Card 
+                        class="p-2 hover:bg-green-50 transition-colors cursor-pointer relative"
+                        onclick={orderByComparisonPickHigher}
+                    >
+                        <div class="absolute top-2 left-2 z-10">
+                            <Badge color="blue" class="font-semibold flex items-center gap-1">
+                                # {store.itemA.rank}
+                            </Badge>
                         </div>
-                        <Heading tag="h5" class="pb-2">Item to Order</Heading>
-                        <P class="font-medium">{store.itemA.artifact.title}</P>
+                        <div class="relative mt-6 mb-2 overflow-hidden rounded-md">
+                            <img 
+                                src={store.itemAPoster}
+                                alt=''
+                                class="object-cover w-full h-full"
+                            />
+                        </div>
+                        <P class="font-small text-center">{store.itemA.artifact.title} ({new Date(store.itemA.artifact.releaseDate).getFullYear()})</P>
                     </Card>
                     
-                    <Card class="p-2 relative">
-                        <div class="absolute top-2 right-2">
-                            <Badge color="blue" class="font-semibold">#{store.itemB.rank}</Badge>
+                    <Card 
+                        class="p-2 hover:bg-red-50 transition-colors cursor-pointer relative"
+                        onclick={orderByComparisonPickLower}
+                    >
+                        <div class="absolute top-2 left-2 z-10">
+                            <Badge color="blue" class="font-semibold flex items-center gap-1">
+                                # {store.itemB.rank}
+                            </Badge>
                         </div>
-                        <Heading tag="h5" class="pb-2">Compared to</Heading>
-                        <P class="font-medium">{store.itemB.artifact.title}</P>
+                        <div class="relative mt-6 mb-2 overflow-hidden rounded-md">
+                            <img 
+                                src={store.itemBPoster} 
+                                alt=''
+                                class="object-cover w-full h-full"
+                            />
+                        </div>
+                        <P class="font-small text-center">{store.itemB.artifact.title} ({new Date(store.itemB.artifact.releaseDate).getFullYear()})</P>
                     </Card>
+                </div>
+                
+                <div class="mt-4 flex gap-2 justify-center">
+                    <Button 
+                        color="green" 
+                        size="sm"
+                        onclick={() => startRanking()}
+                        disabled={isLoading}
+                    >
+                        <div class="flex items-center gap-2">
+                            <CheckCircleOutline class="w-3 h-3" />
+                            <span>Keep Current Position</span>
+                        </div>
+                    </Button>
                     
-                    <div class="flex gap-2 justify-center">
-                        <Button 
-                            color="blue" 
-                            onclick={orderByComparisonPickHigher}
-                            disabled={isLoading}
-                        >
-                            <div class="flex items-center gap-2">
-                                <ThumbsUpOutline class="w-4 h-4" />
-                                <span>Higher</span>
-                            </div>
-                        </Button>
-
-                        <Button 
-                            color="green" 
-                            onclick={() => startRanking()}
-                            disabled={isLoading}
-                        >
-                            <div class="flex items-center gap-2">
-                                <CheckCircleOutline class="w-4 h-4" />
-                                <span>Keep</span>
-                            </div>
-                        </Button>
-                    
-                        <Button 
-                            color="blue" 
-                            onclick={orderByComparisonPickLower}
-                            disabled={isLoading}
-                        >
-                            <div class="flex items-center gap-2">
-                                <ThumbsDownOutline class="w-4 h-4" />
-                                <span>Lower</span>
-                            </div>
-                        </Button>
-                    </div>
+                    <Button 
+                        color="light" 
+                        size="sm" 
+                        onclick={startRanking}
+                        disabled={isLoading}
+                    >
+                        <div class="flex items-center gap-2">
+                            <RefreshOutline class="w-3 h-3" />
+                            <span>Pick Different Items</span>
+                        </div>
+                    </Button>
                 </div>
             {:else if backlogStoreInst.backlog.rankingType === BacklogRankingType.ELO}
                 <Heading tag="h5" class="mb-4 text-center">Which item do you prefer?</Heading>
