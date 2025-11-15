@@ -762,12 +762,12 @@ describe('ArtifactDB', () => {
                 expect(items).toHaveLength(3);
                 
                 // Should be ordered by rank ascending, then by ELO for items without ranks
-                expect(items[0].title).toBe('Rank 1 Game'); // rank 1
-                expect(items[0].rank).toBe(1);
-                expect(items[1].title).toBe('Rank 3 Game'); // rank 3
-                expect(items[1].rank).toBe(3);
-                expect(items[2].title).toBe('No Rank Game'); // rank 999999 (default), but has highest ELO
-                expect(items[2].rank).toBe(999999);
+                expect(items[0].title).toBe('No Rank Game'); // no rank
+                expect(items[0].rank).toBe(null);
+                expect(items[1].title).toBe('Rank 1 Game'); // rank 1
+                expect(items[1].rank).toBe(1);
+                expect(items[2].title).toBe('Rank 3 Game'); // rank 3
+                expect(items[2].rank).toBe(3);
             });
 
             test('should handle ties in ELO ranking using RANK() function', async () => {
