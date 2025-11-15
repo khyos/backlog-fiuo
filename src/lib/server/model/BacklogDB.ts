@@ -55,6 +55,12 @@ export class BacklogDB {
 
     static async getVirtualWishlistBacklog(userId: number, artifactType: ArtifactType): Promise<Backlog | null> {
         const rankingType = await BacklogDB.getUserWishlistRankingType(userId, artifactType);
+        
+        // If using RANK mode, normalize ranks to ensure no gaps and proper incremental ordering
+        if (rankingType === BacklogRankingType.RANK) {
+            await BacklogDB.normalizeWishlistRanks(userId, artifactType);
+        }
+        
         const backlog = new Backlog(-1, userId, rankingType, `${artifactType} Wishlist`, artifactType);
         backlog.backlogItems = await BacklogDB.getVirtualWishlistItems(userId, artifactType, rankingType);
         return backlog;
@@ -257,8 +263,6 @@ export class BacklogDB {
         }
     }
 
-
-
     static async getUserWishlistRankingType(userId: number, artifactType: ArtifactType): Promise<BacklogRankingType> {
         const row = await getDbRow<{rankingType: BacklogRankingType}>(`SELECT rankingType FROM user_wishlist_preferences WHERE userId = ? AND artifactType = ?`, [userId, artifactType]);
         return row?.rankingType || BacklogRankingType.ELO; // Default to ELO for backwards compatibility
@@ -352,8 +356,6 @@ export class BacklogDB {
         )`);
     }
 
-
-
     static async createWishlistRankTable() {
         await runDbQuery(`CREATE TABLE IF NOT EXISTS user_artifact_wishlist_rank (
             userId INTEGER NOT NULL,
@@ -367,32 +369,31 @@ export class BacklogDB {
     static async ensureWishlistRankRecord(userId: number, artifactId: number): Promise<void> {
         const exists = await getDbRow<{count: number}>(`SELECT COUNT(*) as count FROM user_artifact_wishlist_rank WHERE userId = ? AND artifactId = ?`, [userId, artifactId]);
         if (!exists || exists.count === 0) {
-            // Get current max rank and add 1
-            const maxRankRow = await getDbRow<{maxRank: number}>(`SELECT MAX(rank) as maxRank FROM user_artifact_wishlist_rank WHERE userId = ?`, [userId]);
-            const newRank = (maxRankRow?.maxRank || 0) + 1;
-            await runDbQuery(`INSERT OR IGNORE INTO user_artifact_wishlist_rank (userId, artifactId, rank, dateAdded) VALUES (?, ?, ?, CURRENT_TIMESTAMP)`, [userId, artifactId, newRank]);
+            await runDbQuery(`INSERT OR IGNORE INTO user_artifact_wishlist_rank (userId, artifactId, rank, dateAdded) VALUES (?, ?, ?, CURRENT_TIMESTAMP)`, [userId, artifactId, 999999]);
         }
     }
 
     static async initializeWishlistRanksFromElo(userId: number, artifactType: ArtifactType): Promise<void> {
         // Get all wishlist items ordered by ELO and assign sequential ranks
-        // Use ROW_NUMBER() to ensure distinct sequential ranks even for tied ELO scores
+        // Only include released items (same filter as getVirtualWishlistItems)
         const wishlistItems = await getDbRows<{artifactId: number, elo: number}>(`
             SELECT ua.artifactId, COALESCE(elo_table.elo, 1200) as elo
             FROM user_artifact ua
             INNER JOIN artifact a ON ua.artifactId = a.id
             LEFT JOIN user_artifact_wishlist_elo elo_table ON ua.artifactId = elo_table.artifactId AND ua.userId = elo_table.userId
             WHERE ua.userId = ? AND ua.status = 'wishlist' AND a.type = ?
+            AND CAST(a.releaseDate AS INTEGER) <= CAST(strftime('%s', 'now') AS INTEGER) * 1000
             ORDER BY COALESCE(elo_table.elo, 1200) DESC, ua.startDate ASC
         `, [userId, artifactType]);
         
-        // Clear existing ranks for this user and artifact type
+        // Clear existing ranks for this user and artifact type (only for released items)
         await runDbQuery(`
             DELETE FROM user_artifact_wishlist_rank 
             WHERE userId = ? AND artifactId IN (
                 SELECT ua.artifactId FROM user_artifact ua
                 INNER JOIN artifact a ON ua.artifactId = a.id
                 WHERE ua.userId = ? AND ua.status = 'wishlist' AND a.type = ?
+                AND CAST(a.releaseDate AS INTEGER) <= CAST(strftime('%s', 'now') AS INTEGER) * 1000
             )
         `, [userId, userId, artifactType]);
         
@@ -454,5 +455,43 @@ export class BacklogDB {
         await runDbQuery(`UPDATE user_artifact_wishlist_rank SET rank = ? WHERE userId = ? AND artifactId = ?`, [targetRank, userId, artifactId]);
     }
 
+    static async normalizeWishlistRanks(userId: number, artifactType: ArtifactType): Promise<void> {
+        // Get all current wishlist items with their existing ranks, ordered by current rank then ELO
+        const wishlistItems = await getDbRows<{artifactId: number, currentRank: number}>(`
+            SELECT wr.artifactId, wr.rank as currentRank
+            FROM user_artifact ua
+            INNER JOIN artifact a ON ua.artifactId = a.id
+            LEFT JOIN user_artifact_wishlist_rank wr ON ua.artifactId = wr.artifactId AND ua.userId = wr.userId
+            LEFT JOIN user_artifact_wishlist_elo elo_table ON ua.artifactId = elo_table.artifactId AND ua.userId = elo_table.userId
+            WHERE ua.userId = ? AND ua.status = 'wishlist' AND a.type = ?
+            AND CAST(a.releaseDate AS INTEGER) <= CAST(strftime('%s', 'now') AS INTEGER) * 1000
+            ORDER BY wr.rank ASC, COALESCE(elo_table.elo, 1200) DESC, ua.startDate ASC
+        `, [userId, artifactType]);
 
+        if (wishlistItems.length === 0) {
+            return;
+        }
+
+        // Clear existing ranks for this user and artifact type (only for released items)
+        await runDbQuery(`
+            DELETE FROM user_artifact_wishlist_rank 
+            WHERE userId = ? AND artifactId IN (
+                SELECT ua.artifactId FROM user_artifact ua
+                INNER JOIN artifact a ON ua.artifactId = a.id
+                WHERE ua.userId = ? AND ua.status = 'wishlist' AND a.type = ?
+                AND CAST(a.releaseDate AS INTEGER) <= CAST(strftime('%s', 'now') AS INTEGER) * 1000
+            )
+        `, [userId, userId, artifactType]);
+        
+        // Insert new sequential ranks (1, 2, 3, 4...) preserving the current order
+        for (let i = 0; i < wishlistItems.length; i++) {
+            const item = wishlistItems[i];
+            if (item.artifactId) {
+                await runDbQuery(`
+                    INSERT INTO user_artifact_wishlist_rank (userId, artifactId, rank, dateAdded) 
+                    VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+                `, [userId, item.artifactId, i + 1]);
+            }
+        }
+    }
 }

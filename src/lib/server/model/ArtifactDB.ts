@@ -6,7 +6,7 @@ import { artifactFromJSON } from "$lib/services/ArtifactService";
 import { BacklogOrder, BacklogRankingType } from "$lib/model/Backlog";
 import { Genre } from "$lib/model/Genre";
 import { runDbQueries, runDbQuery, getDbRow, getDbRows, runDbInsert } from "../database";
-import type { IBacklogItemDB } from "./BacklogDB";
+import { BacklogDB, type IBacklogItemDB } from "./BacklogDB";
 
 export interface IGenreDB {
     id: number;
@@ -255,8 +255,8 @@ export class ArtifactDB {
             rankColumn = 'ROW_NUMBER() OVER (ORDER BY user_artifact.startDate ASC) AS rank';
         } else if (backlogOrder === BacklogOrder.RANK) {
             // For manual ranking, use the stored rank values
-            sqlOrder = 'COALESCE(rank_table.rank, 999999) ASC, COALESCE(elo_table.elo, 1200) DESC';
-            rankColumn = 'COALESCE(rank_table.rank, 999999) AS rank';
+            sqlOrder = 'rank_table.rank ASC, COALESCE(elo_table.elo, 1200) DESC';
+            rankColumn = 'rank_table.rank AS rank';
             extraJoin = 'LEFT JOIN user_artifact_wishlist_rank rank_table ON user_artifact.artifactId = rank_table.artifactId AND user_artifact.userId = rank_table.userId';
         } else if (backlogOrder === BacklogOrder.ELO) {
             sqlOrder = 'COALESCE(elo_table.elo, 1200) DESC, user_artifact.startDate ASC';
@@ -368,6 +368,17 @@ export class ArtifactDB {
         if (artifactIdsToUpdate.length > 0) {
             const questionMarks = new Array(artifactIdsToUpdate.length).fill('?').join(',');
             await runDbQuery(`UPDATE user_artifact SET status = ? WHERE userId = ? AND artifactId IN (${questionMarks})`, [status, userId, ...artifactIdsToUpdate]);
+        }
+
+        // Handle wishlist rank management
+        if (status === UserArtifactStatus.WISHLIST) {
+            // If setting status to wishlist, ensure proper rank records for new items
+            for (const artifactId of artifactIdsToCreate) {
+                await BacklogDB.ensureWishlistRankRecord(userId, artifactId);
+            }
+            for (const artifactId of artifactIdsToUpdate) {
+                await BacklogDB.ensureWishlistRankRecord(userId, artifactId);
+            }
         }
     }
 

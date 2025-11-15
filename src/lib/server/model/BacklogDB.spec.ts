@@ -1126,13 +1126,14 @@ describe('BacklogDB', () => {
 
                 const record = await getDbRow<{ rank: number }>("SELECT * FROM user_artifact_wishlist_rank WHERE userId = ? AND artifactId = ?", [testUserId, 1]);
                 expect(record).toBeDefined();
-                expect(record?.rank).toBe(1);
+                expect(record?.rank).toBe(999999);
             });
 
             test('should assign sequential ranks for multiple artifacts', async () => {
                 await BacklogDB.ensureWishlistRankRecord(testUserId, 1);
                 await BacklogDB.ensureWishlistRankRecord(testUserId, 2);
                 await BacklogDB.ensureWishlistRankRecord(testUserId, 3);
+                await BacklogDB.normalizeWishlistRanks(testUserId, ArtifactType.GAME);
 
                 const ranks = await getDbRows<{ artifactId: number, rank: number }>("SELECT artifactId, rank FROM user_artifact_wishlist_rank WHERE userId = ? ORDER BY rank", [testUserId]);
                 expect(ranks).toHaveLength(3);
@@ -1158,8 +1159,8 @@ describe('BacklogDB', () => {
                 const user1Rank = await getDbRow<{ rank: number }>("SELECT rank FROM user_artifact_wishlist_rank WHERE userId = ? AND artifactId = ?", [testUserId, 1]);
                 const user2Rank = await getDbRow<{ rank: number }>("SELECT rank FROM user_artifact_wishlist_rank WHERE userId = ? AND artifactId = ?", [user2!.id, 1]);
 
-                expect(user1Rank?.rank).toBe(1);
-                expect(user2Rank?.rank).toBe(1);
+                expect(user1Rank?.rank).toBe(999999);
+                expect(user2Rank?.rank).toBe(999999);
             });
         });
 
