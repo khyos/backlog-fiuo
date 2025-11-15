@@ -122,6 +122,43 @@ export class GameDB {
         return backlogItems;
     }
 
+    static async getVirtualWishlistItems(userId: number, backlogOrder: BacklogOrder): Promise<BacklogItem[]> {
+        const dbBacklockItems = await ArtifactDB.getVirtualWishlistItems(
+            userId,
+            ArtifactType.GAME,
+            backlogOrder
+        );
+
+        const backlogItems: BacklogItem[] = await Promise.all(dbBacklockItems.map(async row => {
+            const releaseDate = new Date(parseInt(row.releaseDate, 10));
+            const game = new Game(row.artifactId, row.title, row.type, releaseDate, row.duration);
+            game.genres = await GameDB.getAssignedGenres(row.artifactId);
+            game.platforms = await GameDB.getPlatforms(row.artifactId);
+            game.ratings = await RatingDB.getRatings(row.artifactId);
+            return new BacklogItem(row.rank, row.elo, row.dateAdded, game, []);
+        }));
+
+        return backlogItems;
+    }
+
+    static async getVirtualFutureItems(userId: number): Promise<BacklogItem[]> {
+        const dbBacklockItems = await ArtifactDB.getVirtualFutureItems(
+            userId,
+            ArtifactType.GAME
+        );
+
+        const backlogItems: BacklogItem[] = await Promise.all(dbBacklockItems.map(async row => {
+            const releaseDate = new Date(parseInt(row.releaseDate, 10));
+            const game = new Game(row.artifactId, row.title, row.type, releaseDate, row.duration);
+            game.genres = await GameDB.getAssignedGenres(row.artifactId);
+            game.platforms = await GameDB.getPlatforms(row.artifactId);
+            game.ratings = await RatingDB.getRatings(row.artifactId);
+            return new BacklogItem(row.rank, row.elo, row.dateAdded, game, []);
+        }));
+
+        return backlogItems;
+    }
+
     // ========================================
     // Create Operations
     // ========================================

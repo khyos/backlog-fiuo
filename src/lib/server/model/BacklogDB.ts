@@ -53,6 +53,19 @@ export class BacklogDB {
         return backlog;
     }
 
+    static async getVirtualWishlistBacklog(userId: number, artifactType: ArtifactType): Promise<Backlog | null> {
+        const rankingType = await BacklogDB.getUserWishlistRankingType(userId, artifactType);
+        const backlog = new Backlog(-1, userId, rankingType, `${artifactType} Wishlist`, artifactType);
+        backlog.backlogItems = await BacklogDB.getVirtualWishlistItems(userId, artifactType, rankingType);
+        return backlog;
+    }
+
+    static async getVirtualFutureBacklog(userId: number, artifactType: ArtifactType): Promise<Backlog | null> {
+        const backlog = new Backlog(-2, userId, BacklogRankingType.WISHLIST, `${artifactType} Future`, artifactType);
+        backlog.backlogItems = await BacklogDB.getVirtualFutureItems(userId, artifactType);
+        return backlog;
+    }
+
     static async getBacklogs(userId: number, page: number, pageSize: number, artifactType: string | null, search: string = ''): Promise<Backlog[]> {
         const baseQuery = `SELECT * FROM backlog WHERE userId = ?`;
         const searchQuery = search ? ` AND LOWER(title) LIKE ?` : "";
@@ -105,6 +118,48 @@ export class BacklogDB {
             backlogItems = await MovieDB.getBacklogItems(backlogId, rankingType, finalBacklogOrder);
         } else if (artifactType === ArtifactType.TVSHOW){
             backlogItems = await TvshowDB.getBacklogItems(backlogId, rankingType, finalBacklogOrder);
+        }
+        return backlogItems;
+    }
+
+    static async getVirtualWishlistItems(userId: number, artifactType: ArtifactType, rankingType?: BacklogRankingType): Promise<BacklogItem[]> {
+        const effectiveRankingType = rankingType || BacklogRankingType.ELO;
+        
+        let finalBacklogOrder: BacklogOrder;
+        switch (effectiveRankingType) {
+            case BacklogRankingType.ELO:
+                finalBacklogOrder = BacklogOrder.ELO;
+                break;
+            case BacklogRankingType.RANK:
+                finalBacklogOrder = BacklogOrder.RANK;
+                break;
+            default:
+                finalBacklogOrder = BacklogOrder.ELO;
+        }
+        
+        let backlogItems: BacklogItem[] = [];
+        if (artifactType === ArtifactType.ANIME) {
+            backlogItems = await AnimeDB.getVirtualWishlistItems(userId, finalBacklogOrder);
+        } else if (artifactType === ArtifactType.GAME) {
+            backlogItems = await GameDB.getVirtualWishlistItems(userId, finalBacklogOrder);
+        } else if (artifactType === ArtifactType.MOVIE){
+            backlogItems = await MovieDB.getVirtualWishlistItems(userId, finalBacklogOrder);
+        } else if (artifactType === ArtifactType.TVSHOW){
+            backlogItems = await TvshowDB.getVirtualWishlistItems(userId, finalBacklogOrder);
+        }
+        return backlogItems;
+    }
+
+    static async getVirtualFutureItems(userId: number, artifactType: ArtifactType): Promise<BacklogItem[]> {
+        let backlogItems: BacklogItem[] = [];
+        if (artifactType === ArtifactType.ANIME) {
+            backlogItems = await AnimeDB.getVirtualFutureItems(userId);
+        } else if (artifactType === ArtifactType.GAME) {
+            backlogItems = await GameDB.getVirtualFutureItems(userId);
+        } else if (artifactType === ArtifactType.MOVIE){
+            backlogItems = await MovieDB.getVirtualFutureItems(userId);
+        } else if (artifactType === ArtifactType.TVSHOW){
+            backlogItems = await TvshowDB.getVirtualFutureItems(userId);
         }
         return backlogItems;
     }
@@ -174,6 +229,51 @@ export class BacklogDB {
         }
     }
 
+    static async eloFightVirtualWishlist(userId: number, winnerArtifactId: number, loserArtifactId: number): Promise<void> {
+        // First ensure both artifacts have wishlist elo records
+        await BacklogDB.ensureWishlistEloRecord(userId, winnerArtifactId);
+        await BacklogDB.ensureWishlistEloRecord(userId, loserArtifactId);
+        
+        const winnerRow = await getDbRow<{elo: number}>(`SELECT elo FROM user_artifact_wishlist_elo WHERE userId = ? AND artifactId = ?`, [userId, winnerArtifactId]);
+        const loserRow = await getDbRow<{elo: number}>(`SELECT elo FROM user_artifact_wishlist_elo WHERE userId = ? AND artifactId = ?`, [userId, loserArtifactId]);
+        
+        if (winnerRow && loserRow) {
+            const winnerElo = winnerRow.elo;
+            const loserElo = loserRow.elo;
+            const winnerExpected = 1 / (1 + Math.pow(10, (loserElo - winnerElo) / 400));
+            const loserExpected = 1 / (1 + Math.pow(10, (winnerElo - loserElo) / 400));
+            const winnerNewElo = winnerElo + Math.round(32 * (1 - winnerExpected));
+            const loserNewElo = loserElo + Math.round(32 * (0 - loserExpected));
+            
+            await runDbQuery(`UPDATE user_artifact_wishlist_elo SET elo = ? WHERE userId = ? AND artifactId = ?`, [winnerNewElo, userId, winnerArtifactId]);
+            await runDbQuery(`UPDATE user_artifact_wishlist_elo SET elo = ? WHERE userId = ? AND artifactId = ?`, [loserNewElo, userId, loserArtifactId]);
+        }
+    }
+
+    static async ensureWishlistEloRecord(userId: number, artifactId: number): Promise<void> {
+        const exists = await getDbRow<{count: number}>(`SELECT COUNT(*) as count FROM user_artifact_wishlist_elo WHERE userId = ? AND artifactId = ?`, [userId, artifactId]);
+        if (!exists || exists.count === 0) {
+            await runDbQuery(`INSERT OR IGNORE INTO user_artifact_wishlist_elo (userId, artifactId, elo, dateAdded) VALUES (?, ?, 1200, CURRENT_TIMESTAMP)`, [userId, artifactId]);
+        }
+    }
+
+
+
+    static async getUserWishlistRankingType(userId: number, artifactType: ArtifactType): Promise<BacklogRankingType> {
+        const row = await getDbRow<{rankingType: BacklogRankingType}>(`SELECT rankingType FROM user_wishlist_preferences WHERE userId = ? AND artifactType = ?`, [userId, artifactType]);
+        return row?.rankingType || BacklogRankingType.ELO; // Default to ELO for backwards compatibility
+    }
+
+    static async setUserWishlistRankingType(userId: number, artifactType: ArtifactType, rankingType: BacklogRankingType): Promise<void> {
+        const oldRankingType = await BacklogDB.getUserWishlistRankingType(userId, artifactType);
+        await runDbQuery(`INSERT OR REPLACE INTO user_wishlist_preferences (userId, artifactType, rankingType) VALUES (?, ?, ?)`, [userId, artifactType, rankingType]);
+        
+        // If switching to RANK mode, initialize ranks based on current ELO order
+        if (rankingType === BacklogRankingType.RANK && oldRankingType !== BacklogRankingType.RANK) {
+            await BacklogDB.initializeWishlistRanksFromElo(userId, artifactType);
+        }
+    }
+
     static async deleteBacklog(id: number): Promise<void> {
         await runDbQuery(`DELETE FROM backlog WHERE id = ?`, [id]);
     }
@@ -187,6 +287,16 @@ export class BacklogDB {
             return new AuthorizationStatus(404, "Not authorized");
         }
         if (backlog.userId !== user.id) {
+            return new AuthorizationStatus(404, "Not authorized");
+        }
+        return new AuthorizationStatus(200, "OK");
+    }
+
+    static async canEditVirtualWishlistBacklog(user: User, userId: number): Promise<AuthorizationStatus> {
+        if (!user.hasRight(UserRights.EDIT_BACKLOG)) {
+            return new AuthorizationStatus(403, "Not authorized");
+        }
+        if (user.id !== userId) {
             return new AuthorizationStatus(404, "Not authorized");
         }
         return new AuthorizationStatus(200, "OK");
@@ -222,4 +332,127 @@ export class BacklogDB {
             PRIMARY KEY (backlogId, artifactId, tagId)
         )`);
     }
+
+    static async createWishlistEloTable() {
+        await runDbQuery(`CREATE TABLE IF NOT EXISTS user_artifact_wishlist_elo (
+            userId INTEGER NOT NULL,
+            artifactId INTEGER NOT NULL,
+            elo INTEGER NOT NULL DEFAULT 1200,
+            dateAdded TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (userId, artifactId)
+        )`);
+    }
+
+    static async createUserWishlistPreferencesTable() {
+        await runDbQuery(`CREATE TABLE IF NOT EXISTS user_wishlist_preferences (
+            userId INTEGER NOT NULL,
+            artifactType TEXT NOT NULL,
+            rankingType TEXT NOT NULL,
+            PRIMARY KEY (userId, artifactType)
+        )`);
+    }
+
+
+
+    static async createWishlistRankTable() {
+        await runDbQuery(`CREATE TABLE IF NOT EXISTS user_artifact_wishlist_rank (
+            userId INTEGER NOT NULL,
+            artifactId INTEGER NOT NULL,
+            rank INTEGER NOT NULL,
+            dateAdded TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (userId, artifactId)
+        )`);
+    }
+
+    static async ensureWishlistRankRecord(userId: number, artifactId: number): Promise<void> {
+        const exists = await getDbRow<{count: number}>(`SELECT COUNT(*) as count FROM user_artifact_wishlist_rank WHERE userId = ? AND artifactId = ?`, [userId, artifactId]);
+        if (!exists || exists.count === 0) {
+            // Get current max rank and add 1
+            const maxRankRow = await getDbRow<{maxRank: number}>(`SELECT MAX(rank) as maxRank FROM user_artifact_wishlist_rank WHERE userId = ?`, [userId]);
+            const newRank = (maxRankRow?.maxRank || 0) + 1;
+            await runDbQuery(`INSERT OR IGNORE INTO user_artifact_wishlist_rank (userId, artifactId, rank, dateAdded) VALUES (?, ?, ?, CURRENT_TIMESTAMP)`, [userId, artifactId, newRank]);
+        }
+    }
+
+    static async initializeWishlistRanksFromElo(userId: number, artifactType: ArtifactType): Promise<void> {
+        // Get all wishlist items ordered by ELO and assign sequential ranks
+        // Use ROW_NUMBER() to ensure distinct sequential ranks even for tied ELO scores
+        const wishlistItems = await getDbRows<{artifactId: number, elo: number}>(`
+            SELECT ua.artifactId, COALESCE(elo_table.elo, 1200) as elo
+            FROM user_artifact ua
+            INNER JOIN artifact a ON ua.artifactId = a.id
+            LEFT JOIN user_artifact_wishlist_elo elo_table ON ua.artifactId = elo_table.artifactId AND ua.userId = elo_table.userId
+            WHERE ua.userId = ? AND ua.status = 'wishlist' AND a.type = ?
+            ORDER BY COALESCE(elo_table.elo, 1200) DESC, ua.startDate ASC
+        `, [userId, artifactType]);
+        
+        // Clear existing ranks for this user and artifact type
+        await runDbQuery(`
+            DELETE FROM user_artifact_wishlist_rank 
+            WHERE userId = ? AND artifactId IN (
+                SELECT ua.artifactId FROM user_artifact ua
+                INNER JOIN artifact a ON ua.artifactId = a.id
+                WHERE ua.userId = ? AND ua.status = 'wishlist' AND a.type = ?
+            )
+        `, [userId, userId, artifactType]);
+        
+        // Insert new sequential ranks (always distinct: 1, 2, 3, 4...)
+        // Even if multiple items have the same ELO, they get different ranks in RANK mode
+        for (let i = 0; i < wishlistItems.length; i++) {
+            const item = wishlistItems[i];
+            await runDbQuery(`
+                INSERT INTO user_artifact_wishlist_rank (userId, artifactId, rank, dateAdded) 
+                VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+            `, [userId, item.artifactId, i + 1]);
+        }
+    }
+
+    static async moveWishlistItem(userId: number, artifactType: ArtifactType, srcRank: number, targetRank: number): Promise<void> {
+        // Get the artifactId of the item at srcRank
+        const srcItem = await getDbRow<{artifactId: number}>(`
+            SELECT wr.artifactId 
+            FROM user_artifact_wishlist_rank wr
+            INNER JOIN user_artifact ua ON wr.artifactId = ua.artifactId AND wr.userId = ua.userId
+            INNER JOIN artifact a ON ua.artifactId = a.id
+            WHERE wr.userId = ? AND wr.rank = ? AND ua.status = 'wishlist' AND a.type = ?
+        `, [userId, srcRank, artifactType]);
+
+        if (!srcItem) {
+            throw new Error('Source item not found');
+        }
+
+        const artifactId = srcItem.artifactId;
+
+        // Update ranks: move items between srcRank and targetRank
+        if (srcRank < targetRank) {
+            // Moving down: decrease rank of items between srcRank+1 and targetRank
+            await runDbQuery(`
+                UPDATE user_artifact_wishlist_rank 
+                SET rank = rank - 1 
+                WHERE userId = ? AND rank > ? AND rank <= ?
+                AND artifactId IN (
+                    SELECT ua.artifactId FROM user_artifact ua
+                    INNER JOIN artifact a ON ua.artifactId = a.id
+                    WHERE ua.userId = ? AND ua.status = 'wishlist' AND a.type = ?
+                )
+            `, [userId, srcRank, targetRank, userId, artifactType]);
+        } else {
+            // Moving up: increase rank of items between targetRank and srcRank-1
+            await runDbQuery(`
+                UPDATE user_artifact_wishlist_rank 
+                SET rank = rank + 1 
+                WHERE userId = ? AND rank >= ? AND rank < ?
+                AND artifactId IN (
+                    SELECT ua.artifactId FROM user_artifact ua
+                    INNER JOIN artifact a ON ua.artifactId = a.id
+                    WHERE ua.userId = ? AND ua.status = 'wishlist' AND a.type = ?
+                )
+            `, [userId, targetRank, srcRank, userId, artifactType]);
+        }
+
+        // Set the moved item to its new rank
+        await runDbQuery(`UPDATE user_artifact_wishlist_rank SET rank = ? WHERE userId = ? AND artifactId = ?`, [targetRank, userId, artifactId]);
+    }
+
+
 }

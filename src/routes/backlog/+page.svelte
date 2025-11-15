@@ -1,6 +1,7 @@
 <script lang="ts">
     import { Button, Input, Listgroup, ListgroupItem } from "flowbite-svelte";
-    import { PlusOutline, SearchOutline, TrashBinSolid } from "flowbite-svelte-icons";
+    import { PlusOutline, SearchOutline, TrashBinSolid, ClockSolid, ClapperboardPlaySolid, ImageSolid, RocketSolid, ForwardSolid } from "flowbite-svelte-icons";
+    import { ArtifactType } from "$lib/model/Artifact";
     import type { PageData } from "./$types";
 
 	export let data: PageData;
@@ -67,9 +68,103 @@
 </script>
 
 <div class="space-y-4">
-    <div class="flex justify-between items-center">
-        <h1 class="text-2xl font-extrabold dark:text-white">Backlogs</h1>
-        
+    <!-- Backlog Sections Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <!-- Current Backlogs Section -->
+        <div class="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg p-6 border border-blue-200 dark:border-blue-800">
+            <div class="flex items-center mb-4">
+                <ClockSolid class="w-5 h-5 text-green-500 mr-2" />
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Current Backlogs</h2>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <Button 
+                    color="blue" 
+                    size="sm" 
+                    onclick={() => window.location.href = `/backlog/current/${ArtifactType.GAME}`}
+                    class="w-full"
+                >
+                    <RocketSolid class="w-3 h-3 mr-2" />
+                    Game
+                </Button>
+                <Button 
+                    color="purple" 
+                    size="sm" 
+                    onclick={() => window.location.href = `/backlog/current/${ArtifactType.MOVIE}`}
+                    class="w-full"
+                >
+                    <ClapperboardPlaySolid class="w-3 h-3 mr-2" />
+                    Movie
+                </Button>
+                <Button 
+                    color="green" 
+                    size="sm" 
+                    onclick={() => window.location.href = `/backlog/current/${ArtifactType.TVSHOW}`}
+                    class="w-full"
+                >
+                    <ImageSolid class="w-3 h-3 mr-2" />
+                    TV Show
+                </Button>
+                <Button 
+                    color="orange" 
+                    size="sm" 
+                    onclick={() => window.location.href = `/backlog/current/${ArtifactType.ANIME}`}
+                    class="w-full"
+                >
+                    <ImageSolid class="w-3 h-3 mr-2" />
+                    Anime
+                </Button>
+            </div>
+        </div>
+        <!-- Coming Soon Section -->
+        <div class="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg p-6 border border-blue-200 dark:border-blue-800">
+            <div class="flex items-center mb-4">
+                <ForwardSolid class="w-5 h-5 text-green-500 mr-2" />
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Coming Soon</h2>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <Button 
+                    color="blue" 
+                    size="sm" 
+                    onclick={() => window.location.href = `/backlog/future/${ArtifactType.GAME}`}
+                    class="w-full"
+                >
+                    <RocketSolid class="w-3 h-3 mr-2" />
+                    Game
+                </Button>
+                <Button 
+                    color="purple" 
+                    size="sm" 
+                    onclick={() => window.location.href = `/backlog/future/${ArtifactType.MOVIE}`}
+                    class="w-full"
+                >
+                    <ClapperboardPlaySolid class="w-3 h-3 mr-2" />
+                    Movie
+                </Button>
+                <Button 
+                    color="green" 
+                    size="sm" 
+                    onclick={() => window.location.href = `/backlog/future/${ArtifactType.TVSHOW}`}
+                    class="w-full"
+                >
+                    <ImageSolid class="w-3 h-3 mr-2" />
+                    TV Show
+                </Button>
+                <Button 
+                    color="orange" 
+                    size="sm" 
+                    onclick={() => window.location.href = `/backlog/future/${ArtifactType.ANIME}`}
+                    class="w-full"
+                >
+                    <ImageSolid class="w-3 h-3 mr-2" />
+                    Anime
+                </Button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Regular Backlogs Section -->
+    <div class="flex justify-between items-center mb-4">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Your Backlogs</h2>
         {#if data.permissions.canCreate}
             <Button size="sm" onclick={navigateToCreateBacklog}>
                 <PlusOutline class="mr-2 h-4 w-4" />

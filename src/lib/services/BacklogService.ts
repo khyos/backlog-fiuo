@@ -6,6 +6,22 @@ export async function fetchBacklog(backlogId: number) {
     return await response.json();
 };
 
+export async function fetchVirtualWishlistBacklog(artifactType: ArtifactType) {
+    const response = await fetch(`/api/backlog/current/${artifactType}`);
+    if (!response.ok) {
+        throw new Error('Error while fetching virtual wishlist backlog');
+    }
+    return await response.json();
+};
+
+export async function fetchVirtualFutureBacklog(artifactType: ArtifactType) {
+    const response = await fetch(`/api/backlog/future/${artifactType}`);
+    if (!response.ok) {
+        throw new Error('Error while fetching virtual future backlog');
+    }
+    return await response.json();
+};
+
 export async function fetchBacklogs(artifactType: ArtifactType): Promise<Backlog[]> {
     const response = await fetch(`/api/backlog/list?artifactType=${artifactType}`);
     if (!response.ok) {
