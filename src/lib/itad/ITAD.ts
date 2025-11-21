@@ -25,6 +25,10 @@ export class ITAD {
     }
 
     static async getIdFromSlug(slug: string): Promise<string> {
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        if (uuidRegex.test(slug)) {
+            return slug;
+        }
         const response = await fetch(`https://api.isthereanydeal.com/lookup/id/title/v1?key=${ITA_APP_ID}`, {
             method: 'POST',
             body: JSON.stringify([slug])
