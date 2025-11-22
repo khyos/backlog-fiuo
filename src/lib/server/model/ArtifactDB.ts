@@ -456,6 +456,7 @@ export class ArtifactDB {
     // Table Creation Methods
     // ========================================
     static async createArtifactTable() {
+        // TODO release date should be moved to TIMESTAMP
         await runDbQuery(`CREATE TABLE IF NOT EXISTS artifact (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             title TEXT NOT NULL,

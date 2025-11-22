@@ -3,11 +3,13 @@ import { fetchBacklog } from '$lib/services/BacklogService';
 import { derived, get, writable } from 'svelte/store';
 import { createBacklogFilters, filterBacklogItems, type BacklogFilters } from '../BacklogFilters';
 import { showCopiedToast } from './PageStore';
-import { ArtifactType } from '$lib/model/Artifact';
+import { Artifact, ArtifactType, type IArtifact } from '$lib/model/Artifact';
+import { artifactFromJSON } from '$lib/services/ArtifactService';
 
 export type BacklogStore = {
     backlog: Backlog,
     backlogFilters: BacklogFilters,
+    suggestedArtifacts?: Artifact[]
 };
 
 export const backlogStore = writable<BacklogStore>({
@@ -22,12 +24,16 @@ export const filteredBacklogItems = derived(backlogStore, $store => {
     return [];
 });
 
-export const initializeStore = (initBacklog: IBacklog) => {
+export const initializeStore = (initBacklog: IBacklog, suggestedArtifactsJSON?: IArtifact[]) => {
     const backlog = Backlog.fromJSON(initBacklog);
     const backlogFilters = createBacklogFilters(backlog.artifactType, backlog.rankingType);
+    const suggestedArtifacts = suggestedArtifactsJSON ? suggestedArtifactsJSON.map(artifactJSON => 
+        artifactFromJSON(artifactJSON.type, artifactJSON)
+    ) : [];
     backlogStore.set({
         backlog: backlog,
-        backlogFilters: backlogFilters
+        backlogFilters: backlogFilters,
+        suggestedArtifacts: suggestedArtifacts
     })
 }
 

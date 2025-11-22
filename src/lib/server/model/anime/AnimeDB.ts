@@ -37,11 +37,15 @@ export class AnimeDB {
     static async getAnimes(page: number, pageSize: number, search: string = ''): Promise<Anime[]> {
         return await ArtifactDB.getArtifacts(ArtifactType.ANIME, page, pageSize, search).then((rows: IArtifactDB[]) => {
             const animes: Anime[] = rows.map((row: IArtifactDB) => {
-                const releaseDate = new Date(parseInt(row.releaseDate, 10));
-                return new Anime(row.id, row.title, row.type, releaseDate, row.duration);
+                return AnimeDB.deserialize(row);
             });
             return animes;
         });
+    }
+
+    static deserialize(artifactJSON: IArtifactDB): Anime {
+        const releaseDate = new Date(parseInt(artifactJSON.releaseDate, 10));
+        return new Anime(artifactJSON.id, artifactJSON.title, artifactJSON.type, releaseDate, artifactJSON.duration);
     }
 
     // ========================================

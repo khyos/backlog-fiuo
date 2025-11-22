@@ -38,11 +38,15 @@ export class TvshowDB {
     static async getTvshows(page: number, pageSize: number, search: string = ''): Promise<Tvshow[]> {
         return await ArtifactDB.getArtifacts(ArtifactType.TVSHOW, page, pageSize, search).then((rows: IArtifactDB[]) => {
             const tvshows: Tvshow[] = rows.map((row: IArtifactDB) => {
-                const releaseDate = new Date(parseInt(row.releaseDate, 10));
-                return new Tvshow(row.id, row.title, row.type, releaseDate, row.duration);
+                return TvshowDB.deserialize(row);
             });
             return tvshows;
         });
+    }
+
+    static deserialize(artifactJSON: IArtifactDB): Tvshow {
+        const releaseDate = new Date(parseInt(artifactJSON.releaseDate, 10));
+        return new Tvshow(artifactJSON.id, artifactJSON.title, artifactJSON.type, releaseDate, artifactJSON.duration);
     }
 
     // ========================================

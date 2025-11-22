@@ -31,11 +31,15 @@ export class MovieDB {
     static async getMovies(page: number, pageSize: number, search: string = ''): Promise<Movie[]> {
         return await ArtifactDB.getArtifacts(ArtifactType.MOVIE, page, pageSize, search).then((rows: IArtifactDB[]) => {
             const movies: Movie[] = rows.map((row: IArtifactDB) => {
-                const releaseDate = new Date(parseInt(row.releaseDate, 10));
-                return new Movie(row.id, row.title, row.type, releaseDate, row.duration);
+                return MovieDB.deserialize(row);
             });
             return movies;
         });
+    }
+
+    static deserialize(artifactJSON: IArtifactDB): Movie {
+        const releaseDate = new Date(parseInt(artifactJSON.releaseDate, 10));
+        return new Movie(artifactJSON.id, artifactJSON.title, artifactJSON.type, releaseDate, artifactJSON.duration);
     }
 
     // ========================================

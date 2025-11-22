@@ -34,11 +34,15 @@ export class GameDB {
     static async getGames(page: number, pageSize: number, search: string = ''): Promise<Game[]> {
         return await ArtifactDB.getArtifacts(ArtifactType.GAME, page, pageSize, search).then((rows: IArtifactDB[]) => {
             const games: Game[] = rows.map((row: IArtifactDB) => {
-                const releaseDate = new Date(parseInt(row.releaseDate, 10));
-                return new Game(row.id, row.title, row.type, releaseDate, row.duration);
+                return GameDB.deserialize(row);
             });
             return games;
         });
+    }
+
+    static deserialize(artifactJSON: IArtifactDB): Game {
+        const releaseDate = new Date(parseInt(artifactJSON.releaseDate, 10));
+        return new Game(artifactJSON.id, artifactJSON.title, artifactJSON.type, releaseDate, artifactJSON.duration);
     }
 
     // ========================================

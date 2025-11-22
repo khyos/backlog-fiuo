@@ -11,7 +11,7 @@
         Toast,
     } from "flowbite-svelte";
     import {
-    CheckCircleSolid,
+        CheckCircleSolid,
         PlusOutline,
     } from "flowbite-svelte-icons";
     import { Tag } from "$lib/model/Tag";
@@ -32,13 +32,13 @@
 
     export let data: PageData;
 
-    initializeStore(data.backlog);
+    initializeStore(data.backlog, data.suggestedArtifacts);
 
     let backlogTags = data.backlogTags.map(backlogTag => Tag.fromJSON(backlogTag));
     let genres = data.genres.map(genre => Genre.fromJSON(genre));
     let platforms = data.platforms.map(platform => Platform.fromJSON(platform));
 
-    let backlogItemsForSelect = data.backlog.backlogItems.map((bi) => {
+    let backlogItemsForSelect = data.backlog.backlogItems.map(bi => {
         return {
             value: bi.rank,
             name: `${bi.rank} - ${bi.artifact.title}`

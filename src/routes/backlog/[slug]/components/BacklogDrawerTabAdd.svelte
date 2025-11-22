@@ -14,6 +14,7 @@
     import type { Artifact } from "$lib/model/Artifact";
     import { addBacklogItem } from "$lib/services/BacklogService";
     import { backlogStore, refreshBacklog } from "../stores/BacklogStore";
+    import Suggestions from "./Suggestions.svelte";
     
     export let selectedTab: string = "filters";
     export let canEdit: boolean;
@@ -78,4 +79,7 @@
             No results
         </p>
     {/if}
+    <Suggestions
+        canEdit={canEdit}
+    />
 </TabItem>

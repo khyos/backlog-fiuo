@@ -1,4 +1,4 @@
-import { ArtifactType } from "$lib/model/Artifact";
+import { ArtifactType, type IArtifactDB } from "$lib/model/Artifact";
 import { AuthorizationStatus } from "$lib/model/AuthorizationStatus";
 import { Backlog, BacklogOrder, BacklogRankingType, BacklogType } from "$lib/model/Backlog";
 import { BacklogItem } from "$lib/model/BacklogItem";
@@ -223,6 +223,62 @@ export class BacklogDB {
     static async createFutureBacklogForUser(userId: number, artifactType: ArtifactType): Promise<number> {
         const backlogId = await runDbInsert(`INSERT INTO backlog (userId, title, type, artifactType, rankingType) VALUES (?, 'Future Backlog', ?, ?, 'elo')`, [userId, BacklogType.FUTURE, artifactType]);
         return backlogId;
+    }
+
+    static async getCurrentSuggestedArtifacts(
+        userId: number,
+        artifactType: ArtifactType,
+        backlogId: number,
+        limit: number = 10
+    ): Promise<IArtifactDB[]> {
+        const currentDate = Math.floor(Date.now());
+
+        const query = `
+            SELECT DISTINCT artifact.*
+            FROM artifact
+            JOIN user_artifact ON artifact.id = user_artifact.artifactId
+            WHERE artifact.type = ?
+                AND user_artifact.userId = ?
+                AND user_artifact.status = 'wishlist'
+                AND CAST(artifact.releaseDate AS INTEGER) <= ?
+                AND artifact.id NOT IN (
+                    SELECT artifactId
+                    FROM backlog_items
+                    WHERE backlogId = ?
+                )
+            ORDER BY artifact.releaseDate DESC
+            LIMIT ?
+        `;
+
+        return await getDbRows<IArtifactDB>(query, [artifactType, userId, currentDate, backlogId, limit]);
+    }
+
+    static async getFutureSuggestedArtifacts(
+        userId: number,
+        artifactType: ArtifactType,
+        backlogId: number,
+        limit: number = 10
+    ): Promise<IArtifactDB[]> {
+        const currentDate = Math.floor(Date.now());
+
+        const query = `
+            SELECT DISTINCT artifact.*
+            FROM artifact
+            JOIN user_artifact ON artifact.id = user_artifact.artifactId
+            WHERE artifact.type = ?
+                AND user_artifact.userId = ?
+                AND user_artifact.status = 'wishlist'
+                AND CAST(artifact.releaseDate AS INTEGER) > ?
+                AND artifact.id NOT IN (
+                    SELECT artifactId
+                    FROM backlog_items
+                    WHERE backlogId = ?
+                )
+            ORDER BY artifact.releaseDate ASC
+            LIMIT ?
+        `;
+
+        return await getDbRows<IArtifactDB>(query, [artifactType, userId, currentDate, backlogId, limit]);
     }
 
     static async createBacklogTable() {
