@@ -17,12 +17,8 @@
     
     export let selectedTab: string = "filters";
     export let canEdit: boolean;
-    export let onAddBacklogItem: ((artifactId: number) => Promise<void>) | undefined = undefined;
     let searchArtifactTerm: string = "";
     let searchedArtifacts: Artifact[] = [];
-    
-    // Check if this is a virtual wishlist (backlog id = -1)
-    $: isVirtualWishlist = $backlogStore.backlog.id === -1;
 
     // Event Callbacks
     const fetchArtifacts = () => {
@@ -39,22 +35,14 @@
         const artifactIdStr = (e.currentTarget as HTMLElement)?.getAttribute("data-id");
         if (!artifactIdStr) return;
         const artifactId = parseInt(artifactIdStr);
-        
-        if (isVirtualWishlist && onAddBacklogItem) {
-            // For virtual wishlist, use the provided wishlist add function
-            await onAddBacklogItem(artifactId);
-        } else {
-            // For regular backlogs, use the standard backlog add function
-            await addBacklogItem($backlogStore.backlog.id, artifactId);
-        }
-        
+        await addBacklogItem($backlogStore.backlog.id, artifactId);
         refreshBacklog();
     };
 
 </script>
 
 <TabItem open={selectedTab == 'add'} title="Add" class="w-full" disabled={!canEdit}>
-    <Label class="block mb-2">{isVirtualWishlist ? 'Add to wishlist' : 'Add to backlog'}</Label>
+    <Label class="block mb-2">Add to backlog</Label>
     <Input
         id="search-field"
         placeholder="Search"

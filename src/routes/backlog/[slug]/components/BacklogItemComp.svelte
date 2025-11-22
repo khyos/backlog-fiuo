@@ -16,9 +16,6 @@
     export let backlogItem: BacklogItem;
     export let canEdit: boolean = false;
     export let prices: Record<string, Price> | undefined = undefined;
-    export let isVirtualWishlist: boolean = false;
-    export let showAddToBacklogButton: boolean = true;
-    export let onAddBacklogItem: ((artifactId: number) => Promise<void>) | undefined = undefined;
 
     $: backlogStoreInst = $backlogStore;
     
@@ -113,25 +110,15 @@
                 <ChevronDownOutline class="w-4 h-4" />
             </Button>
             <Dropdown>
-                {#if !isVirtualWishlist}
-                    <DropdownItem onclick={() => showAddTag(backlogItem)}>Add Tag</DropdownItem>
-                    {#if backlogStoreInst.backlog.rankingType === BacklogRankingType.RANK}
-                        <DropdownItem onclick={() => showMoveToRank(backlogItem)}>Move to Rank</DropdownItem>
-                        <DropdownItem onclick={() => startOrderByFight(backlogItem.artifact.id)}>Order by Comparison</DropdownItem>
-                    {:else if backlogStoreInst.backlog.rankingType === BacklogRankingType.ELO}
-                        <DropdownItem onclick={() => startOrderByFight(backlogItem.artifact.id)}>Order by Elo</DropdownItem>
-                    {/if}
-                    <DropdownItem onclick={() => showMoveToBacklog(backlogItem)}>Move to other Backlog</DropdownItem>
-                {/if}
-                {#if isVirtualWishlist}
+                <DropdownItem onclick={() => showAddTag(backlogItem)}>Add Tag</DropdownItem>
+                {#if backlogStoreInst.backlog.rankingType === BacklogRankingType.RANK}
+                    <DropdownItem onclick={() => showMoveToRank(backlogItem)}>Move to Rank</DropdownItem>
+                    <DropdownItem onclick={() => startOrderByFight(backlogItem.artifact.id)}>Order by Comparison</DropdownItem>
+                {:else if backlogStoreInst.backlog.rankingType === BacklogRankingType.ELO}
                     <DropdownItem onclick={() => startOrderByFight(backlogItem.artifact.id)}>Order by Elo</DropdownItem>
-                    {#if showAddToBacklogButton && onAddBacklogItem}
-                        <DropdownItem onclick={() => onAddBacklogItem?.(backlogItem.artifact.id)}>Add to Backlog</DropdownItem>
-                    {/if}
                 {/if}
-                <DropdownItem data-id={backlogItem.artifact.id} onclick={onDeleteBacklogItem}>
-                    {isVirtualWishlist ? 'Remove from Wishlist' : 'Delete'}
-                </DropdownItem>
+                <DropdownItem onclick={() => showMoveToBacklog(backlogItem)}>Move to other Backlog</DropdownItem>
+                <DropdownItem data-id={backlogItem.artifact.id} onclick={onDeleteBacklogItem}>Delete</DropdownItem>
             </Dropdown>
         {/if}
     </div>

@@ -87,41 +87,6 @@ export class MovieDB {
         return backlogItems;
     }
 
-    static async getVirtualWishlistItems(userId: number, backlogOrder: BacklogOrder): Promise<BacklogItem[]> {
-        const dbBacklockItems = await ArtifactDB.getVirtualWishlistItems(
-            userId,
-            ArtifactType.MOVIE,
-            backlogOrder
-        );
-
-        const backlogItems: BacklogItem[] = await Promise.all(dbBacklockItems.map(async row => {
-            const releaseDate = new Date(parseInt(row.releaseDate, 10));
-            const movie = new Movie(row.artifactId, row.title, row.type, releaseDate, row.duration);
-            movie.genres = await MovieDB.getAssignedGenres(row.artifactId);
-            movie.ratings = await RatingDB.getRatings(row.artifactId);
-            return new BacklogItem(row.rank, row.elo, row.dateAdded, movie, []);
-        }));
-
-        return backlogItems;
-    }
-
-    static async getVirtualFutureItems(userId: number): Promise<BacklogItem[]> {
-        const dbBacklockItems = await ArtifactDB.getVirtualFutureItems(
-            userId,
-            ArtifactType.MOVIE
-        );
-
-        const backlogItems: BacklogItem[] = await Promise.all(dbBacklockItems.map(async row => {
-            const releaseDate = new Date(parseInt(row.releaseDate, 10));
-            const movie = new Movie(row.artifactId, row.title, row.type, releaseDate, row.duration);
-            movie.genres = await MovieDB.getAssignedGenres(row.artifactId);
-            movie.ratings = await RatingDB.getRatings(row.artifactId);
-            return new BacklogItem(row.rank, row.elo, row.dateAdded, movie, []);
-        }));
-
-        return backlogItems;
-    }
-
     // ========================================
     // Create Operations
     // ========================================
