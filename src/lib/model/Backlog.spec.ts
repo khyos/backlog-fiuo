@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { Backlog, SERIALIZE_TYPE, BacklogRankingType, BacklogOrder, BacklogOrderLabel, type IBacklog } from './Backlog';
+import { Backlog, SERIALIZE_TYPE, BacklogRankingType, BacklogOrder, BacklogOrderLabel, type IBacklog, BacklogType } from './Backlog';
 import { BacklogItem } from './BacklogItem';
 import { Movie } from './movie/Movie';
 import { ArtifactType } from './Artifact';
@@ -13,7 +13,7 @@ describe('Backlog', () => {
     const dateAdded = Date.now();
 
     test('should create a backlog with correct initial values', () => {
-        const backlog = new Backlog(1, 100, BacklogRankingType.ELO, 'My Movies', ArtifactType.MOVIE);
+        const backlog = new Backlog(1, 100, BacklogType.STANDARD, BacklogRankingType.ELO, 'My Movies', ArtifactType.MOVIE);
 
         expect(backlog.id).toBe(1);
         expect(backlog.userId).toBe(100);
@@ -24,7 +24,7 @@ describe('Backlog', () => {
     });
 
     test('should serialize to JSON', () => {
-        const backlog = new Backlog(1, 100, BacklogRankingType.ELO, 'My Movies', ArtifactType.MOVIE);
+        const backlog = new Backlog(1, 100, BacklogType.STANDARD, BacklogRankingType.ELO, 'My Movies', ArtifactType.MOVIE);
         const backlogItem1 = new BacklogItem(1, 1000, dateAdded, movie1, [tag]);
         const backlogItem2 = new BacklogItem(2, 1100, dateAdded, movie2, []);
         backlog.backlogItems = [backlogItem1, backlogItem2];
@@ -35,6 +35,7 @@ describe('Backlog', () => {
             __type: SERIALIZE_TYPE,
             id: 1,
             userId: 100,
+            type: BacklogType.STANDARD,
             rankingType: BacklogRankingType.ELO,
             title: 'My Movies',
             artifactType: ArtifactType.MOVIE,
@@ -47,6 +48,7 @@ describe('Backlog', () => {
             __type: SERIALIZE_TYPE,
             id: 1,
             userId: 100,
+            type: BacklogType.STANDARD,
             rankingType: BacklogRankingType.ELO,
             title: 'My Movies',
             artifactType: ArtifactType.MOVIE,
@@ -100,6 +102,7 @@ describe('Backlog', () => {
             __type: 'InvalidType',
             id: 1,
             userId: 100,
+            type: BacklogType.STANDARD,
             rankingType: BacklogRankingType.ELO,
             title: 'My Movies',
             artifactType: ArtifactType.MOVIE,

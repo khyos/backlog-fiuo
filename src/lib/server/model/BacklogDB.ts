@@ -1,6 +1,6 @@
 import { ArtifactType } from "$lib/model/Artifact";
 import { AuthorizationStatus } from "$lib/model/AuthorizationStatus";
-import { Backlog, BacklogOrder, BacklogRankingType } from "$lib/model/Backlog";
+import { Backlog, BacklogOrder, BacklogRankingType, BacklogType } from "$lib/model/Backlog";
 import { BacklogItem } from "$lib/model/BacklogItem";
 import { UserRights, type User } from "$lib/model/User";
 import { getDbRow, getDbRows, runDbInsert, runDbQuery } from "../database";
@@ -13,6 +13,7 @@ import { TvshowDB } from "./tvshow/TvshowDB";
 export interface IBacklogDB {
     id: number;
     userId: number;
+    type: BacklogType;
     rankingType: BacklogRankingType;
     title: string;
     artifactType: ArtifactType;
@@ -31,9 +32,9 @@ export interface IBacklogItemDB {
 }
 
 export class BacklogDB {
-    static async createBacklog(userId: number, title: string, artifactType: ArtifactType, rankingType: BacklogRankingType): Promise<Backlog | null> {
+    static async createBacklog(userId: number, title: string, type: BacklogType, artifactType: ArtifactType, rankingType: BacklogRankingType): Promise<Backlog | null> {
         const backlogId = await runDbInsert(`INSERT INTO backlog (userId, title, artifactType, rankingType) VALUES (?, ?, ?, ?)`, [userId, title, artifactType, rankingType]);
-        return new Backlog(backlogId, userId, rankingType, title, artifactType);
+        return new Backlog(backlogId, userId, type, rankingType, title, artifactType);
     }
     
     static async getBacklogById(id: number): Promise<Backlog | null> {
@@ -41,7 +42,7 @@ export class BacklogDB {
         if (!row) {
             return null;
         }
-        return new Backlog(row.id, row.userId, row.rankingType, row.title, row.artifactType);
+        return new Backlog(row.id, row.userId, row.type, row.rankingType, row.title, row.artifactType);
     }
 
     static async getBacklogByIdWithItems(id: number): Promise<Backlog | null> {
@@ -61,13 +62,13 @@ export class BacklogDB {
             await BacklogDB.normalizeWishlistRanks(userId, artifactType);
         }
         
-        const backlog = new Backlog(-1, userId, rankingType, `${artifactType} Wishlist`, artifactType);
+        const backlog = new Backlog(-1, userId, BacklogType.WISHLIST, rankingType, `${artifactType} Wishlist`, artifactType);
         backlog.backlogItems = await BacklogDB.getVirtualWishlistItems(userId, artifactType, rankingType);
         return backlog;
     }
 
     static async getVirtualFutureBacklog(userId: number, artifactType: ArtifactType): Promise<Backlog | null> {
-        const backlog = new Backlog(-2, userId, BacklogRankingType.WISHLIST, `${artifactType} Future`, artifactType);
+        const backlog = new Backlog(-2, userId, BacklogType.FUTURE, BacklogRankingType.WISHLIST, `${artifactType} Future`, artifactType);
         backlog.backlogItems = await BacklogDB.getVirtualFutureItems(userId, artifactType);
         return backlog;
     }
@@ -91,7 +92,7 @@ export class BacklogDB {
             page * pageSize
         ];
         const rows = await getDbRows<IBacklogDB>(query, params);
-        return rows.map((row) => new Backlog(row.id, row.userId, row.rankingType, row.title, row.artifactType));
+        return rows.map((row) => new Backlog(row.id, row.userId, row.type, row.rankingType, row.title, row.artifactType));
     }
 
     static async getBacklogMaxRank(backlogId: number): Promise<number> {
@@ -311,6 +312,7 @@ export class BacklogDB {
         await runDbQuery(`CREATE TABLE IF NOT EXISTS backlog (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             userId INTEGER NOT NULL,
+            type TEXT NOT NULL,
             rankingType TEXT NOT NULL,
             title TEXT NOT NULL,
             artifactType TEXT NOT NULL

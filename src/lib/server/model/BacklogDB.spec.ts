@@ -6,7 +6,7 @@ import { TagDB } from './TagDB';
 import { UserDB } from './UserDB';
 import { ArtifactDB } from './ArtifactDB';
 import { ArtifactType } from '$lib/model/Artifact';
-import { BacklogRankingType } from '$lib/model/Backlog';
+import { BacklogRankingType, BacklogType } from '$lib/model/Backlog';
 import { User, UserRole } from '$lib/model/User';
 import { TagType } from '$lib/model/Tag';
 import { GameDB } from './game/GameDB';
@@ -88,6 +88,7 @@ describe('BacklogDB', () => {
             const backlog = await BacklogDB.createBacklog(
                 user1!.id,
                 'My Game Backlog',
+                BacklogType.STANDARD,
                 ArtifactType.GAME,
                 BacklogRankingType.RANK
             );
@@ -104,9 +105,9 @@ describe('BacklogDB', () => {
         test('should create backlogs with different ranking types', async () => {
             const user1 = await UserDB.getByUsername('testuser1');
 
-            const rankBacklog = await BacklogDB.createBacklog(user1!.id, 'Rank List', ArtifactType.GAME, BacklogRankingType.RANK);
-            const eloBacklog = await BacklogDB.createBacklog(user1!.id, 'ELO List', ArtifactType.GAME, BacklogRankingType.ELO);
-            const wishlistBacklog = await BacklogDB.createBacklog(user1!.id, 'Wishlist', ArtifactType.GAME, BacklogRankingType.WISHLIST);
+            const rankBacklog = await BacklogDB.createBacklog(user1!.id, 'Rank List', BacklogType.STANDARD, ArtifactType.GAME, BacklogRankingType.RANK);
+            const eloBacklog = await BacklogDB.createBacklog(user1!.id, 'ELO List', BacklogType.STANDARD, ArtifactType.GAME, BacklogRankingType.ELO);
+            const wishlistBacklog = await BacklogDB.createBacklog(user1!.id, 'Wishlist', BacklogType.STANDARD, ArtifactType.GAME, BacklogRankingType.WISHLIST);
 
             expect(rankBacklog!.rankingType).toBe(BacklogRankingType.RANK);
             expect(eloBacklog!.rankingType).toBe(BacklogRankingType.ELO);
@@ -116,10 +117,10 @@ describe('BacklogDB', () => {
         test('should create backlogs with different artifact types', async () => {
             const user1 = await UserDB.getByUsername('testuser1');
 
-            const gameBacklog = await BacklogDB.createBacklog(user1!.id, 'Games', ArtifactType.GAME, BacklogRankingType.RANK);
-            const movieBacklog = await BacklogDB.createBacklog(user1!.id, 'Movies', ArtifactType.MOVIE, BacklogRankingType.RANK);
-            const animeBacklog = await BacklogDB.createBacklog(user1!.id, 'Anime', ArtifactType.ANIME, BacklogRankingType.RANK);
-            const tvBacklog = await BacklogDB.createBacklog(user1!.id, 'TV Shows', ArtifactType.TVSHOW, BacklogRankingType.RANK);
+            const gameBacklog = await BacklogDB.createBacklog(user1!.id, 'Games', BacklogType.STANDARD, ArtifactType.GAME, BacklogRankingType.RANK);
+            const movieBacklog = await BacklogDB.createBacklog(user1!.id, 'Movies', BacklogType.STANDARD, ArtifactType.MOVIE, BacklogRankingType.RANK);
+            const animeBacklog = await BacklogDB.createBacklog(user1!.id, 'Anime', BacklogType.STANDARD, ArtifactType.ANIME, BacklogRankingType.RANK);
+            const tvBacklog = await BacklogDB.createBacklog(user1!.id, 'TV Shows', BacklogType.STANDARD, ArtifactType.TVSHOW, BacklogRankingType.RANK);
 
             expect(gameBacklog!.artifactType).toBe(ArtifactType.GAME);
             expect(movieBacklog!.artifactType).toBe(ArtifactType.MOVIE);
@@ -130,8 +131,8 @@ describe('BacklogDB', () => {
         test('should assign unique IDs to different backlogs', async () => {
             const user1 = await UserDB.getByUsername('testuser1');
 
-            const backlog1 = await BacklogDB.createBacklog(user1!.id, 'Backlog 1', ArtifactType.GAME, BacklogRankingType.RANK);
-            const backlog2 = await BacklogDB.createBacklog(user1!.id, 'Backlog 2', ArtifactType.GAME, BacklogRankingType.RANK);
+            const backlog1 = await BacklogDB.createBacklog(user1!.id, 'Backlog 1', BacklogType.STANDARD, ArtifactType.GAME, BacklogRankingType.RANK);
+            const backlog2 = await BacklogDB.createBacklog(user1!.id, 'Backlog 2', BacklogType.STANDARD, ArtifactType.GAME, BacklogRankingType.RANK);
 
             expect(backlog1!.id).not.toBe(backlog2!.id);
             expect(typeof backlog1!.id).toBe('number');
@@ -141,7 +142,7 @@ describe('BacklogDB', () => {
         test('should handle empty title', async () => {
             const user1 = await UserDB.getByUsername('testuser1');
 
-            const backlog = await BacklogDB.createBacklog(user1!.id, '', ArtifactType.GAME, BacklogRankingType.RANK);
+            const backlog = await BacklogDB.createBacklog(user1!.id, '', BacklogType.STANDARD, ArtifactType.GAME, BacklogRankingType.RANK);
 
             expect(backlog).not.toBeNull();
             expect(backlog!.title).toBe('');
@@ -151,7 +152,7 @@ describe('BacklogDB', () => {
             const user1 = await UserDB.getByUsername('testuser1');
 
             const specialTitle = 'My "Special" Backlog & More!';
-            const backlog = await BacklogDB.createBacklog(user1!.id, specialTitle, ArtifactType.GAME, BacklogRankingType.RANK);
+            const backlog = await BacklogDB.createBacklog(user1!.id, specialTitle, BacklogType.STANDARD, ArtifactType.GAME, BacklogRankingType.RANK);
 
             expect(backlog!.title).toBe(specialTitle);
         });
@@ -162,7 +163,7 @@ describe('BacklogDB', () => {
 
         beforeEach(async () => {
             const user1 = await UserDB.getByUsername('testuser1');
-            const backlog = await BacklogDB.createBacklog(user1!.id, 'Test Backlog', ArtifactType.GAME, BacklogRankingType.RANK);
+            const backlog = await BacklogDB.createBacklog(user1!.id, 'Test Backlog', BacklogType.STANDARD, ArtifactType.GAME, BacklogRankingType.RANK);
             testBacklogId = backlog!.id;
         });
 
@@ -206,7 +207,7 @@ describe('BacklogDB', () => {
 
         beforeEach(async () => {
             const user1 = await UserDB.getByUsername('testuser1');
-            const backlog = await BacklogDB.createBacklog(user1!.id, 'Test Backlog', ArtifactType.GAME, BacklogRankingType.RANK);
+            const backlog = await BacklogDB.createBacklog(user1!.id, 'Test Backlog', BacklogType.STANDARD, ArtifactType.GAME, BacklogRankingType.RANK);
             testBacklogId = backlog!.id;
 
             // Add some items
@@ -232,7 +233,7 @@ describe('BacklogDB', () => {
 
         test('should handle empty backlog', async () => {
             const user1 = await UserDB.getByUsername('testuser1');
-            const emptyBacklog = await BacklogDB.createBacklog(user1!.id, 'Empty Backlog', ArtifactType.GAME, BacklogRankingType.RANK);
+            const emptyBacklog = await BacklogDB.createBacklog(user1!.id, 'Empty Backlog', BacklogType.STANDARD, ArtifactType.GAME, BacklogRankingType.RANK);
 
             const backlog = await BacklogDB.getBacklogByIdWithItems(emptyBacklog!.id);
 
@@ -247,12 +248,12 @@ describe('BacklogDB', () => {
             const user2 = await UserDB.getByUsername('testuser2');
 
             // Create backlogs for user1
-            await BacklogDB.createBacklog(user1!.id, 'Action Games', ArtifactType.GAME, BacklogRankingType.RANK);
-            await BacklogDB.createBacklog(user1!.id, 'RPG Games', ArtifactType.GAME, BacklogRankingType.ELO);
-            await BacklogDB.createBacklog(user1!.id, 'My Movies', ArtifactType.MOVIE, BacklogRankingType.RANK);
+            await BacklogDB.createBacklog(user1!.id, 'Action Games', BacklogType.STANDARD, ArtifactType.GAME, BacklogRankingType.RANK);
+            await BacklogDB.createBacklog(user1!.id, 'RPG Games', BacklogType.STANDARD, ArtifactType.GAME, BacklogRankingType.ELO);
+            await BacklogDB.createBacklog(user1!.id, 'My Movies', BacklogType.STANDARD, ArtifactType.MOVIE, BacklogRankingType.RANK);
 
             // Create backlogs for user2
-            await BacklogDB.createBacklog(user2!.id, 'User2 Games', ArtifactType.GAME, BacklogRankingType.RANK);
+            await BacklogDB.createBacklog(user2!.id, 'User2 Games', BacklogType.STANDARD, ArtifactType.GAME, BacklogRankingType.RANK);
         });
 
         test('should return backlogs for specific user', async () => {
@@ -337,7 +338,7 @@ describe('BacklogDB', () => {
 
         beforeEach(async () => {
             const user1 = await UserDB.getByUsername('testuser1');
-            const backlog = await BacklogDB.createBacklog(user1!.id, 'Test Backlog', ArtifactType.GAME, BacklogRankingType.RANK);
+            const backlog = await BacklogDB.createBacklog(user1!.id, 'Test Backlog', BacklogType.STANDARD, ArtifactType.GAME, BacklogRankingType.RANK);
             testBacklogId = backlog!.id;
         });
 
@@ -363,7 +364,7 @@ describe('BacklogDB', () => {
 
             test('should handle adding same artifact to different backlogs', async () => {
                 const user1 = await UserDB.getByUsername('testuser1');
-                const backlog2 = await BacklogDB.createBacklog(user1!.id, 'Second Backlog', ArtifactType.GAME, BacklogRankingType.RANK);
+                const backlog2 = await BacklogDB.createBacklog(user1!.id, 'Second Backlog', BacklogType.STANDARD, ArtifactType.GAME, BacklogRankingType.RANK);
 
                 await BacklogDB.addBacklogItem(testBacklogId, 100, 1);
                 await BacklogDB.addBacklogItem(backlog2!.id, 100, 1);
@@ -499,8 +500,8 @@ describe('BacklogDB', () => {
 
         beforeEach(async () => {
             const user1 = await UserDB.getByUsername('testuser1');
-            const fromBacklog = await BacklogDB.createBacklog(user1!.id, 'From Backlog', ArtifactType.GAME, BacklogRankingType.RANK);
-            const toBacklog = await BacklogDB.createBacklog(user1!.id, 'To Backlog', ArtifactType.GAME, BacklogRankingType.ELO);
+            const fromBacklog = await BacklogDB.createBacklog(user1!.id, 'From Backlog', BacklogType.STANDARD, ArtifactType.GAME, BacklogRankingType.RANK);
+            const toBacklog = await BacklogDB.createBacklog(user1!.id, 'To Backlog', BacklogType.STANDARD, ArtifactType.GAME, BacklogRankingType.ELO);
 
             fromBacklogId = fromBacklog!.id;
             toBacklogId = toBacklog!.id;
@@ -531,7 +532,7 @@ describe('BacklogDB', () => {
 
         test('should throw error when backlogs are different types', async () => {
             const user1 = await UserDB.getByUsername('testuser1');
-            const movieBacklog = await BacklogDB.createBacklog(user1!.id, 'Movie Backlog', ArtifactType.MOVIE, BacklogRankingType.RANK);
+            const movieBacklog = await BacklogDB.createBacklog(user1!.id, 'Movie Backlog', BacklogType.STANDARD, ArtifactType.MOVIE, BacklogRankingType.RANK);
 
             await expect(BacklogDB.moveItemToOtherBacklog(fromBacklogId, movieBacklog!.id, 100, true))
                 .rejects.toThrow('Backlogs are not of the same type.');
@@ -555,7 +556,7 @@ describe('BacklogDB', () => {
 
         beforeEach(async () => {
             const user1 = await UserDB.getByUsername('testuser1');
-            const backlog = await BacklogDB.createBacklog(user1!.id, 'ELO Backlog', ArtifactType.GAME, BacklogRankingType.ELO);
+            const backlog = await BacklogDB.createBacklog(user1!.id, 'ELO Backlog', BacklogType.STANDARD, ArtifactType.GAME, BacklogRankingType.ELO);
             testBacklogId = backlog!.id;
 
             // Add items with initial ELO (default 1200)
@@ -593,7 +594,7 @@ describe('BacklogDB', () => {
 
         beforeEach(async () => {
             const user1 = await UserDB.getByUsername('testuser1');
-            const backlog = await BacklogDB.createBacklog(user1!.id, 'Test Backlog', ArtifactType.GAME, BacklogRankingType.RANK);
+            const backlog = await BacklogDB.createBacklog(user1!.id, 'Test Backlog', BacklogType.STANDARD, ArtifactType.GAME, BacklogRankingType.RANK);
             testBacklogId = backlog!.id;
 
             await BacklogDB.addBacklogItem(testBacklogId, 100, 1);
@@ -622,7 +623,7 @@ describe('BacklogDB', () => {
             user1 = (await UserDB.getByUsername('testuser1'))!;
             user2 = (await UserDB.getByUsername('testuser2'))!;
 
-            const backlog = await BacklogDB.createBacklog(user1.id, 'User1 Backlog', ArtifactType.GAME, BacklogRankingType.RANK);
+            const backlog = await BacklogDB.createBacklog(user1.id, 'User1 Backlog', BacklogType.STANDARD, ArtifactType.GAME, BacklogRankingType.RANK);
             testBacklogId = backlog!.id;
         });
 
@@ -668,7 +669,7 @@ describe('BacklogDB', () => {
             const user1 = await UserDB.getByUsername('testuser1');
 
             // Create backlog
-            const backlog = await BacklogDB.createBacklog(user1!.id, 'Full Test', ArtifactType.GAME, BacklogRankingType.RANK);
+            const backlog = await BacklogDB.createBacklog(user1!.id, 'Full Test', BacklogType.STANDARD, ArtifactType.GAME, BacklogRankingType.RANK);
             expect(backlog).not.toBeNull();
 
             // Add items
@@ -703,9 +704,9 @@ describe('BacklogDB', () => {
             const user2 = await UserDB.getByUsername('testuser2');
 
             // Create multiple backlogs
-            const gameBacklog = await BacklogDB.createBacklog(user1!.id, 'Games', ArtifactType.GAME, BacklogRankingType.RANK);
-            await BacklogDB.createBacklog(user1!.id, 'Movies', ArtifactType.MOVIE, BacklogRankingType.RANK);
-            const user2Backlog = await BacklogDB.createBacklog(user2!.id, 'User2 Games', ArtifactType.GAME, BacklogRankingType.RANK);
+            const gameBacklog = await BacklogDB.createBacklog(user1!.id, 'Games', BacklogType.STANDARD, ArtifactType.GAME, BacklogRankingType.RANK);
+            await BacklogDB.createBacklog(user1!.id, 'Movies', BacklogType.STANDARD, ArtifactType.MOVIE, BacklogRankingType.RANK);
+            const user2Backlog = await BacklogDB.createBacklog(user2!.id, 'User2 Games', BacklogType.STANDARD, ArtifactType.GAME, BacklogRankingType.RANK);
 
             // Add same artifact ID to different backlogs
             await BacklogDB.addBacklogItem(gameBacklog!.id, 100, 1);
@@ -730,11 +731,11 @@ describe('BacklogDB', () => {
     describe('Error handling and edge cases', () => {
         test('should handle invalid user IDs in createBacklog', async () => {
             // Negative user ID
-            const backlog1 = await BacklogDB.createBacklog(-1, 'Test', ArtifactType.GAME, BacklogRankingType.RANK);
+            const backlog1 = await BacklogDB.createBacklog(-1, 'Test', BacklogType.STANDARD, ArtifactType.GAME, BacklogRankingType.RANK);
             expect(backlog1).not.toBeNull(); // The method might still create the backlog
 
             // Zero user ID
-            const backlog2 = await BacklogDB.createBacklog(0, 'Test', ArtifactType.GAME, BacklogRankingType.RANK);
+            const backlog2 = await BacklogDB.createBacklog(0, 'Test', BacklogType.STANDARD, ArtifactType.GAME, BacklogRankingType.RANK);
             expect(backlog2).not.toBeNull();
         });
 
@@ -742,7 +743,7 @@ describe('BacklogDB', () => {
             const user1 = await UserDB.getByUsername('testuser1');
             const longTitle = 'a'.repeat(1000);
 
-            const backlog = await BacklogDB.createBacklog(user1!.id, longTitle, ArtifactType.GAME, BacklogRankingType.RANK);
+            const backlog = await BacklogDB.createBacklog(user1!.id, longTitle, BacklogType.STANDARD, ArtifactType.GAME, BacklogRankingType.RANK);
             expect(backlog!.title).toBe(longTitle);
         });
 
@@ -750,7 +751,7 @@ describe('BacklogDB', () => {
             const user1 = await UserDB.getByUsername('testuser1');
             const unicodeTitle = 'テストバックログ 🎮';
 
-            const backlog = await BacklogDB.createBacklog(user1!.id, unicodeTitle, ArtifactType.GAME, BacklogRankingType.RANK);
+            const backlog = await BacklogDB.createBacklog(user1!.id, unicodeTitle, BacklogType.STANDARD, ArtifactType.GAME, BacklogRankingType.RANK);
             expect(backlog!.title).toBe(unicodeTitle);
         });
 

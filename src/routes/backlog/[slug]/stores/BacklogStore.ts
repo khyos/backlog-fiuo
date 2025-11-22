@@ -1,4 +1,4 @@
-import { Backlog, BacklogRankingType, type IBacklog } from '$lib/model/Backlog';
+import { Backlog, BacklogRankingType, BacklogType, type IBacklog } from '$lib/model/Backlog';
 import { fetchBacklog, fetchVirtualWishlistBacklog, fetchVirtualFutureBacklog } from '$lib/services/BacklogService';
 import { derived, get, writable } from 'svelte/store';
 import { createBacklogFilters, filterBacklogItems, type BacklogFilters } from '../BacklogFilters';
@@ -11,7 +11,7 @@ export type BacklogStore = {
 };
 
 export const backlogStore = writable<BacklogStore>({
-    backlog: new Backlog(-1, -1, BacklogRankingType.RANK, '', ArtifactType.GAME),
+    backlog: new Backlog(-1, -1, BacklogType.STANDARD, BacklogRankingType.RANK, '', ArtifactType.GAME),
     backlogFilters: createBacklogFilters(ArtifactType.GAME, BacklogRankingType.RANK)
 });
 

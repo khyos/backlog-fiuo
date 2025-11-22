@@ -2,10 +2,16 @@ import { ArtifactType } from "./Artifact"
 import { BacklogItem, type IBacklogItem } from "./BacklogItem"
 import type { ISerializable, Serializable } from "./Serializable";
 
+export enum BacklogType {
+    FUTURE = "FUTURE",
+    STANDARD = "STANDARD",
+    WISHLIST = "WISHLIST"
+}
+
 export enum BacklogRankingType {
     RANK = "rank",
     ELO = "elo",
-    WISHLIST= "wishlist"
+    WISHLIST = "wishlist"
 }
 
 export enum BacklogOrder {
@@ -34,6 +40,7 @@ export interface IBacklogDB {
 export interface IBacklog extends ISerializable {
     id: number
     userId: number
+    type: BacklogType
     rankingType: BacklogRankingType
     backlogItems: IBacklogItem[]
     artifactType: ArtifactType
@@ -43,14 +50,16 @@ export interface IBacklog extends ISerializable {
 export class Backlog implements Serializable<IBacklog> {
     id: number
     userId: number
+    type: BacklogType
     rankingType: BacklogRankingType
     backlogItems: BacklogItem[]
     artifactType: ArtifactType
     title: string
 
-    constructor(id: number, userId: number, rankingType: BacklogRankingType, title: string, artifactType: ArtifactType) {
+    constructor(id: number, userId: number, type: BacklogType, rankingType: BacklogRankingType, title: string, artifactType: ArtifactType) {
         this.id = id;
         this.userId = userId;
+        this.type = type;
         this.rankingType = rankingType;
         this.title = title;
         this.artifactType = artifactType;
@@ -62,6 +71,7 @@ export class Backlog implements Serializable<IBacklog> {
             __type: SERIALIZE_TYPE,
             id: this.id,
             userId: this.userId,
+            type: this.type,
             rankingType: this.rankingType,
             title: this.title,
             artifactType: this.artifactType,
@@ -73,7 +83,7 @@ export class Backlog implements Serializable<IBacklog> {
         if (json.__type !== SERIALIZE_TYPE) {
             throw new Error('Invalid Type');
         }
-        const backlog = new Backlog(json.id, json.userId, json.rankingType, json.title, json.artifactType);
+        const backlog = new Backlog(json.id, json.userId, json.type, json.rankingType, json.title, json.artifactType);
         backlog.backlogItems = json.backlogItems.map((backlogItemData) => {
             return BacklogItem.fromJSON(backlogItemData);
         });
