@@ -3,9 +3,9 @@ import { BacklogItem, type IBacklogItem } from "./BacklogItem"
 import type { ISerializable, Serializable } from "./Serializable";
 
 export enum BacklogType {
-    FUTURE = "FUTURE",
+    FUTURE = "future",
     STANDARD = "standard",
-    WISHLIST = "WISHLIST"
+    CURRENT = "current"
 }
 
 export enum BacklogRankingType {

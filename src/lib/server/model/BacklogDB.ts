@@ -205,6 +205,25 @@ export class BacklogDB {
         return new AuthorizationStatus(200, "OK");
     }
 
+    static async getCurrentBacklogIdForUser(userId: number, artifactType: ArtifactType): Promise<number | null> {
+        const row = await getDbRow<IBacklogDB>(`SELECT * FROM backlog WHERE userId = ? AND type = ? AND artifactType = ?`, [userId, BacklogType.CURRENT, artifactType]);
+        return row ? row.id : null;
+    }
+
+    static async createCurrentBacklogForUser(userId: number, artifactType: ArtifactType): Promise<number> {
+        const backlogId = await runDbInsert(`INSERT INTO backlog (userId, title, type, artifactType, rankingType) VALUES (?, 'Current Backlog', ?, ?, 'elo')`, [userId, BacklogType.CURRENT, artifactType]);
+        return backlogId;
+    }
+
+    static async getFutureBacklogIdForUser(userId: number, artifactType: ArtifactType): Promise<number | null> {
+        const row = await getDbRow<IBacklogDB>(`SELECT * FROM backlog WHERE userId = ? AND type = ? AND artifactType = ?`, [userId, BacklogType.FUTURE, artifactType]);
+        return row ? row.id : null;
+    }
+
+    static async createFutureBacklogForUser(userId: number, artifactType: ArtifactType): Promise<number> {
+        const backlogId = await runDbInsert(`INSERT INTO backlog (userId, title, type, artifactType, rankingType) VALUES (?, 'Future Backlog', ?, ?, 'elo')`, [userId, BacklogType.FUTURE, artifactType]);
+        return backlogId;
+    }
 
     static async createBacklogTable() {
         await runDbQuery(`CREATE TABLE IF NOT EXISTS backlog (
