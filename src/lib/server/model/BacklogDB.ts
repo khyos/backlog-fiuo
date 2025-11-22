@@ -198,7 +198,7 @@ export class BacklogDB {
         await runDbQuery(`CREATE TABLE IF NOT EXISTS backlog (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             userId INTEGER NOT NULL,
-            type TEXT NOT NULL,
+            type TEXT NOT NULL DEFAULT 'standard',
             rankingType TEXT NOT NULL,
             title TEXT NOT NULL,
             artifactType TEXT NOT NULL

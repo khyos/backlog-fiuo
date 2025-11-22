@@ -4,7 +4,7 @@ import type { ISerializable, Serializable } from "./Serializable";
 
 export enum BacklogType {
     FUTURE = "FUTURE",
-    STANDARD = "STANDARD",
+    STANDARD = "standard",
     WISHLIST = "WISHLIST"
 }
 
