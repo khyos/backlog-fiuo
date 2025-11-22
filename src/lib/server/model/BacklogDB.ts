@@ -33,6 +33,10 @@ export interface IBacklogItemDB {
 
 export class BacklogDB {
     static async createBacklog(userId: number, title: string, type: BacklogType, artifactType: ArtifactType, rankingType: BacklogRankingType): Promise<Backlog | null> {
+        if (await BacklogDB.doesBacklogPerTypeExist(userId, type, artifactType)) {
+            return null;
+        }
+        
         const backlogId = await runDbInsert(`INSERT INTO backlog (userId, title, artifactType, rankingType) VALUES (?, ?, ?, ?)`, [userId, title, artifactType, rankingType]);
         return new Backlog(backlogId, userId, type, rankingType, title, artifactType);
     }
@@ -79,6 +83,14 @@ export class BacklogDB {
     static async getBacklogMaxRank(backlogId: number): Promise<number> {
         const row = await getDbRow<{ maxRank: number }>(`SELECT MAX(rank) as maxRank FROM backlog_items WHERE backlogId = ?`, [backlogId]);
         return row?.maxRank || 0;
+    }
+
+    static async doesBacklogPerTypeExist(userId: number, type: BacklogType, artifactType: ArtifactType): Promise<boolean> {
+        if (type === BacklogType.STANDARD) {
+            return false;
+        }
+        const row = await getDbRow<IBacklogDB>(`SELECT * FROM backlog WHERE userId = ? AND type = ? AND artifactType = ?`, [userId, type, artifactType]);
+        return row != null;
     }
 
     static async getBacklogItems(backlogId: number, artifactType: ArtifactType, rankingType: BacklogRankingType, backlogOrder?: BacklogOrder): Promise<BacklogItem[]> {
