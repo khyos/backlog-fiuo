@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { fetchBacklog, fetchBacklogs, fetchVirtualWishlistBacklog, fetchVirtualFutureBacklog, addBacklogItem, deleteBacklogItem, moveBacklogItemToOtherBacklog } from './BacklogService';
+import { fetchBacklog, fetchBacklogs, addBacklogItem, deleteBacklogItem, moveBacklogItemToOtherBacklog } from './BacklogService';
 import { ArtifactType } from '$lib/model/Artifact';
 
 describe('BacklogService', () => {
@@ -41,66 +41,6 @@ describe('BacklogService', () => {
             mockFetch.mockResolvedValue({ ok: false });
 
             await expect(fetchBacklogs(ArtifactType.GAME)).rejects.toThrow('Error while Fetching Backlog List');
-        });
-    });
-
-    describe('fetchVirtualWishlistBacklog', () => {
-        it('should fetch virtual wishlist backlog for a given artifact type', async () => {
-            const mockBacklog = { id: 'wishlist', name: 'Wishlist', items: [] };
-            mockJson.mockResolvedValue(mockBacklog);
-            mockFetch.mockResolvedValue({ ok: true, json: mockJson });
-
-            const result = await fetchVirtualWishlistBacklog(ArtifactType.GAME);
-
-            expect(mockFetch).toHaveBeenCalledWith('/api/backlog/current/game');
-            expect(result).toEqual(mockBacklog);
-        });
-
-        it('should throw error when response is not ok', async () => {
-            mockFetch.mockResolvedValue({ ok: false });
-
-            await expect(fetchVirtualWishlistBacklog(ArtifactType.MOVIE))
-                .rejects.toThrow('Error while fetching virtual wishlist backlog');
-        });
-
-        it('should handle different artifact types', async () => {
-            const mockBacklog = { id: 'wishlist', name: 'Anime Wishlist', items: [] };
-            mockJson.mockResolvedValue(mockBacklog);
-            mockFetch.mockResolvedValue({ ok: true, json: mockJson });
-
-            await fetchVirtualWishlistBacklog(ArtifactType.ANIME);
-
-            expect(mockFetch).toHaveBeenCalledWith('/api/backlog/current/anime');
-        });
-    });
-
-    describe('fetchVirtualFutureBacklog', () => {
-        it('should fetch virtual future backlog for a given artifact type', async () => {
-            const mockBacklog = { id: 'future', name: 'Future Releases', items: [] };
-            mockJson.mockResolvedValue(mockBacklog);
-            mockFetch.mockResolvedValue({ ok: true, json: mockJson });
-
-            const result = await fetchVirtualFutureBacklog(ArtifactType.GAME);
-
-            expect(mockFetch).toHaveBeenCalledWith('/api/backlog/future/game');
-            expect(result).toEqual(mockBacklog);
-        });
-
-        it('should throw error when response is not ok', async () => {
-            mockFetch.mockResolvedValue({ ok: false });
-
-            await expect(fetchVirtualFutureBacklog(ArtifactType.TVSHOW))
-                .rejects.toThrow('Error while fetching virtual future backlog');
-        });
-
-        it('should handle different artifact types', async () => {
-            const mockBacklog = { id: 'future', name: 'Future Movies', items: [] };
-            mockJson.mockResolvedValue(mockBacklog);
-            mockFetch.mockResolvedValue({ ok: true, json: mockJson });
-
-            await fetchVirtualFutureBacklog(ArtifactType.MOVIE);
-
-            expect(mockFetch).toHaveBeenCalledWith('/api/backlog/future/movie');
         });
     });
 

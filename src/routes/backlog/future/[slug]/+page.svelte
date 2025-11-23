@@ -2,106 +2,75 @@
     import {
         Badge,
         Button,
+        Checkbox,
+        Input,
+        Listgroup,
+        ListgroupItem,
+        Modal,
+        Select,
+        Toast,
     } from "flowbite-svelte";
     import {
-        ClockSolid,
+        CheckCircleSolid,
         PlusOutline,
     } from "flowbite-svelte-icons";
+    import { Tag } from "$lib/model/Tag";
     import type { PageData } from "./$types";
+    import { deleteBacklogItem, moveBacklogItemToOtherBacklog as moveBacklogItemToOtherBacklogAPI } from "$lib/services/BacklogService";
+    import { fetchPrices } from "$lib/services/PricesService";
     import type { Price } from "$lib/types/itad/Price";
     import BacklogDrawer from "../../[slug]/components/BacklogDrawer.svelte";
-    import BacklogHeader from "../../[slug]/components/BacklogHeader.svelte";
-    import BacklogList from "../../[slug]/components/BacklogList.svelte";
-    import BacklogModals from "../../[slug]/components/BacklogModals.svelte";
-    import { backlogStore, initializeStore, refreshBacklog } from "../../[slug]/stores/BacklogStore";
-    import { filteredBacklogItems } from "../../[slug]/stores/BacklogStore";
-    import { pageStore, toggleDrawer } from "../../[slug]/stores/PageStore";
+    import { TimeUtil } from "$lib/util/TimeUtil";
+    import BacklogItemComp from "../../[slug]/components/BacklogItemComp.svelte";
+    import { pageStore, hideMoveToBacklog, hideMoveToRank, toggleDrawer } from "../../[slug]/stores/PageStore";
+    import { copyAiPrompt, filteredBacklogItems, initializeStore, refreshBacklog } from "../../[slug]/stores/BacklogStore";
+    import { tagStore } from "../../[slug]/stores/TagStore";
+    import { Genre } from "$lib/model/Genre";
+    import { Platform } from "$lib/model/game/Platform";
     import { get } from "svelte/store";
-    import { moveBacklogItemToOtherBacklog as moveBacklogItemToOtherBacklogAPI } from "$lib/services/BacklogService";
-    import { BacklogPageHelper } from "$lib/util/BacklogPageHelper";
-    
+    import { addTag, createTag, fetchTags } from "../../[slug]/actions/TagActions";
+
     export let data: PageData;
 
-    // Initialize stores
-    initializeStore(data.backlog);
-    
-    // Convert plain objects to model instances using helper
-    const { genres, backlogTags, platforms } = BacklogPageHelper.convertModelInstances(data);
-    
-    // Computed values
-    $: backlogStoreInst = $backlogStore;
-    $: totalTime = $filteredBacklogItems.reduce((acc, item) => acc + item.artifact.duration, 0);
+    initializeStore(data.backlog, data.suggestedArtifacts);
 
-    // Modal state
-    let backlogItemsForSelect: Array<{value: number, name: string}> = [];
+    let backlogTags = data.backlogTags.map(backlogTag => Tag.fromJSON(backlogTag));
+    let genres = data.genres.map(genre => Genre.fromJSON(genre));
+    let platforms = data.platforms.map(platform => Platform.fromJSON(platform));
+
+    let backlogItemsForSelect = data.backlog.backlogItems.map(bi => {
+        return {
+            value: bi.rank,
+            name: `${bi.rank} - ${bi.artifact.title}`
+        };
+    });
     let moveToRankSelected: number;
+
     let keepTagsSelected: boolean = false;
     let moveToBacklogSelected: number;
-    let prices: Record<string, Price> = {};
 
-    // Update backlog items for select when backlog changes
-    $: if (backlogStoreInst?.backlog?.backlogItems) {
-        backlogItemsForSelect = BacklogPageHelper.createBacklogItemsForSelect(backlogStoreInst.backlog.backlogItems);
-    }
+    let totalTime = data.backlog.backlogItems.reduce((acc, item) => {
+        return acc + item.artifact.duration;
+    }, 0);
 
-    // Future-specific methods  
-    const onAddBacklogItem = async (artifactId: number): Promise<void> => {
-        // For virtual future list, we add items by setting their status to wishlist
-        // This works for items with no status or any other status
-        const response = await fetch(`/api/artifact/userStatus`, {
-            method: "POST",
-            body: JSON.stringify({
-                artifactIds: [artifactId],
-                status: "wishlist"
-            })
-        });
-        
-        if (!response.ok) {
-            throw new Error('Failed to add item to future list');
-        }
-        
-        await refreshBacklog();
-    };
-
-    const onDeleteBacklogItem = async (e: MouseEvent): Promise<void> => {
+    const deleteBacklogItemCb = async (e: MouseEvent) => {
         const artifactIdStr = (e.currentTarget as HTMLElement)?.getAttribute("data-id");
         if (!artifactIdStr) return;
-        
-        const artifactId = parseInt(artifactIdStr, 10);
-        
-        // For virtual future list, we remove by changing status away from wishlist
-        const response = await fetch(`/api/artifact/userStatus`, {
-            method: "POST", 
-            body: JSON.stringify({
-                artifactIds: [artifactId],
-                status: null
-            })
-        });
-        
-        if (!response.ok) {
-            throw new Error('Failed to remove item from future list');
-        }
-        
-        await refreshBacklog();
+        const artifactId = parseInt(artifactIdStr);
+        await deleteBacklogItem(data.backlog.id, artifactId);
+        refreshBacklog();
     };
 
-    const onMoveBacklogItem = async (): Promise<void> => {
-        // Future list is ordered by release date only - no manual reordering
-        return Promise.resolve();
-    };
-
-    const onFetchPrices = async (): Promise<void> => {
-        prices = await BacklogPageHelper.fetchPricesForBacklog(backlogStoreInst.backlog.artifactType, backlogStoreInst.backlog.backlogItems);
-    };
-
-    const moveBacklogItemToOtherBacklog = () => {
-        return new Promise<void>((resolve, reject) => {
-            let store = get(pageStore);
-            if (!store.selectedBacklogItem) {
-                reject();
-                return;
-            }
-            moveBacklogItemToOtherBacklogAPI(backlogStoreInst.backlog.id, moveToBacklogSelected, store.selectedBacklogItem.artifact.id, keepTagsSelected).then(() => {
+    const moveBacklogItem = async (srcRank: number, targetRank: number) => {
+        if (srcRank === targetRank) return Promise.resolve();
+        return new Promise<void> (resolve => {
+            fetch(`/api/backlog/${data.backlog.id}/move`, {
+                method: "POST",
+                body: JSON.stringify({
+                    srcRank: srcRank,
+                    targetRank: targetRank,
+                }),
+            }).then(() => {
                 refreshBacklog().then(() => {
                     resolve();
                 });
@@ -109,78 +78,114 @@
         });
     };
 
-    const getDisplayTitle = () => {
-        const type = backlogStoreInst.backlog.artifactType;
-        return `${type.charAt(0).toUpperCase() + type.slice(1)} Coming Soon`;
-    };
+    const moveBacklogItemToOtherBacklog = () => {
+        return new Promise<void> ((resolve, reject) => {
+            let store = get(pageStore);
+            if (!store.selectedBacklogItem) {
+                reject();
+                return;
+            }
+            moveBacklogItemToOtherBacklogAPI(data.backlog.id, moveToBacklogSelected, store.selectedBacklogItem.artifact.id, keepTagsSelected).then(() => {
+                refreshBacklog().then(() => {
+                    resolve();
+                });
+            });
+        });
+    }
+
+    let prices: Record<string, Price>;
+    const fetchPricesCb = async () => {
+        const artifactIds = data.backlog.backlogItems.map(bi => bi.artifact.id);
+        prices = await fetchPrices(data.backlog.artifactType, artifactIds);  
+    }
 </script>
 
-<svelte:head>
-    <title>{getDisplayTitle()}</title>
-</svelte:head>
-
-<div class="mb-4 p-4 bg-purple-50 dark:bg-purple-900 rounded-lg">
-    <div class="flex items-center justify-between">
-        <div class="flex items-center space-x-2">
-            <Badge color="purple">
-                <ClockSolid class="w-3 h-3 mr-1" />
-                Virtual Future List
-            </Badge>
-            <span class="text-sm text-gray-600 dark:text-gray-400">
-                This list automatically includes all {backlogStoreInst.backlog.artifactType}s marked as "wishlist" that are not yet released, ordered by release date.
-            </span>
-        </div>
-    </div>
-</div>
-
-<BacklogList
-    backlogItems={$filteredBacklogItems}
-    canEdit={data.canEdit}
-    {prices}
-    onDeleteBacklogItem={onDeleteBacklogItem}
-    onMoveBacklogItem={onMoveBacklogItem}
-    isVirtualWishlist={true}
-    {onAddBacklogItem}
->
-    <BacklogHeader 
-        slot="header" 
-        title={getDisplayTitle()} 
-        {totalTime} 
-    />
-    
-    <div slot="empty" class="text-center py-12">
-        <div class="mb-4">
-            <ClockSolid class="w-12 h-12 mx-auto text-gray-400 dark:text-gray-600" />
-        </div>
-        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">
-            No upcoming releases yet
+<Listgroup>
+    <div class="flex p-1">
+        <h3
+            class="p-1 text-xl font-medium text-gray-900 dark:text-white"
+            style="flex-grow: 1; padding-left: 1rem"
+        >
+            {data.backlog.title} ({TimeUtil.formatDuration(totalTime)})
         </h3>
-        <p class="text-gray-600 dark:text-gray-400 mb-4">
-            Start by marking some unreleased {backlogStoreInst.backlog.artifactType}s as "wishlist" to see them here.
-        </p>
-        <Button color="purple" onclick={toggleDrawer}>
-            <PlusOutline class="w-4 h-4 mr-2" />
-            Add Items
-        </Button>
-    </div>
-</BacklogList>
+        {#if $pageStore.isCopiedToastVisible}
+            <Toast class="fixed bottom-4 left-1/2 transform -translate-x-1/2" params={{ delay: 250, duration: 1000 }} dismissable={false}>
+                {#snippet icon()}
+                    <CheckCircleSolid class="h-6 w-6" />
+                {/snippet}
+                Copied !
+            </Toast>
+        {/if}
 
-<BacklogDrawer
+        <Button size="xs" class="mr-1" onclick={copyAiPrompt}>AI</Button>
+        <Button size="xs" onclick={toggleDrawer}>Filters / Add</Button>
+    </div>
+    {#each $filteredBacklogItems as backlogItem (backlogItem.artifact.id)}
+        <ListgroupItem>
+            <BacklogItemComp
+                {backlogItem}
+                canEdit={data.canEdit}
+                {prices}
+                onDeleteBacklogItem={deleteBacklogItemCb}
+                onMoveBacklogItem={moveBacklogItem}
+            />
+        </ListgroupItem>
+    {/each}
+</Listgroup>
+
+<!-- Use the extracted drawer component -->
+<BacklogDrawer 
     canEdit={data.canEdit}
     {genres}
     {backlogTags}
     {platforms}
-    {onMoveBacklogItem}
-    {onFetchPrices}
-    {onAddBacklogItem}
+    onMoveBacklogItem={moveBacklogItem}
+    onFetchPrices={fetchPricesCb}
 />
 
-<BacklogModals
-    {backlogItemsForSelect}
-    bind:moveToRankSelected
-    bind:keepTagsSelected
-    bind:moveToBacklogSelected
-    onMoveBacklogItem={onMoveBacklogItem}
-    {moveBacklogItemToOtherBacklog}
-/>
+<!-- The Modals remain in the main file -->
+<Modal size="xs" title="Add Tag" bind:open={$tagStore.showAddTag} autoclose>
+    <div style="display: flex; align-items: center;" class="mb-2">
+        <Input
+            type="text"
+            id="search-field-tag"
+            placeholder="Search"
+            autocomplete="off"
+            class="mr-1"
+            style="flex-grow: 1;"
+            bind:value={$tagStore.searchTagTerm}
+            oninput={fetchTags}
+        />
+        <Button
+            size="xs"
+            disabled={$tagStore.searchTagTerm.length < 2}
+            onclick={createTag}><PlusOutline size="sm" /></Button
+        >
+    </div>
+    {#each $tagStore.searchedTags as tag (tag.id)}
+        <Button size="xs" class="m-1" onclick={() => addTag(tag.id)}
+            >{tag.id}</Button
+        >
+    {/each}
+</Modal>
 
+<Modal size="xs" title="Move to Rank" bind:open={$pageStore.showMoveToRank} autoclose>
+    Move <Badge class="mr-2 gap-1" color="blue"># {$pageStore.selectedBacklogItem!.rank}</Badge><b>{$pageStore.selectedBacklogItem!.artifact.title}</b> to
+    <Select class="mt-2" items={backlogItemsForSelect} bind:value={moveToRankSelected} />
+    <Button class="mt-2" onclick={() => {
+        moveBacklogItem($pageStore.selectedBacklogItem!.rank, moveToRankSelected).then(() => {
+            hideMoveToRank();
+        });
+    }}>Move</Button>
+</Modal>
+
+<Modal size="xs" title="Move to Backlog" bind:open={$pageStore.showMoveToBacklog} autoclose>
+    Move <Badge class="mr-2 gap-1" color="blue"># {$pageStore.selectedBacklogItem!.rank}</Badge><b>{$pageStore.selectedBacklogItem!.artifact.title}</b> to
+    <Select class="mt-2" items={$pageStore.backlogsForSelect} bind:value={moveToBacklogSelected} />
+    <Checkbox bind:checked={keepTagsSelected}>Keep tags</Checkbox>
+    <Button class="mt-2" onclick={() => {
+        moveBacklogItemToOtherBacklog().then(() => {
+            hideMoveToBacklog();
+        });
+    }}>Move</Button>
+</Modal>

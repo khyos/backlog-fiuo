@@ -5,7 +5,7 @@ import { BacklogDB } from './BacklogDB';
 import { TagDB } from './TagDB';
 import { Tag, TagType } from '$lib/model/Tag';
 import { ArtifactType } from '$lib/model/Artifact';
-import { BacklogRankingType } from '$lib/model/Backlog';
+import { BacklogRankingType, BacklogType } from '$lib/model/Backlog';
 
 describe('BacklogItemDB', () => {
     const cleanupTestData = async () => {
@@ -42,7 +42,7 @@ describe('BacklogItemDB', () => {
     describe('getTags', () => {
         beforeEach(async () => {
             // Create test backlog and items
-            const backlogId = await BacklogDB.createBacklog(1, 'Test Backlog', ArtifactType.GAME, BacklogRankingType.RANK);
+            const backlogId = await BacklogDB.createBacklog(1, 'Test Backlog', BacklogType.STANDARD, ArtifactType.GAME, BacklogRankingType.RANK);
             await BacklogDB.addBacklogItem(backlogId!.id, 100, 1);
             await BacklogDB.addBacklogItem(backlogId!.id, 200, 2);
             
@@ -54,7 +54,7 @@ describe('BacklogItemDB', () => {
 
         test('should return all tags for a specific backlog item', async () => {
             // Use the backlog setup in beforeEach
-            const backlog = await BacklogDB.createBacklog(1, 'Test Backlog', ArtifactType.GAME, BacklogRankingType.RANK);
+            const backlog = await BacklogDB.createBacklog(1, 'Test Backlog', BacklogType.STANDARD, ArtifactType.GAME, BacklogRankingType.RANK);
             await BacklogDB.addBacklogItem(backlog!.id, 100, 1);
             await BacklogItemDB.addTag(backlog!.id, 100, '1');
             await BacklogItemDB.addTag(backlog!.id, 100, '2');
@@ -67,7 +67,7 @@ describe('BacklogItemDB', () => {
         });
 
         test('should return empty array when item has no tags', async () => {
-            const backlog = await BacklogDB.createBacklog(1, 'Test Backlog', ArtifactType.GAME, BacklogRankingType.RANK);
+            const backlog = await BacklogDB.createBacklog(1, 'Test Backlog', BacklogType.STANDARD, ArtifactType.GAME, BacklogRankingType.RANK);
             await BacklogDB.addBacklogItem(backlog!.id, 300, 1);
             
             const tags = await BacklogItemDB.getTags(backlog!.id, ArtifactType.GAME, 300);
@@ -76,7 +76,7 @@ describe('BacklogItemDB', () => {
         });
 
         test('should return empty array when backlog item does not exist', async () => {
-            const backlog = await BacklogDB.createBacklog(1, 'Test Backlog', ArtifactType.GAME, BacklogRankingType.RANK);
+            const backlog = await BacklogDB.createBacklog(1, 'Test Backlog', BacklogType.STANDARD, ArtifactType.GAME, BacklogRankingType.RANK);
             
             const tags = await BacklogItemDB.getTags(backlog!.id, ArtifactType.GAME, 999);
             
@@ -88,8 +88,8 @@ describe('BacklogItemDB', () => {
             await TagDB.createTag('game-tag', ArtifactType.GAME, TagType.DEFAULT);
             await TagDB.createTag('anime-tag', ArtifactType.ANIME, TagType.TRIGGER_WARNING);
             
-            const gameBacklog = await BacklogDB.createBacklog(1, 'Game Backlog', ArtifactType.GAME, BacklogRankingType.RANK);
-            const animeBacklog = await BacklogDB.createBacklog(1, 'Anime Backlog', ArtifactType.ANIME, BacklogRankingType.RANK);
+            const gameBacklog = await BacklogDB.createBacklog(1, 'Game Backlog', BacklogType.STANDARD, ArtifactType.GAME, BacklogRankingType.RANK);
+            const animeBacklog = await BacklogDB.createBacklog(1, 'Anime Backlog', BacklogType.STANDARD, ArtifactType.ANIME, BacklogRankingType.RANK);
             
             await BacklogDB.addBacklogItem(gameBacklog!.id, 100, 1);
             await BacklogDB.addBacklogItem(animeBacklog!.id, 100, 1);
@@ -107,7 +107,7 @@ describe('BacklogItemDB', () => {
         });
 
         test('should return Tag instances with correct properties', async () => {
-            const backlog = await BacklogDB.createBacklog(1, 'Test Backlog', ArtifactType.GAME, BacklogRankingType.RANK);
+            const backlog = await BacklogDB.createBacklog(1, 'Test Backlog', BacklogType.STANDARD, ArtifactType.GAME, BacklogRankingType.RANK);
             await BacklogDB.addBacklogItem(backlog!.id, 100, 1);
             await BacklogItemDB.addTag(backlog!.id, 100, '1');
             
@@ -124,7 +124,7 @@ describe('BacklogItemDB', () => {
         let backlogId: number;
 
         beforeEach(async () => {
-            const backlog = await BacklogDB.createBacklog(1, 'Test Backlog', ArtifactType.GAME, BacklogRankingType.RANK);
+            const backlog = await BacklogDB.createBacklog(1, 'Test Backlog', BacklogType.STANDARD, ArtifactType.GAME, BacklogRankingType.RANK);
             backlogId = backlog!.id;
             await BacklogDB.addBacklogItem(backlogId, 100, 1);
         });
@@ -187,7 +187,7 @@ describe('BacklogItemDB', () => {
         let backlogId: number;
 
         beforeEach(async () => {
-            const backlog = await BacklogDB.createBacklog(1, 'Test Backlog', ArtifactType.GAME, BacklogRankingType.RANK);
+            const backlog = await BacklogDB.createBacklog(1, 'Test Backlog', BacklogType.STANDARD, ArtifactType.GAME, BacklogRankingType.RANK);
             backlogId = backlog!.id;
             await BacklogDB.addBacklogItem(backlogId, 100, 1);
             
@@ -254,8 +254,8 @@ describe('BacklogItemDB', () => {
         let toBacklogId: number;
 
         beforeEach(async () => {
-            const fromBacklog = await BacklogDB.createBacklog(1, 'From Backlog', ArtifactType.GAME, BacklogRankingType.RANK);
-            const toBacklog = await BacklogDB.createBacklog(1, 'To Backlog', ArtifactType.GAME, BacklogRankingType.ELO);
+            const fromBacklog = await BacklogDB.createBacklog(1, 'From Backlog', BacklogType.STANDARD, ArtifactType.GAME, BacklogRankingType.RANK);
+            const toBacklog = await BacklogDB.createBacklog(1, 'To Backlog', BacklogType.STANDARD, ArtifactType.GAME, BacklogRankingType.ELO);
             
             fromBacklogId = fromBacklog!.id;
             toBacklogId = toBacklog!.id;
@@ -310,7 +310,7 @@ describe('BacklogItemDB', () => {
 
         test('should preserve tag relationships when moving between different users backlogs', async () => {
             // Create backlog for different user
-            const userTwoBacklog = await BacklogDB.createBacklog(2, 'User Two Backlog', ArtifactType.GAME, BacklogRankingType.RANK);
+            const userTwoBacklog = await BacklogDB.createBacklog(2, 'User Two Backlog', BacklogType.STANDARD, ArtifactType.GAME, BacklogRankingType.RANK);
             await BacklogDB.addBacklogItem(userTwoBacklog!.id, 100, 1);
             
             await BacklogItemDB.moveItemTagsToOtherBacklog(fromBacklogId, userTwoBacklog!.id, 100);
@@ -350,8 +350,8 @@ describe('BacklogItemDB', () => {
 
     describe('Integration tests', () => {
         test('should handle complete tag lifecycle: add -> get -> move -> remove', async () => {
-            const backlog1 = await BacklogDB.createBacklog(1, 'Backlog 1', ArtifactType.GAME, BacklogRankingType.RANK);
-            const backlog2 = await BacklogDB.createBacklog(1, 'Backlog 2', ArtifactType.GAME, BacklogRankingType.ELO);
+            const backlog1 = await BacklogDB.createBacklog(1, 'Backlog 1', BacklogType.STANDARD, ArtifactType.GAME, BacklogRankingType.RANK);
+            const backlog2 = await BacklogDB.createBacklog(1, 'Backlog 2', BacklogType.STANDARD, ArtifactType.GAME, BacklogRankingType.ELO);
             
             await BacklogDB.addBacklogItem(backlog1!.id, 100, 1);
             await BacklogDB.addBacklogItem(backlog2!.id, 100, 1);
@@ -381,7 +381,7 @@ describe('BacklogItemDB', () => {
         });
 
         test('should maintain data consistency across multiple operations', async () => {
-            const backlogId = (await BacklogDB.createBacklog(1, 'Test Backlog', ArtifactType.GAME, BacklogRankingType.RANK))!.id;
+            const backlogId = (await BacklogDB.createBacklog(1, 'Test Backlog', BacklogType.STANDARD, ArtifactType.GAME, BacklogRankingType.RANK))!.id;
             
             // Add multiple items
             await BacklogDB.addBacklogItem(backlogId, 100, 1);
@@ -417,7 +417,7 @@ describe('BacklogItemDB', () => {
 
     describe('Error handling and edge cases', () => {
         test('should handle invalid tag IDs gracefully', async () => {
-            const backlogId = (await BacklogDB.createBacklog(1, 'Test Backlog', ArtifactType.GAME, BacklogRankingType.RANK))!.id;
+            const backlogId = (await BacklogDB.createBacklog(1, 'Test Backlog', BacklogType.STANDARD, ArtifactType.GAME, BacklogRankingType.RANK))!.id;
             await BacklogDB.addBacklogItem(backlogId, 100, 1);
             
             // Empty tag ID
@@ -440,7 +440,7 @@ describe('BacklogItemDB', () => {
         });
 
         test('should handle invalid artifact IDs gracefully', async () => {
-            const backlogId = (await BacklogDB.createBacklog(1, 'Test Backlog', ArtifactType.GAME, BacklogRankingType.RANK))!.id;
+            const backlogId = (await BacklogDB.createBacklog(1, 'Test Backlog', BacklogType.STANDARD, ArtifactType.GAME, BacklogRankingType.RANK))!.id;
             
             // Negative artifact ID
             await expect(BacklogItemDB.getTags(backlogId, ArtifactType.GAME, -1))

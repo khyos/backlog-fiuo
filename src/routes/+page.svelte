@@ -1,31 +1,21 @@
 <script lang="ts">
-    import { Button, Card } from "flowbite-svelte";
+    import { Card } from "flowbite-svelte";
     import { 
         ClockSolid, 
         RocketSolid, 
-        ForwardSolid, 
-        PlusOutline,
-        EyeSolid,
+        ForwardSolid,
         ClapperboardPlaySolid,
         ImageSolid,
-        StarSolid,
-        BookmarkSolid,
-        ChevronRightOutline
+        StarSolid
     } from "flowbite-svelte-icons";
     import { ArtifactType } from "$lib/model/Artifact";
-    import type { PageData } from "./$types";
-
-    export let data: PageData;
-
-    // Calculate some quick stats
-    $: recentBacklogs = data.backlogs.slice(0, 6);
 </script>
 
 <svelte:head>
     <title>Backlog - Your Entertainment Hub</title>
 </svelte:head>
 
-<div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-gray-900 dark:via-blue-900 dark:to-indigo-900">
+<div class="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-gray-900 dark:via-blue-900 dark:to-indigo-900">
     <!-- Hero Section -->
     <div class="relative overflow-hidden">
         <div class="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-purple-600/10 dark:from-blue-400/10 dark:to-purple-400/10"></div>
@@ -43,14 +33,6 @@
 
     <!-- Stats Section -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-
-        <!-- Section Title -->
-        <div class="text-center mb-16">
-            <h2 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-                Quick Access
-            </h2>
-            <div class="h-1 w-24 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full mx-auto mt-6"></div>
-        </div>
 
         <!-- Enhanced Quick Access Grid -->
         <div class="flex justify-center mb-20">
@@ -160,109 +142,5 @@
                 </Card>
             </div>
         </div>
-
-        <!-- Recent Backlogs Section -->
-        {#if recentBacklogs.length > 0}
-            <div class="w-full">
-                <!-- Section Header -->
-                <div class="text-center mb-12">
-                    <div class="flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 shadow-lg mx-auto mb-4">
-                        <BookmarkSolid class="w-8 h-8 text-white" />
-                    </div>
-                    <h2 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-                        Recent Backlogs
-                    </h2>
-                    <div class="h-1 w-24 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full mx-auto"></div>
-                </div>
-
-                <!-- Enhanced Backlogs Grid -->
-                <div class="flex justify-center">
-                    <Card class="group relative overflow-hidden bg-gradient-to-br from-purple-50/80 via-pink-50/80 to-rose-50/80 dark:from-purple-900/20 dark:via-pink-900/20 dark:to-rose-900/20 border-0 shadow-2xl hover:shadow-3xl transition-all duration-500 backdrop-blur-sm w-full max-w-5xl">
-                        <!-- Animated background overlay -->
-                        <div class="absolute inset-0 bg-gradient-to-r from-purple-400/10 via-pink-400/10 to-rose-400/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                        
-                        <div class="relative z-10 p-8">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                {#each recentBacklogs as backlog, index (backlog.id)}
-                                    <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
-                                    <a href="/backlog/{backlog.id}" class="group/item relative overflow-hidden block">
-                                        <div class="relative p-6 rounded-2xl bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm border border-purple-200/50 dark:border-purple-700/50 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] hover:-translate-y-1 h-full">
-                                            <!-- Animated background on hover -->
-                                            <div class="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 opacity-0 group-hover/item:opacity-100 transition-opacity duration-300 rounded-2xl"></div>
-                                            
-                                            <div class="relative z-10 flex flex-col h-full">
-                                                <div class="flex items-center space-x-4 mb-4">
-                                                    <!-- Index number with gradient -->
-                                                    <div class="flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 text-white font-bold text-sm shadow-lg group-hover/item:scale-110 transition-transform duration-300 flex-shrink-0">
-                                                        {index + 1}
-                                                    </div>
-                                                    
-                                                    <!-- Backlog info -->
-                                                    <div class="flex-grow min-w-0">
-                                                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-1 group-hover/item:text-purple-700 dark:group-hover/item:text-purple-300 transition-colors duration-300 line-clamp-2">
-                                                            {backlog.title}
-                                                        </h3>
-                                                        <p class="text-sm text-gray-600 dark:text-gray-400">
-                                                            Recently updated
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                
-                                                <!-- Action section -->
-                                                <div class="flex items-center justify-end mt-auto pt-2">
-                                                    <div class="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/50 dark:to-pink-900/50 text-purple-600 dark:text-purple-300 group-hover/item:scale-110 group-hover/item:bg-gradient-to-br group-hover/item:from-purple-200 group-hover/item:to-pink-200 dark:group-hover/item:from-purple-800 dark:group-hover/item:to-pink-800 transition-all duration-300">
-                                                        <ChevronRightOutline class="w-5 h-5" />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </a>
-                                {/each}
-                            </div>
-                            
-                            <!-- View All Button -->
-                            <div class="text-center mt-8">
-                                <Button 
-                                    href="/backlog" 
-                                    size="lg" 
-                                    class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
-                                >
-                                    <EyeSolid class="w-5 h-5 mr-2" />
-                                    View All Backlogs
-                                </Button>
-                            </div>
-                        </div>
-                    </Card>
-                </div>
-            </div>
-        {:else}
-            <!-- Empty State for Recent Backlogs -->
-            <div class="flex justify-center">
-                <div class="w-full max-w-2xl">
-                    <Card class="bg-gradient-to-br from-gray-50/80 to-slate-100/80 dark:from-gray-800/50 dark:to-slate-800/50 border-0 shadow-lg backdrop-blur-sm">
-                        <div class="text-center p-12">
-                            <div class="flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-gray-400 to-slate-500 shadow-lg mx-auto mb-6">
-                                <BookmarkSolid class="w-8 h-8 text-white" />
-                            </div>
-                            <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-3">
-                                No Recent Backlogs
-                            </h3>
-                            <p class="text-gray-600 dark:text-gray-300 mb-6">
-                                Start creating your first backlog to track your entertainment!
-                            </p>
-                            {#if data.permissions.canCreate}
-                                <Button 
-                                    href="/backlog/create" 
-                                    class="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-                                >
-                                    <PlusOutline class="w-4 h-4 mr-2" />
-                                    Create Your First Backlog
-                                </Button>
-                            {/if}
-                        </div>
-                    </Card>
-                </div>
-            </div>
-        {/if}
     </div>
 </div>

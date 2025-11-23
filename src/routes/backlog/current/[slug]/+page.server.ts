@@ -1,79 +1,58 @@
-import { ArtifactType } from '$lib/model/Artifact.js';
 import { BacklogDB } from '$lib/server/model/BacklogDB';
+import { error } from '@sveltejs/kit';
+import type { PageServerLoad } from './$types';
+import { BacklogUtil } from '$lib/server/model/BacklogUtil';
+import { ArtifactType } from '$lib/model/Artifact';
+import { User } from '$lib/model/User';
+import { AnimeDB } from '$lib/server/model/anime/AnimeDB';
 import { GameDB } from '$lib/server/model/game/GameDB';
 import { MovieDB } from '$lib/server/model/movie/MovieDB';
-import { error } from '@sveltejs/kit';
-import type { ServerLoadEvent } from '@sveltejs/kit';
-import { User, UserRights } from '$lib/model/User';
-import type { Tag } from '$lib/model/Tag';
 import { TvshowDB } from '$lib/server/model/tvshow/TvshowDB';
-import { AnimeDB } from '$lib/server/model/anime/AnimeDB';
-export const load = async ({ params, locals }: ServerLoadEvent) => {
-	const artifactTypeParam = params.slug;
-	if (!artifactTypeParam || !Object.values(ArtifactType).includes(artifactTypeParam as ArtifactType)) {
-		error(400, 'Invalid artifact type');
-	}
 
-	const artifactType = artifactTypeParam as ArtifactType;
+const COMPATIBLE_ARTIFACT_TYPES: ArtifactType[] = [
+	ArtifactType.ANIME,
+	ArtifactType.GAME,
+	ArtifactType.MOVIE,
+	ArtifactType.TVSHOW
+];
+
+export const load: PageServerLoad = async ({ params, locals }) => {
 	const user = User.deserialize(locals.user);
-
-	if (user.id < 0) {
-		error(401, 'Please sign in to access your wishlist');
+	if (!user) {
+		error(401, 'Not authorized');
 	}
 
-	const backlog = await BacklogDB.getVirtualWishlistBacklog(user.id, artifactType);
-	if (!backlog) {
-		error(404, 'Wishlist not found');
+	const artifactType: ArtifactType = params.slug as ArtifactType;
+	if (COMPATIBLE_ARTIFACT_TYPES.indexOf(artifactType) === -1) {
+		error(400, 'Invalid artifact type for current backlog');
+	}
+	let backlogId = await BacklogDB.getCurrentBacklogIdForUser(user.id, artifactType);
+	if (!backlogId) {
+		backlogId = await BacklogDB.createCurrentBacklogForUser(user.id, artifactType);
 	}
 
-	const backlogTags = extractUniqueTagsFromBacklog(backlog);
-	const genres = await fetchGenres(artifactType);
-	const platforms = await fetchPlatforms(artifactType);
-	const currentRankingType = await BacklogDB.getUserWishlistRankingType(user.id, artifactType);
-	
+	const backlogPageInfo = await BacklogUtil.loadBacklogPageInfo(backlogId, locals);
+	if (!backlogPageInfo) {
+		error(404, 'Backlog not found');
+	}
+
+	const suggestedArtifactsDB = await BacklogDB.getCurrentSuggestedArtifacts(user.id, artifactType, backlogId);
+	const suggestedArtifacts = suggestedArtifactsDB.map((artifactDB) => {
+		if (artifactDB.type === ArtifactType.ANIME) {
+			return AnimeDB.deserialize(artifactDB);
+		} else if (artifactDB.type === ArtifactType.GAME) {
+			return GameDB.deserialize(artifactDB);
+		} else if (artifactDB.type === ArtifactType.MOVIE) {
+			return MovieDB.deserialize(artifactDB);
+		} else if (artifactDB.type === ArtifactType.TVSHOW) {
+			return TvshowDB.deserialize(artifactDB);
+		}
+		return null;
+	}).filter(artifact => artifact !== null);
+
 	return {
-		backlog: backlog.toJSON(),
-		backlogTags: backlogTags.map(backlogTag => backlogTag.toJSON()),
-		genres: genres.map(genre => genre.toJSON()),
-		platforms: platforms.map(platform => platform.toJSON()),
-		canEdit: user.hasRight(UserRights.EDIT_BACKLOG),
-		currentRankingType
+		...backlogPageInfo,
+		suggestedArtifacts: suggestedArtifacts.map(artifact => artifact.toJSON())
 	};
 }
 
-function extractUniqueTagsFromBacklog(backlog: { backlogItems: Array<{ tags: Tag[] }> }) {
-	const backlogTags: Tag[] = [];
-	
-	for (const item of backlog.backlogItems) {
-		for (const tag of item.tags) {
-			if (!backlogTags.some(backlogTag => backlogTag.id === tag.id)) {
-				backlogTags.push(tag);
-			}
-		}
-	}
-	
-	return backlogTags;
-}
-
-async function fetchGenres(artifactType: ArtifactType) {
-	if (artifactType === ArtifactType.ANIME) {
-		return await AnimeDB.getGenreDefinitions();
-	}
-	else if (artifactType === ArtifactType.GAME) {
-		return await GameDB.getGenreDefinitions();
-	} 
-	else if (artifactType === ArtifactType.MOVIE) {
-		return await MovieDB.getGenreDefinitions();
-	}
-	else if (artifactType === ArtifactType.TVSHOW) {
-		return await TvshowDB.getGenreDefinitions();
-	}
-	return [];
-}
-
-async function fetchPlatforms(artifactType: ArtifactType) {
-	if (artifactType === ArtifactType.GAME) {
-		return await GameDB.getAllPlatforms();
-	} 
-	return [];
-}

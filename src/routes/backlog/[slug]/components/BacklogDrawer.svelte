@@ -27,7 +27,6 @@
     // Event Callbacks
     export let onMoveBacklogItem: (srcRank: number, targetRank: number) => Promise<void>;
     export let onFetchPrices: () => Promise<void>;
-    export let onAddBacklogItem: ((artifactId: number) => Promise<void>) | undefined = undefined;
 </script>
 
 <Drawer
@@ -52,7 +51,6 @@
         <BacklogDrawerTabAdd
             bind:selectedTab={$pageStore.selectedTab}
             {canEdit}
-            {onAddBacklogItem}
         />
         <BacklogDrawerTabOrder
             bind:selectedTab={$pageStore.selectedTab}

@@ -2,7 +2,7 @@ import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { ArtifactType } from '$lib/model/Artifact';
 import { Game } from '$lib/model/game/Game';
 import { BacklogItem } from '$lib/model/BacklogItem';
-import { Backlog, BacklogRankingType } from '$lib/model/Backlog';
+import { Backlog, BacklogRankingType, BacklogType } from '$lib/model/Backlog';
 import * as ArtifactService from '$lib/services/ArtifactService';
 import { get } from 'svelte/store';
 import { backlogStore } from '../../routes/backlog/[slug]/stores/BacklogStore';
@@ -21,7 +21,7 @@ describe('OrderByFightStore', () => {
     const mockBacklogItem2 = new BacklogItem(2, 1600, Date.now(), mockGame2, [new Tag('tag2', TagType.DEFAULT)]);
     
     // Mock Backlog
-    const mockBacklog = new Backlog(1, 1, BacklogRankingType.RANK, 'Test Backlog', ArtifactType.GAME);
+    const mockBacklog = new Backlog(1, 1, BacklogType.STANDARD, BacklogRankingType.RANK, 'Test Backlog', ArtifactType.GAME);
     mockBacklog.backlogItems = [mockBacklogItem1, mockBacklogItem2];
 
     beforeEach(() => {
@@ -63,7 +63,7 @@ describe('OrderByFightStore', () => {
         });
 
         it('should throw error when backlog has less than 2 items', async () => {
-            const singleItemBacklog = new Backlog(1, 1, BacklogRankingType.RANK, 'Test Backlog', ArtifactType.GAME);
+            const singleItemBacklog = new Backlog(1, 1, BacklogType.STANDARD, BacklogRankingType.RANK, 'Test Backlog', ArtifactType.GAME);
             singleItemBacklog.backlogItems = [mockBacklogItem1];
             backlogStore.set({ 
                 backlog: singleItemBacklog,
@@ -128,7 +128,7 @@ describe('OrderByFightStore', () => {
             const mockBacklogItem1WithElo = new BacklogItem(1, 1500, Date.now(), mockGame1, [new Tag('tag1', TagType.DEFAULT)]);
             const mockBacklogItem2WithElo = new BacklogItem(2, 1550, Date.now(), mockGame2, [new Tag('tag2', TagType.DEFAULT)]);
             
-            const backlogWithElo = new Backlog(1, 1, BacklogRankingType.ELO, 'Test Backlog', ArtifactType.GAME);
+            const backlogWithElo = new Backlog(1, 1, BacklogType.STANDARD, BacklogRankingType.ELO, 'Test Backlog', ArtifactType.GAME);
             backlogWithElo.backlogItems = [mockBacklogItem1WithElo, mockBacklogItem2WithElo];
             backlogStore.set({ 
                 backlog: backlogWithElo,
@@ -152,7 +152,7 @@ describe('OrderByFightStore', () => {
             const mockBacklogItem1WithElo = new BacklogItem(1, 1500, Date.now(), mockGame1, [new Tag('tag1', TagType.DEFAULT)]);
             const mockBacklogItem2WithElo = new BacklogItem(2, 2500, Date.now(), mockGame2, [new Tag('tag2', TagType.DEFAULT)]); // ELO difference > 100
             
-            const backlogWithElo = new Backlog(1, 1, BacklogRankingType.ELO, 'Test Backlog', ArtifactType.GAME);
+            const backlogWithElo = new Backlog(1, 1, BacklogType.STANDARD, BacklogRankingType.ELO, 'Test Backlog', ArtifactType.GAME);
             backlogWithElo.backlogItems = [mockBacklogItem1WithElo, mockBacklogItem2WithElo];
 
             backlogStore.set({

@@ -38,11 +38,15 @@ export class TvshowDB {
     static async getTvshows(page: number, pageSize: number, search: string = ''): Promise<Tvshow[]> {
         return await ArtifactDB.getArtifacts(ArtifactType.TVSHOW, page, pageSize, search).then((rows: IArtifactDB[]) => {
             const tvshows: Tvshow[] = rows.map((row: IArtifactDB) => {
-                const releaseDate = new Date(parseInt(row.releaseDate, 10));
-                return new Tvshow(row.id, row.title, row.type, releaseDate, row.duration);
+                return TvshowDB.deserialize(row);
             });
             return tvshows;
         });
+    }
+
+    static deserialize(artifactJSON: IArtifactDB): Tvshow {
+        const releaseDate = new Date(parseInt(artifactJSON.releaseDate, 10));
+        return new Tvshow(artifactJSON.id, artifactJSON.title, artifactJSON.type, releaseDate, artifactJSON.duration);
     }
 
     // ========================================
@@ -130,41 +134,6 @@ export class TvshowDB {
             tvshow.ratings = await RatingDB.getRatings(row.artifactId);
             const tags = await BacklogItemDB.getTags(row.backlogId, ArtifactType.TVSHOW, row.artifactId);
             return new BacklogItem(row.rank, row.elo, row.dateAdded, tvshow, tags);
-        }));
-
-        return backlogItems;
-    }
-
-    static async getVirtualWishlistItems(userId: number, backlogOrder: BacklogOrder): Promise<BacklogItem[]> {
-        const dbBacklockItems = await ArtifactDB.getVirtualWishlistItems(
-            userId,
-            ArtifactType.TVSHOW,
-            backlogOrder
-        );
-
-        const backlogItems: BacklogItem[] = await Promise.all(dbBacklockItems.map(async row => {
-            const releaseDate = new Date(parseInt(row.releaseDate, 10));
-            const tvshow = new Tvshow(row.artifactId, row.title, row.type, releaseDate, row.duration);
-            tvshow.genres = await TvshowDB.getAssignedGenres(row.artifactId);
-            tvshow.ratings = await RatingDB.getRatings(row.artifactId);
-            return new BacklogItem(row.rank, row.elo, row.dateAdded, tvshow, []);
-        }));
-
-        return backlogItems;
-    }
-
-    static async getVirtualFutureItems(userId: number): Promise<BacklogItem[]> {
-        const dbBacklockItems = await ArtifactDB.getVirtualFutureItems(
-            userId,
-            ArtifactType.TVSHOW
-        );
-
-        const backlogItems: BacklogItem[] = await Promise.all(dbBacklockItems.map(async row => {
-            const releaseDate = new Date(parseInt(row.releaseDate, 10));
-            const tvshow = new Tvshow(row.artifactId, row.title, row.type, releaseDate, row.duration);
-            tvshow.genres = await TvshowDB.getAssignedGenres(row.artifactId);
-            tvshow.ratings = await RatingDB.getRatings(row.artifactId);
-            return new BacklogItem(row.rank, row.elo, row.dateAdded, tvshow, []);
         }));
 
         return backlogItems;

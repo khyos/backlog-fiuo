@@ -1,6 +1,6 @@
 <script lang="ts">
     import { ArtifactType } from "$lib/model/Artifact";
-    import { BacklogRankingType } from "$lib/model/Backlog";
+    import { BacklogRankingType, BacklogType } from "$lib/model/Backlog";
     import { Alert, Button, Input, Label, Select } from "flowbite-svelte";
 
     let creationMessage: {
@@ -37,6 +37,7 @@
             method: "POST",
             body: JSON.stringify({
                 title: title,
+                type: BacklogType.STANDARD,
                 artifactType: selectedArtifactType,
                 rankingType: selectedRankingType
             }),
