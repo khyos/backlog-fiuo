@@ -70,8 +70,8 @@ describe('HLTB', () => {
         it('should extract duration from real HTML file', () => {
             const durationText = HLTB.extractDurationFromHtml(realHtmlContent);
             
-            // Should extract "44h 17m" from Main + Extras row (second row), Average column
-            expect(durationText).toBe('44h 17m');
+            // Should extract "14h 21m" from Main + Extras row (second row), Average column
+            expect(durationText).toBe('14h 21m');
         });
 
         it('should return null for HTML without time table', () => {
@@ -92,7 +92,7 @@ describe('HLTB', () => {
             const emptyTableHtml = `
                 <html>
                     <body>
-                        <table class="GameTimeTable_game_main_table__7uN3H">
+                        <table class="GameTimeTable-module__7uN3H_game_main_table">
                             <!-- Empty table -->
                         </table>
                     </body>
@@ -110,11 +110,11 @@ describe('HLTB', () => {
 
             const duration = await HLTB.getGameDuration('65945');
             
-            // Should extract "44h 17m" and parse it to seconds
-            // 44h = 44 * 3600 = 158400 seconds
-            // 17m = 17 * 60 = 1020 seconds
-            // Total = 159420 seconds
-            expect(duration).toBe(159420);
+            // Should extract "14h 21m" and parse it to seconds
+            // 14h = 14 * 3600 = 50400 seconds
+            // 21m = 21 * 60 = 1260 seconds
+            // Total = 51660 seconds
+            expect(duration).toBe(51660);
         });
 
         it('should return 0 when time table is not found', async () => {
