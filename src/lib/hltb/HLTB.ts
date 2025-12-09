@@ -31,8 +31,22 @@ export class HLTB {
     static extractDurationFromHtml(htmlContent: string): string | null {
         try {
             const dom = new JSDOM(htmlContent);
-            const timeTable = dom.window.document.querySelector('[class^=GameTimeTable_game_main_table]');
-            const durationText = timeTable?.children[1].children[1].children[2].textContent;
+            const timeTable = dom.window.document.querySelector('[class*="GameTimeTable-module"][class*="game_main_table"]');
+            const durationRows = timeTable?.children[1].children;
+
+            let main;
+            let mainAndExtras;
+            for (let i = 0; i < durationRows!.length; i++) {
+                const row = durationRows![i];
+                const label = row.children[0].textContent?.toLowerCase();
+                if (label === 'main story') {
+                    main = row.children[2].textContent?.trim();
+                } else if (label === 'main + extras') {
+                    mainAndExtras = row.children[2].textContent?.trim();
+                }
+            }
+
+            const durationText = mainAndExtras || main;
             
             // Clean up the DOM
             if (dom?.window) {
