@@ -3,14 +3,16 @@ import { BacklogOrder, BacklogRankingType } from "$lib/model/Backlog"
 import type { BacklogItem } from "$lib/model/BacklogItem";
 import type { Game } from "$lib/model/game/Game";
 
+const currentYear = new Date().getFullYear();
+
 const ANIME_RELEASE_DATE_MIN = 1917;
-const ANIME_RELEASE_DATE_MAX = 2025;
+const ANIME_RELEASE_DATE_MAX = currentYear;
 const GAME_RELEASE_DATE_MIN = 1970;
-const GAME_RELEASE_DATE_MAX = 2025;
+const GAME_RELEASE_DATE_MAX = currentYear;
 const MOVIE_RELEASE_DATE_MIN = 1895;
-const MOVIE_RELEASE_DATE_MAX = 2025;
+const MOVIE_RELEASE_DATE_MAX = currentYear;
 const TVSHOW_RELEASE_DATE_MIN = 1930;
-const TVSHOW_RELEASE_DATE_MAX = 2025;
+const TVSHOW_RELEASE_DATE_MAX = currentYear;
 const ANIME_MAX_DURATION = 400;
 const GAME_MAX_DURATION = 200;
 const MOVIE_MAX_DURATION = 240;

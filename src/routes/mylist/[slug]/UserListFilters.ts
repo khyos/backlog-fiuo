@@ -2,12 +2,14 @@ import { Artifact, ArtifactType } from "$lib/model/Artifact";
 import { UserListOrder } from "$lib/model/UserList";
 import type { Game } from "$lib/model/game/Game";
 
+const currentYear = new Date().getFullYear();
+
 const GAME_RELEASE_DATE_MIN = 1970;
-const GAME_RELEASE_DATE_MAX = 2025;
+const GAME_RELEASE_DATE_MAX = currentYear;
 const MOVIE_RELEASE_DATE_MIN = 1895;
-const MOVIE_RELEASE_DATE_MAX = 2025;
+const MOVIE_RELEASE_DATE_MAX = currentYear;
 const TVSHOW_RELEASE_DATE_MIN = 1930;
-const TVSHOW_RELEASE_DATE_MAX = 2025;
+const TVSHOW_RELEASE_DATE_MAX = currentYear;
 const GAME_MAX_DURATION = 200;
 const MOVIE_MAX_DURATION = 240;
 const TVSHOW_MAX_DURATION = 400;
