@@ -21,8 +21,8 @@ export class RottenTomatoes {
         let dom;
         try {
             dom = new JSDOM(response.body);
-            const criticsRatingText = dom.window.document.querySelector('rt-text[slot="criticsScore"]')?.textContent;
-            const audienceRatingText = dom.window.document.querySelector('rt-text[slot="audienceScore"]')?.textContent;
+            const criticsRatingText = dom.window.document.querySelector('media-scorecard>rt-text[slot="critics-score"]')?.textContent;
+            const audienceRatingText = dom.window.document.querySelector('media-scorecard>rt-text[slot="audience-score"]')?.textContent;
             const ratings: RottenTomatoesRatings = {};
             if (criticsRatingText) {
                 ratings.critics = Math.round(parseFloat(criticsRatingText.slice(0, -1)));
