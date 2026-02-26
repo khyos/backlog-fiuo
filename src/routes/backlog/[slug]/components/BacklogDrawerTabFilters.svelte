@@ -25,12 +25,15 @@
 
     const originalOrderByType = get(backlogStore).backlogFilters.orderBy.type;
 
-    const orderBacklogByItems = [
-        { value: originalOrderByType, name: BacklogOrderLabel[originalOrderByType] },
+    const orderBacklogByItems: { value: BacklogOrder, name: string }[] = [
         { value: BacklogOrder.DATE_ADDED, name: BacklogOrderLabel[BacklogOrder.DATE_ADDED] },
         { value: BacklogOrder.RATING, name: BacklogOrderLabel[BacklogOrder.RATING] },
         { value: BacklogOrder.DATE_RELEASE, name: BacklogOrderLabel[BacklogOrder.DATE_RELEASE] }
     ];
+
+    if (!orderBacklogByItems.some(item => item.value === originalOrderByType)) {
+        orderBacklogByItems.unshift({ value: originalOrderByType, name: BacklogOrderLabel[originalOrderByType] });
+    }
 
     let genreItems = genres.map((genre) => { return { value: genre.id, name: genre.title } }) ;
     let platformItems = platforms.map((platform) => { return { value: platform.id, name: platform.title } }) ;
