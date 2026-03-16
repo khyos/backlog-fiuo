@@ -22,12 +22,7 @@
         Hr,
         Spinner,
         Checkbox,
-
         Datepicker,
-
-        type DateOrRange
-
-
     } from "flowbite-svelte";
     import { 
         PlusOutline, 
@@ -221,25 +216,11 @@
         updateScore(value);
     }
 
-    function handleDateChange(date: DateOrRange) {
-        if (date instanceof Date) {
-            updateDate(date);
-        }
-    }
-
-    function handleStartDateChange(date: DateOrRange) {
-        if (date instanceof Date) {
-            updateStartDate(date);
-        }
-    }
-
-    function handleEndDateChange(date: DateOrRange) {
-        if (date instanceof Date) {
-            updateEndDate(date);
-        }
-    }
-
     let expandedChildren = new SvelteSet<number>();
+    
+    let movieDate: Date | undefined = undefined;
+    let startDate: Date | undefined = undefined;
+    let endDate: Date | undefined = undefined;
 
     function toggleChild(childId: number) {
         if (expandedChildren.has(childId)) {
@@ -248,6 +229,30 @@
             expandedChildren.add(childId);
         }
         expandedChildren = expandedChildren;
+    }
+
+    $: if (artifact.userInfo?.startDate && artifact.type === ArtifactType.MOVIE) {
+        movieDate = artifact.userInfo.startDate;
+    }
+
+    $: if (artifact.userInfo?.startDate && artifact.type !== ArtifactType.MOVIE) {
+        startDate = artifact.userInfo.startDate;
+    }
+
+    $: if (artifact.userInfo?.endDate && artifact.type !== ArtifactType.MOVIE) {
+        endDate = artifact.userInfo.endDate;
+    }
+
+    $: if (movieDate && movieDate !== artifact.userInfo?.startDate) {
+        updateDate(movieDate);
+    }
+
+    $: if (startDate && startDate !== artifact.userInfo?.startDate) {
+        updateStartDate(startDate);
+    }
+
+    $: if (endDate && endDate !== artifact.userInfo?.endDate) {
+        updateEndDate(endDate);
     }
 </script>
 
@@ -313,41 +318,38 @@
                     {#if artifact.type === ArtifactType.MOVIE}
                         <Datepicker
                             onclear={() => updateDate(null)}
-                            onapply={handleDateChange}
+                            bind:value={movieDate}
                             dateFormat= {{
                                 day: '2-digit',
                                 month: '2-digit',
                                 year: 'numeric'
                             }}
                             showActionButtons={true}
-                            autohide={false}
-                            placeholder="Pick a date"
-                            value={artifact.userInfo?.startDate || undefined} />
+                            autohide={true}
+                            placeholder="Pick a date" />
                     {:else}
                         <Datepicker
                             onclear={() => updateStartDate(null)}
-                            onapply={handleStartDateChange}
+                            bind:value={startDate}
                             dateFormat= {{
                                 day: '2-digit',
                                 month: '2-digit',
                                 year: 'numeric'
                             }}
                             showActionButtons={true}
-                            autohide={false}
-                            placeholder="Pick a start date"
-                            value={artifact.userInfo?.startDate || undefined} />
+                            autohide={true}
+                            placeholder="Pick a start date" />
                         <Datepicker
                             onclear={() => updateEndDate(null)}
-                            onapply={handleEndDateChange}
+                            bind:value={endDate}
                             dateFormat= {{
                                 day: '2-digit',
                                 month: '2-digit',
                                 year: 'numeric'
                             }}
                             showActionButtons={true}
-                            autohide={false}
-                            placeholder="Pick a end date"
-                            value={artifact.userInfo?.endDate || undefined} />
+                            autohide={true}
+                            placeholder="Pick a end date" />
                     {/if}
                 </div>
             {/if}
