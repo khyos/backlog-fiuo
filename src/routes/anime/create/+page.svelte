@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { onMount } from 'svelte';
     import { A, Alert, Button, Input, Label, Popover, Select, Spinner } from "flowbite-svelte";
     import { QuestionCircleOutline, SearchOutline } from "flowbite-svelte-icons";
 
@@ -188,6 +189,20 @@
             findAnimeInfo();
         }
     };
+
+    // Pre-fill SC id and title from URL query params (used by the SC import page)
+    onMount(() => {
+        const params = new URLSearchParams(window.location.search);
+        const preScId = params.get('scId');
+        const preTitle = params.get('title');
+        if (preScId) {
+            const input = document.getElementById('scId') as HTMLInputElement | null;
+            if (input) input.value = preScId;
+        }
+        if (preTitle) {
+            searchTerm = preTitle;
+        }
+    });
 </script>
 
 <div class="max-w-4xl mx-auto p-4">

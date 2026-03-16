@@ -188,7 +188,7 @@
                 {#if stat.averageScore !== null}
                     <div class="mb-4">
                         <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1">Avg score</p>
-                        <p class="text-lg font-medium dark:text-white">{stat.averageScore.toFixed(1)} / 10</p>
+                        <p class="text-lg font-medium dark:text-white">{stat.averageScore.toFixed(1)} / 100</p>
                     </div>
                 {/if}
 
