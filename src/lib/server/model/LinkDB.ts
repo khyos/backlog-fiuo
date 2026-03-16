@@ -30,6 +30,16 @@ export class LinkDB {
         return links;
     }
 
+    static async getArtifactByLink(type: LinkType, url: string): Promise<{ id: number; title: string; artifactType: string } | null> {
+        const row = await getDbRow<{ id: number; title: string; artifactType: string }>(
+            `SELECT artifact.id as id, artifact.title as title, artifact.type as artifactType
+             FROM link INNER JOIN artifact ON link.artifactId = artifact.id
+             WHERE link.type = ? AND link.url = ?`,
+            [type, url]
+        );
+        return row ?? null;
+    }
+
     static async createLinkTable() {
         await runDbQuery(`CREATE TABLE IF NOT EXISTS link (
             artifactId INTEGER NOT NULL,

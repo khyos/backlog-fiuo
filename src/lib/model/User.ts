@@ -11,7 +11,8 @@ export function getUserRights(role: UserRole) {
             return [
                 UserRights.CREATE_ARTIFACT, UserRights.DELETE_ARTIFACT, UserRights.EDIT_ARTIFACT,
                 UserRights.CREATE_BACKLOG, UserRights.EDIT_BACKLOG, UserRights.DELETE_BACKLOG,
-                UserRights.EDIT_ALL_BACKLOGS, UserRights.DELETE_ALL_BACKLOGS, UserRights.BOOTSTRAP
+                UserRights.EDIT_ALL_BACKLOGS, UserRights.DELETE_ALL_BACKLOGS, UserRights.BOOTSTRAP,
+                UserRights.SENSCRITIQUE_EXPORT
             ];
         case UserRole.CONTRIBUTOR:
             return [
@@ -38,7 +39,9 @@ export enum UserRights {
     EDIT_ALL_BACKLOGS = 'edit_all_backlogs',
     DELETE_ALL_BACKLOGS = 'delete_all_backlogs',
 
-    BOOTSTRAP = 'bootstrap'
+    BOOTSTRAP = 'bootstrap',
+
+    SENSCRITIQUE_EXPORT = 'senscritique_export'
 }
 
 export interface IUser {

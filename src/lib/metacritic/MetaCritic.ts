@@ -20,7 +20,7 @@ export class MetaCritic {
         let dom;
         try {
             dom = new JSDOM(response.body)
-            const ratingSpan = dom.window.document.querySelector('.product-score .c-siteReviewScore>span');
+            const ratingSpan = dom.window.document.querySelector('.hero-scores [data-testid=global-score-value]');
             const ratingText = ratingSpan?.textContent
             if (!ratingText) {
                 return null;
@@ -63,14 +63,14 @@ export class MetaCritic {
         try {
             dom = new JSDOM(response.body);
             const results: SearchResult[] = [];
-            const cards: NodeListOf<HTMLAnchorElement> = dom.window.document.querySelectorAll('.c-pageSiteSearch-results .g-grid-container>a');
+            const cards: NodeListOf<HTMLAnchorElement> = dom.window.document.querySelectorAll('.c-search-results .search-item>a');
             for (const card of cards) {
                 const nameContainer = card.querySelector('div:nth-child(2)>p');
                 const name = nameContainer?.innerHTML.trim();
                 if (!name) {
                     throw new Error('Name not found in Metacritic search result');
                 }
-                const date = card?.querySelector('div:nth-child(2)>span>span')?.innerHTML.trim();
+                const date = card?.querySelector('div:nth-child(2)>div .c-search-product-meta__release-date>span')?.innerHTML.trim();
                 results.push({
                     id: MetaCritic.getLastPart(card.href),
                     name: name,
