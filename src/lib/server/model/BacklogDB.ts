@@ -110,14 +110,19 @@ export class BacklogDB {
         }
         
         let backlogItems: BacklogItem[] = [];
-        if (artifactType === ArtifactType.ANIME) {
-            backlogItems = await AnimeDB.getBacklogItems(backlogId, rankingType, finalBacklogOrder);
-        } else if (artifactType === ArtifactType.GAME) {
-            backlogItems = await GameDB.getBacklogItems(backlogId, rankingType, finalBacklogOrder);
-        } else if (artifactType === ArtifactType.MOVIE){
-            backlogItems = await MovieDB.getBacklogItems(backlogId, rankingType, finalBacklogOrder);
-        } else if (artifactType === ArtifactType.TVSHOW){
-            backlogItems = await TvshowDB.getBacklogItems(backlogId, rankingType, finalBacklogOrder);
+        switch (artifactType) {
+            case ArtifactType.ANIME:
+                backlogItems = await AnimeDB.getBacklogItems(backlogId, rankingType, finalBacklogOrder);
+                break;
+            case ArtifactType.GAME:
+                backlogItems = await GameDB.getBacklogItems(backlogId, rankingType, finalBacklogOrder);
+                break;
+            case ArtifactType.MOVIE:
+                backlogItems = await MovieDB.getBacklogItems(backlogId, rankingType, finalBacklogOrder);
+                break;
+            case ArtifactType.TVSHOW:
+                backlogItems = await TvshowDB.getBacklogItems(backlogId, rankingType, finalBacklogOrder);
+                break;
         }
         return backlogItems;
     }
@@ -197,10 +202,10 @@ export class BacklogDB {
         }
         const backlog = await BacklogDB.getBacklogById(backlogId);
         if (!backlog) {
-            return new AuthorizationStatus(404, "Not authorized");
+            return new AuthorizationStatus(404, "Not found");
         }
         if (backlog.userId !== user.id) {
-            return new AuthorizationStatus(404, "Not authorized");
+            return new AuthorizationStatus(403, "Not authorized");
         }
         return new AuthorizationStatus(200, "OK");
     }
@@ -298,7 +303,7 @@ export class BacklogDB {
             artifactId INTEGER NOT NULL,
             dateAdded TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
             rank INTEGER NOT NULL,
-            elo INTERGER NOT NULL DEFAULT 1200,
+            elo INTEGER NOT NULL DEFAULT 1200,
             PRIMARY KEY (backlogId, artifactId)
         )`);
     }

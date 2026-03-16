@@ -17,7 +17,7 @@ import { TMDB } from "$lib/tmdb/TMDB";
 
 export class DBUtil {
     static async initDb(): Promise<void> {
-        createDatabase();
+        await createDatabase();
         await Promise.all([
             ArtifactDB.createArtifactTable(),
             ArtifactDB.createUserArtifactTable(),

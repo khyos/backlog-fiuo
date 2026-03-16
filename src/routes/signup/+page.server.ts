@@ -45,7 +45,7 @@ export const actions: Actions = {
 			path: '/',
 			secure: true,
 			sameSite: 'strict',
-			maxAge: 60 * 60 * 24 // 1 day
+			maxAge: 30 * 60 * 60 * 24 // 30 days
 		});
 
 		throw redirect(302, '/');

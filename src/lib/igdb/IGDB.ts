@@ -11,7 +11,7 @@ export type IGDBSearchGameResult = {
 }
 
 export type IGDBGame = {
-    alertnative_names: number[]
+    alternative_names: number[]
     cover: number
     first_release_date: number
     genres: number[]
@@ -62,7 +62,7 @@ export class IGDB {
             body: `fields name,url,first_release_date; search "${query}";`
         });
         const jsonReponse: IGDBSearchGameResult[] = await response.json();
-        jsonReponse.map((game) => {
+        jsonReponse.forEach((game) => {
             if (game.first_release_date) {
                 game.date = new Date(game.first_release_date * 1000).getFullYear().toString();
             }

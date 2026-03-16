@@ -633,7 +633,7 @@ describe('BacklogDB', () => {
             
             const authStatus = await BacklogDB.canEditBacklog(user2WithRights, testBacklogId);
             
-            expect(authStatus.status).toBe(404);
+            expect(authStatus.status).toBe(403);
             expect(authStatus.message).toBe('Not authorized');
         });
 
@@ -643,7 +643,7 @@ describe('BacklogDB', () => {
             const authStatus = await BacklogDB.canEditBacklog(userWithRights, 999);
             
             expect(authStatus.status).toBe(404);
-            expect(authStatus.message).toBe('Not authorized');
+            expect(authStatus.message).toBe('Not found');
         });
     });
 

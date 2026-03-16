@@ -61,6 +61,8 @@
             </DropdownHeader>
             <DropdownGroup>
                 <DropdownItem href="/profile">Profile</DropdownItem>
+                <DropdownItem href="/stats">Stats</DropdownItem>
+                <DropdownItem href="/anomalies">Anomalies</DropdownItem>
                 <DropdownItem href="/signout">Sign out</DropdownItem>
             </DropdownGroup>
         {:else}

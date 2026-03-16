@@ -13,6 +13,23 @@ export interface IGenreDB {
     title: string;
 }
 
+const ALLOWED_GENRE_TABLES = new Set([
+    'anime_genre',
+    'anime_anime_genre',
+    'game_genre',
+    'game_game_genre',
+    'movie_genre',
+    'movie_movie_genre',
+    'tvshow_genre',
+    'tvshow_tvshow_genre',
+]);
+
+function assertValidTableName(tableName: string): void {
+    if (!ALLOWED_GENRE_TABLES.has(tableName)) {
+        throw new Error(`Invalid table name: ${tableName}`);
+    }
+}
+
 export class ArtifactDB {
     // ========================================
     // Basic Getters
@@ -39,15 +56,19 @@ export class ArtifactDB {
     // Genre Methods
     // ========================================
     static async getGenreDefinitions(genreTableName: string): Promise<Genre[]> {
+        assertValidTableName(genreTableName);
         const rows = await getDbRows<IGenreDB>(`SELECT * FROM ${genreTableName} ORDER BY title`);
         return rows.map((row: IGenreDB) => new Genre(row.id, row.title));
     }
 
     static async addGenreDefinition(genreId: number, title: string, genreTableName: string): Promise<void> {
+        assertValidTableName(genreTableName);
         return await runDbQuery(`INSERT OR IGNORE INTO ${genreTableName} (id, title) VALUES (?, ?)`, [genreId, title]);
     }
 
     static async getAssignedGenres(artifactId: number, genreTableName: string, genreMapTableName: string): Promise<Genre[]> {
+        assertValidTableName(genreTableName);
+        assertValidTableName(genreMapTableName);
         const rows = await getDbRows<IGenreDB>(`SELECT ${genreTableName}.id as id, title FROM ${genreMapTableName}
                     INNER JOIN ${genreTableName} ON ${genreMapTableName}.genreId = ${genreTableName}.id
                     WHERE artifactId = ?`, [artifactId]);
@@ -55,6 +76,7 @@ export class ArtifactDB {
     }
 
     static async assignGenre(artifactId: number, genreId: number, genreMapTableName: string): Promise<void> {
+        assertValidTableName(genreMapTableName);
         return await runDbQuery(`INSERT OR IGNORE INTO ${genreMapTableName} (artifactId, genreId) VALUES (?, ?)`, [artifactId, genreId]);
     }
 
@@ -79,6 +101,7 @@ export class ArtifactDB {
     }
 
     static async unassignGenre(artifactId: number, genreId: number, genreMapTableName: string): Promise<void> {
+        assertValidTableName(genreMapTableName);
         return await runDbQuery(`DELETE FROM ${genreMapTableName} WHERE artifactId = ? AND genreId = ?`, [artifactId, genreId]);
     }
 
@@ -372,6 +395,7 @@ export class ArtifactDB {
         artifact: Artifact,
         genreMapTableName: string
     ): Promise<void> {
+        assertValidTableName(genreMapTableName);
         const id = artifact.id;
         const artifactIdsToDelete = artifact.getArtifactIds();
         const questionMarks = new Array(artifactIdsToDelete.length).fill('?').join(',');
@@ -483,6 +507,7 @@ export class ArtifactDB {
     }
 
     static async createGenreTable(genreTableName: string) {
+        assertValidTableName(genreTableName);
         await runDbQuery(`CREATE TABLE IF NOT EXISTS ${genreTableName} (
             id INTEGER PRIMARY KEY,
             title TEXT NOT NULL
@@ -490,6 +515,7 @@ export class ArtifactDB {
     }
 
     static async createGenreMapTable(genreMapTableName: string) {
+        assertValidTableName(genreMapTableName);
         await runDbQuery(`CREATE TABLE IF NOT EXISTS ${genreMapTableName} (
             artifactId INTEGER NOT NULL,
             genreId INTEGER NOT NULL,

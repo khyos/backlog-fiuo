@@ -23,15 +23,15 @@ export async function GET({ url }: RequestEvent) {
 }
 
 const getURLFromId = async function(artifactType: ArtifactType | null, type: LinkType, url: string): Promise<string> {
-    let finalUrl = url;
     switch (type) {
         case LinkType.HLTB:
             return `https://howlongtobeat.com/game?id=${url}`;
         case LinkType.IGDB:
             return await IGDB.getUrlFromId(url);
-        case LinkType.ITAD:
-            finalUrl = await ITAD.getSlugFromId(url);
+        case LinkType.ITAD: {
+            const finalUrl = await ITAD.getSlugFromId(url);
             return `https://isthereanydeal.com/game/${finalUrl}`;
+        }
         case LinkType.MAL:
             return `https://myanimelist.net/anime/${url}`;
         case LinkType.METACRITIC:

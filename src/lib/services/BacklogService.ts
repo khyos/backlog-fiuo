@@ -3,13 +3,16 @@ import type { Backlog } from "$lib/model/Backlog";
 
 export async function fetchBacklog(backlogId: number) {
     const response = await fetch(`/api/backlog/${backlogId}`);
+    if (!response.ok) {
+        throw new Error('Error while Fetching Backlog');
+    }
     return await response.json();
 };
 
 export async function fetchBacklogs(artifactType: ArtifactType): Promise<Backlog[]> {
     const response = await fetch(`/api/backlog/list?artifactType=${artifactType}`);
     if (!response.ok) {
-        throw new Error('Error while Fetching Backlog List');
+        throw new Error('Error while Fetching Backlogs');
     }
     return await response.json();
 };
