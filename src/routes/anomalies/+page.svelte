@@ -1,8 +1,9 @@
 <script lang="ts">
-    import { Badge, Table, TableBody, TableBodyCell, TableBodyRow, TableHead, TableHeadCell } from "flowbite-svelte";
+    import { Badge, Table, TableBody, TableBodyCell, TableBodyRow, TableHead, TableHeadCell, Button } from "flowbite-svelte";
     import { ExclamationCircleOutline } from "flowbite-svelte-icons";
     import type { PageData } from "./$types";
     import { ArtifactType } from "$lib/model/Artifact";
+    import { UserArtifactStatus } from "$lib/model/UserArtifact";
 
     export let data: PageData;
 
@@ -27,10 +28,33 @@
         [ArtifactType.ANIME]:  'anime'
     };
 
+    let updatingId: number | null = null;
+
     function fmtDate(d: string | null): string {
         if (!d) return '—';
         const parsed = new Date(d);
         return isNaN(parsed.getTime()) ? '—' : parsed.toLocaleDateString();
+    }
+
+    async function setAsFinished(artifactId: number) {
+        updatingId = artifactId;
+        try {
+            const response = await fetch('/api/artifact/userStatus', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ artifactIds: [artifactId], status: UserArtifactStatus.FINISHED })
+            });
+            
+            if (response.ok) {
+                // Remove the entry from the data
+                data.groups = data.groups.map(g => ({
+                    ...g,
+                    entries: g.entries.filter(e => e.artifactId !== artifactId)
+                })).filter(g => g.entries.length > 0);
+            }
+        } finally {
+            updatingId = null;
+        }
     }
 </script>
 
@@ -63,6 +87,9 @@
                             <TableHeadCell>Score</TableHeadCell>
                             <TableHeadCell>Start date</TableHeadCell>
                             <TableHeadCell>End date</TableHeadCell>
+                            {#if group.key === 'end_date_not_finished'}
+                                <TableHeadCell>Action</TableHeadCell>
+                            {/if}
                         </TableHead>
                         <TableBody>
                             {#each group.entries as entry (entry.artifactId + group.key)}
@@ -76,6 +103,18 @@
                                     <TableBodyCell>{entry.score ?? '—'}</TableBodyCell>
                                     <TableBodyCell>{fmtDate(entry.startDate)}</TableBodyCell>
                                     <TableBodyCell>{fmtDate(entry.endDate)}</TableBodyCell>
+                                    {#if group.key === 'end_date_not_finished'}
+                                        <TableBodyCell>
+                                            <Button 
+                                                size="xs" 
+                                                color="green"
+                                                disabled={updatingId === entry.artifactId}
+                                                on:click={() => setAsFinished(entry.artifactId)}
+                                            >
+                                                {updatingId === entry.artifactId ? 'Setting...' : 'Set Finished'}
+                                            </Button>
+                                        </TableBodyCell>
+                                    {/if}
                                 </TableBodyRow>
                             {/each}
                         </TableBody>

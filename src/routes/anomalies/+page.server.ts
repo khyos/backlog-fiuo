@@ -48,23 +48,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	const groups: AnomalyGroup[] = [
 		{
-			key: 'finished_no_date',
-			label: 'Finished — no end date',
-			description: 'Status is "Finished" but no end date is recorded.',
-			entries: all.filter(e =>
-				e.status === UserArtifactStatus.FINISHED && !e.endDate
-			)
-		},
-		{
-			key: 'finished_no_score',
-			label: 'Finished or dropped — no score',
-			description: 'Status is "Finished" or "Dropped" but no score has been given.',
-			entries: all.filter(e =>
-				(e.status === UserArtifactStatus.FINISHED || e.status === UserArtifactStatus.DROPPED) &&
-				(e.score === null || e.score === 0)
-			)
-		},
-		{
 			key: 'end_date_not_finished',
 			label: 'Has end date — not finished or dropped',
 			description: 'An end date is set but status is neither "Finished" nor "Dropped".',
@@ -87,6 +70,23 @@ export const load: PageServerLoad = async ({ locals }) => {
 			label: 'Has score — no status',
 			description: 'A score is recorded but no status has been set.',
 			entries: all.filter(e => !e.status && e.score !== null && e.score > 0)
+		},
+		{
+			key: 'finished_no_date',
+			label: 'Finished — no end date',
+			description: 'Status is "Finished" but no end date is recorded.',
+			entries: all.filter(e =>
+				e.status === UserArtifactStatus.FINISHED && !e.endDate
+			)
+		},
+		{
+			key: 'finished_no_score',
+			label: 'Finished or dropped — no score',
+			description: 'Status is "Finished" or "Dropped" but no score has been given.',
+			entries: all.filter(e =>
+				(e.status === UserArtifactStatus.FINISHED || e.status === UserArtifactStatus.DROPPED) &&
+				(e.score === null || e.score === 0)
+			)
 		}
 	];
 
