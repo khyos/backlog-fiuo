@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { Badge, Table, TableBody, TableBodyCell, TableBodyRow, TableHead, TableHeadCell, Button } from "flowbite-svelte";
+    import { Badge, Table, TableBody, TableBodyCell, TableBodyRow, TableHead, TableHeadCell } from "flowbite-svelte";
     import { ExclamationCircleOutline } from "flowbite-svelte-icons";
     import type { PageData } from "./$types";
     import { ArtifactType } from "$lib/model/Artifact";
@@ -105,14 +105,13 @@
                                     <TableBodyCell>{fmtDate(entry.endDate)}</TableBodyCell>
                                     {#if group.key === 'end_date_not_finished'}
                                         <TableBodyCell>
-                                            <Button 
-                                                size="xs" 
-                                                color="green"
+                                            <button 
+                                                class="inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
                                                 disabled={updatingId === entry.artifactId}
                                                 on:click={() => setAsFinished(entry.artifactId)}
                                             >
                                                 {updatingId === entry.artifactId ? 'Setting...' : 'Set Finished'}
-                                            </Button>
+                                            </button>
                                         </TableBodyCell>
                                     {/if}
                                 </TableBodyRow>
