@@ -22,13 +22,9 @@ export class UserDB {
 
     static async signIn(username: string, password: string): Promise<string> {
         const row = await getDbRow<UserInDB>(`SELECT * FROM user WHERE username = ?`, [username]);
-        if (!row) {
-            throw new Error("Invalid username");
-        }
-
-        const isValid = await bcrypt.compare(password, row.password);
-        if (!isValid) {
-            throw new Error("Invalid password");
+        const isValid = row ? await bcrypt.compare(password, row.password) : false;
+        if (!row || !isValid) {
+            throw new Error("Invalid credentials");
         }
 
         return jwt.sign({ id: row.username }, JWT_ACCESS_SECRET);

@@ -32,11 +32,6 @@ export const BacklogOrderLabel = {
 
 export const SERIALIZE_TYPE = 'Backlog';
 
-export interface IBacklogDB {
-    id: number
-    title: string
-}
-
 export interface IBacklog extends ISerializable {
     id: number
     userId: number
