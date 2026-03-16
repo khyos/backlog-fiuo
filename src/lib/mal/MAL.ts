@@ -94,10 +94,11 @@ export class MAL {
     }
 
     static async getAnimeEpisodes(animeId: string): Promise<MALAnimeEpisode[]> {
-        let hasNextPage = true;
         let page = 1;
         let episodes: MALAnimeEpisode[] = [];
-        do {
+        let hasNextPage = true;
+
+        while (hasNextPage) {
             const pageData = await this.getAnimeEpisodesPage(animeId, page);
             if (pageData && pageData.episodes.length > 0) {
                 episodes = episodes.concat(pageData.episodes);
@@ -106,7 +107,7 @@ export class MAL {
             } else {
                 hasNextPage = false;
             }
-        } while (hasNextPage);
+        }
         return episodes;
     }
 
