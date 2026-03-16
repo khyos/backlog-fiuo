@@ -221,24 +221,6 @@
         updateScore(value);
     }
 
-    function handleDateChange(date: DateOrRange) {
-        if (date instanceof Date) {
-            updateDate(date);
-        }
-    }
-
-    function handleStartDateChange(date: DateOrRange) {
-        if (date instanceof Date) {
-            updateStartDate(date);
-        }
-    }
-
-    function handleEndDateChange(date: DateOrRange) {
-        if (date instanceof Date) {
-            updateEndDate(date);
-        }
-    }
-
     let expandedChildren = new SvelteSet<number>();
     
     let movieDate: Date | undefined = undefined;
