@@ -49,20 +49,20 @@ const setLinkInfo = async (movieId: number, type: LinkType, url: string): Promis
     if (type === LinkType.SENSCRITIQUE) {
         const scRating = await SensCritique.getMovieRating(url);
         if (scRating) {
-            await RatingDB.addRating(movieId, RatingType.SENSCRITIQUE, scRating);
+            await RatingDB.updateRating(movieId, RatingType.SENSCRITIQUE, scRating);
         }
     } else if (type === LinkType.METACRITIC) {
         const mcRating = await MetaCritic.getMovieRating(url);
         if (mcRating) {
-            await RatingDB.addRating(movieId, RatingType.METACRITIC, mcRating);
+            await RatingDB.updateRating(movieId, RatingType.METACRITIC, mcRating);
         }
     } else if (type === LinkType.ROTTEN_TOMATOES) {
         const rtRatings = await RottenTomatoes.getMovieRatings(url);
         if (rtRatings.critics) {
-            await RatingDB.addRating(movieId, RatingType.ROTTEN_TOMATOES_CRITICS, rtRatings.critics);
+            await RatingDB.updateRating(movieId, RatingType.ROTTEN_TOMATOES_CRITICS, rtRatings.critics);
         }
         if (rtRatings.audience) {
-            await RatingDB.addRating(movieId, RatingType.ROTTEN_TOMATOES_AUDIENCE, rtRatings.audience);
+            await RatingDB.updateRating(movieId, RatingType.ROTTEN_TOMATOES_AUDIENCE, rtRatings.audience);
         }
     }
     return finalUrl;
