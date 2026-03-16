@@ -177,27 +177,27 @@ describe('UserDB', () => {
 
         test('should throw error for invalid username', async () => {
             await expect(UserDB.signIn('nonexistent', 'anypassword'))
-                .rejects.toThrow('Invalid username');
+                .rejects.toThrow('Invalid credentials');
         });
 
         test('should throw error for invalid password', async () => {
             await expect(UserDB.signIn('validuser', 'wrongpassword'))
-                .rejects.toThrow('Invalid password');
+                .rejects.toThrow('Invalid credentials');
         });
 
         test('should be case sensitive for username', async () => {
             await expect(UserDB.signIn('ValidUser', 'correctpassword'))
-                .rejects.toThrow('Invalid username');
+                .rejects.toThrow('Invalid credentials');
         });
 
         test('should handle empty username', async () => {
             await expect(UserDB.signIn('', 'anypassword'))
-                .rejects.toThrow('Invalid username');
+                .rejects.toThrow('Invalid credentials');
         });
 
         test('should handle empty password', async () => {
             await expect(UserDB.signIn('validuser', ''))
-                .rejects.toThrow('Invalid password');
+                .rejects.toThrow('Invalid credentials');
         });
 
         test('should handle special characters in credentials', async () => {
@@ -240,7 +240,7 @@ describe('UserDB', () => {
             
             for (const wrongPassword of wrongPasswords) {
                 await expect(UserDB.signIn('testuser', wrongPassword))
-                    .rejects.toThrow('Invalid password');
+                    .rejects.toThrow('Invalid credentials');
             }
         });
 

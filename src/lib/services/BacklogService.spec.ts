@@ -16,7 +16,7 @@ describe('BacklogService', () => {
         it('should fetch a backlog by id', async () => {
             const mockBacklog = { id: 1, name: 'Test Backlog' };
             mockJson.mockResolvedValue(mockBacklog);
-            mockFetch.mockResolvedValue({ json: mockJson });
+            mockFetch.mockResolvedValue({ ok: true, json: mockJson });
 
             const result = await fetchBacklog(1);
 
@@ -40,7 +40,7 @@ describe('BacklogService', () => {
         it('should throw error when response is not ok', async () => {
             mockFetch.mockResolvedValue({ ok: false });
 
-            await expect(fetchBacklogs(ArtifactType.GAME)).rejects.toThrow('Error while Fetching Backlog List');
+            await expect(fetchBacklogs(ArtifactType.GAME)).rejects.toThrow('Error while Fetching Backlogs');
         });
     });
 
