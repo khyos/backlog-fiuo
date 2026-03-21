@@ -233,7 +233,7 @@
             <Input
                 id="search-field"
                 class="ps-9"
-                placeholder="Search for a game" 
+                placeholder="Search for a movie" 
                 autocomplete="off"
                 bind:value={searchTerm}
                 onkeyup={handleKeyUp}>

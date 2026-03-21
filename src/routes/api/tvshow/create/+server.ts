@@ -10,6 +10,7 @@ import { error, json } from "@sveltejs/kit";
 import type { RequestEvent } from "./$types";
 import { TvshowDB } from "$lib/server/model/tvshow/TvshowDB";
 import { ArtifactDB } from "$lib/server/model/ArtifactDB";
+import { ArtifactType } from "$lib/model/Artifact";
 
 export async function POST({ request, locals }: RequestEvent) {
     const user = User.deserialize(locals.user);
@@ -20,7 +21,7 @@ export async function POST({ request, locals }: RequestEvent) {
     if (!tmdbId) {
         error(500, 'No TMDB ID provided');
     }
-    const alreadyExists = await LinkDB.exists(LinkType.TMDB, tmdbId);
+    const alreadyExists = await LinkDB.exists(LinkType.TMDB, tmdbId, ArtifactType.TVSHOW);
     if (alreadyExists) {
         error(500, 'TV Show already exists in list');
     }

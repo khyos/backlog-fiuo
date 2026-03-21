@@ -146,12 +146,12 @@ describe('LinkDB', () => {
             const testUrl = 'https://store.steampowered.com/app/123456';
             await LinkDB.addLink(artifactId, LinkType.STEAM, testUrl);
 
-            const exists = await LinkDB.exists(LinkType.STEAM, testUrl);
+            const exists = await LinkDB.exists(LinkType.STEAM, testUrl, ArtifactType.GAME);
             expect(exists).toBe(true);
         });
 
         test('should return false for non-existing link', async () => {
-            const exists = await LinkDB.exists(LinkType.STEAM, 'https://store.steampowered.com/app/nonexistent');
+            const exists = await LinkDB.exists(LinkType.STEAM, 'https://store.steampowered.com/app/nonexistent', ArtifactType.GAME);
             expect(exists).toBe(false);
         });
 
@@ -167,7 +167,7 @@ describe('LinkDB', () => {
             const testUrl = 'https://store.steampowered.com/app/123456';
             await LinkDB.addLink(artifactId, LinkType.STEAM, testUrl);
 
-            const exists = await LinkDB.exists(LinkType.METACRITIC, testUrl);
+            const exists = await LinkDB.exists(LinkType.METACRITIC, testUrl, ArtifactType.GAME);
             expect(exists).toBe(false);
         });
     });

@@ -12,6 +12,7 @@ import { GameDB } from "$lib/server/model/game/GameDB";
 import { Steam } from "$lib/steam/Steam";
 import { error, json } from "@sveltejs/kit";
 import type { RequestEvent } from "./$types";
+import { ArtifactType } from "$lib/model/Artifact";
 
 export async function POST({ request, locals }: RequestEvent) {
     const user = User.deserialize(locals.user);
@@ -22,7 +23,7 @@ export async function POST({ request, locals }: RequestEvent) {
     if (!igdbId) {
         error(500, 'No IGDB ID provided');
     }
-    const alreadyExists = await LinkDB.exists(LinkType.IGDB, igdbId);
+    const alreadyExists = await LinkDB.exists(LinkType.IGDB, igdbId, ArtifactType.GAME);
     if (alreadyExists) {
         error(500, 'Game already exists in list');
     }
