@@ -1,5 +1,5 @@
 <script lang="ts">
-    export let bars: { label: string; value: number }[] = [];
+    export let bars: { label: string; showLabel: boolean; value: number }[] = [];
     export let color = '#3b82f6';
 
     const W = 400;
@@ -47,6 +47,7 @@
                 <title>{bar.label}: {bar.value}</title>
             </rect>
         {/if}
+        {#if bar.showLabel}
         <text
             x={lx(i)}
             y={H - 4}
@@ -54,5 +55,6 @@
             font-size="8"
             class="fill-gray-500 dark:fill-gray-400"
         >{bar.label}</text>
+        {/if}
     {/each}
 </svg>

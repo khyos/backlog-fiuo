@@ -18,7 +18,8 @@
         week: 'Week',
         month: 'Month',
         year: 'Year',
-        decade: 'Decade'
+        decade: 'Decade',
+        'all-time': 'All Time'
     };
 
     const ARTIFACT_LABELS: Record<string, string> = {
@@ -53,10 +54,11 @@
     };
 
     const SUB_PERIOD_LABEL: Record<Period, string> = {
-        week:   'per day',
-        month:  'per day',
-        year:   'per month',
-        decade: 'per year'
+        week:      'per day',
+        month:     'per day',
+        year:      'per month',
+        decade:    'per year',
+        'all-time': 'per year'
     };
 
     function selectPeriod(p: Period) {
@@ -97,17 +99,19 @@
 
             const bars = subPeriods.map(sp => ({
                 label: sp.label,
+                showLabel: sp.displayLabel ?? false,
                 value: countInPeriod(entries, type, sp.start, sp.end)
             }));
 
             // Episode stats for anime / tvshow
             const epType = EPISODE_TYPE[type];
             let episodeCount: number | null = null;
-            let episodeBars: { label: string; value: number }[] | null = null;
+            let episodeBars: { label: string; showLabel: boolean; value: number }[] | null = null;
             if (epType) {
                 episodeCount = countInPeriod(entries, epType, start, end);
                 episodeBars = subPeriods.map(sp => ({
                     label: sp.label,
+                    showLabel: sp.displayLabel ?? false,
                     value: countInPeriod(entries, epType, sp.start, sp.end)
                 }));
             }
@@ -116,7 +120,14 @@
         });
     }
 
-    $: bounds     = getPeriodBounds(selectedPeriod, offset);
+    $: earliestDate = data.entries
+        .filter(e => e.startDate)
+        .reduce((min, e) => {
+            const ts = Date.parse(e.startDate!);
+            return ts < min ? ts : min;
+        }, Date.now());
+
+    $: bounds     = getPeriodBounds(selectedPeriod, offset, earliestDate);
     $: subPeriods = getSubPeriods(selectedPeriod, bounds);
     $: stats      = computeStats(data.entries, bounds.start, bounds.end, subPeriods);
     $: totalFinished = stats.reduce((acc, s) => acc + s.finishedCount, 0);

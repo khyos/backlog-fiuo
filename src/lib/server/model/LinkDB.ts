@@ -1,3 +1,4 @@
+import type { ArtifactType } from "$lib/model/Artifact";
 import { Link, LinkType, type ILinkDB } from "$lib/model/Link";
 import { getDbRow, getDbRows, runDbQuery } from "$lib/server/database";
 
@@ -10,8 +11,11 @@ export class LinkDB {
         return await runDbQuery(`UPDATE link SET url = ? WHERE artifactId = ?  AND type = ?`, [url, artifactId, type]);
     }
 
-    static async exists(type: LinkType, url: string): Promise<boolean> {
-        const row = await getDbRow<ILinkDB>(`SELECT * FROM link WHERE type = ? AND url = ?`, [type, url]);
+    static async exists(type: LinkType, url: string, artifactType: ArtifactType): Promise<boolean> {
+        const row = await getDbRow<ILinkDB>(
+            `SELECT * FROM link INNER JOIN artifact ON link.artifactId = artifact.id
+            WHERE link.type = ? AND link.url = ? AND artifact.type = ?`,
+            [type, url, artifactType]);
         return !!row;
     }
 

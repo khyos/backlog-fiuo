@@ -1,4 +1,4 @@
-export type Period = 'week' | 'month' | 'year' | 'decade';
+export type Period = 'week' | 'month' | 'year' | 'decade' | 'all-time';
 
 export type PeriodBounds = {
     start: number;  // inclusive timestamp ms
@@ -7,7 +7,7 @@ export type PeriodBounds = {
     canGoForward: boolean;
 };
 
-export function getPeriodBounds(period: Period, offset: number): PeriodBounds {
+export function getPeriodBounds(period: Period, offset: number, earliestDate?: number): PeriodBounds {
     const now = new Date();
 
     switch (period) {
@@ -50,6 +50,14 @@ export function getPeriodBounds(period: Period, offset: number): PeriodBounds {
                 canGoForward: offset < 0
             };
         }
+        case 'all-time': {
+            return {
+                start: earliestDate ?? 0,
+                end: now.getTime(),
+                label: 'All Time',
+                canGoForward: false
+            };
+        }
     }
 }
 
@@ -61,7 +69,7 @@ function formatWeekLabel(monday: Date, sunday: Date): string {
     return `${monday.toLocaleString('default', opts)} – ${sunday.toLocaleString('default', { ...opts, year: 'numeric' })}`;
 }
 
-export type SubPeriod = { label: string; start: number; end: number };
+export type SubPeriod = { label: string; displayLabel: boolean; start: number; end: number };
 
 const MONTH_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const DAY_SHORT   = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
@@ -75,6 +83,7 @@ export function getSubPeriods(period: Period, bounds: PeriodBounds): SubPeriod[]
                 const y = startY + i;
                 return {
                     label: `${y}`,
+                    displayLabel: true,
                     start: new Date(y, 0, 1).getTime(),
                     end:   new Date(y, 11, 31, 23, 59, 59, 999).getTime()
                 };
@@ -84,6 +93,7 @@ export function getSubPeriods(period: Period, bounds: PeriodBounds): SubPeriod[]
             const y = d.getFullYear();
             return Array.from({ length: 12 }, (_, i) => ({
                 label: MONTH_SHORT[i],
+                displayLabel: true,
                 start: new Date(y, i, 1).getTime(),
                 end:   new Date(y, i + 1, 0, 23, 59, 59, 999).getTime()
             }));
@@ -94,6 +104,7 @@ export function getSubPeriods(period: Period, bounds: PeriodBounds): SubPeriod[]
             const days = new Date(y, m + 1, 0).getDate();
             return Array.from({ length: days }, (_, i) => ({
                 label: `${i + 1}`,
+                displayLabel: true,
                 start: new Date(y, m, i + 1).getTime(),
                 end:   new Date(y, m, i + 1, 23, 59, 59, 999).getTime()
             }));
@@ -101,8 +112,24 @@ export function getSubPeriods(period: Period, bounds: PeriodBounds): SubPeriod[]
         case 'week': {
             return Array.from({ length: 7 }, (_, i) => {
                 const s = bounds.start + i * 86_400_000;
-                return { label: DAY_SHORT[i], start: s, end: s + 86_400_000 - 1 };
+                return { label: DAY_SHORT[i], displayLabel: true, start: s, end: s + 86_400_000 - 1 };
             });
+        }
+        case 'all-time': {
+            const startY = new Date(bounds.start).getFullYear();
+            const endY = new Date(bounds.end).getFullYear();
+            const totalYears = endY - startY + 1;
+            const interval = Math.max(1, Math.ceil(totalYears / 10));
+            const years: SubPeriod[] = [];
+            for (let y = startY; y <= endY; y++) {
+                years.push({
+                    label: `${y}`,
+                    displayLabel: (y - startY) % interval === 0 || y === endY,
+                    start: new Date(y, 0, 1).getTime(),
+                    end: new Date(y, 11, 31, 23, 59, 59, 999).getTime()
+                });
+            }
+            return years;
         }
     }
 }
