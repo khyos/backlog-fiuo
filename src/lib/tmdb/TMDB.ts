@@ -56,7 +56,7 @@ class ReleaseDates {
     fallbackDate?: string
 
     getMostRelevant() {
-        return this.theatricalNoNote || this.digital || this.fallbackDate || this.theatricalWithNote;
+        return this.theatricalNoNote || this.theatricalWithNote || this.digital || this.fallbackDate;
     }
 }
 
@@ -134,7 +134,8 @@ export class TMDB {
                 frDates = countryDates;
             } else if (releaseDatesForCountry.iso_3166_1 === 'US') {
                 usDates = countryDates;
-            } else if (releaseDatesForCountry.iso_3166_1.toLowerCase() === originCountry?.toLowerCase()) {
+            }
+            if (releaseDatesForCountry.iso_3166_1.toLowerCase() === originCountry?.toLowerCase()) {
                 originCountryDates = countryDates;
             } else {
                 defaultDates = countryDates;
@@ -147,13 +148,13 @@ export class TMDB {
         let releaseDate;
 
         if (originCountryDate) {
-            const originDate = new Date(originCountryDate).getTime();
+            const originDateTime = new Date(originCountryDate).getTime();
             // If origin date is recent (last 3 months) or in future
-            if (originDate > now - threeMonthsInMs) {
+            if (originDateTime > now - threeMonthsInMs) {
                 if (frDate) {
                     const frDateTime = new Date(frDate).getTime();
                     // If french date exists and is not older than 3 months compared to origin date
-                    if (frDateTime < originDate + threeMonthsInMs) {
+                    if (frDateTime < originDateTime + threeMonthsInMs) {
                         releaseDate = frDate;
                     } else {
                         releaseDate = originCountryDate;
@@ -161,6 +162,9 @@ export class TMDB {
                 } else {
                     releaseDate = originCountryDate;
                 }
+            } else if (frDate) {
+                const frDateTime = new Date(frDate).getTime();
+                releaseDate = frDateTime > originDateTime ? originCountryDate : frDate;
             } else {
                 releaseDate = originCountryDate;
             }
