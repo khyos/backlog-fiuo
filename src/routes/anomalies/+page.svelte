@@ -29,11 +29,31 @@
     };
 
     let updatingId: number | null = null;
+    let deletingId: number | null = null;
 
     function fmtDate(d: string | null): string {
         if (!d) return '—';
         const parsed = new Date(d);
         return isNaN(parsed.getTime()) ? '—' : parsed.toLocaleDateString();
+    }
+
+    async function deleteEntry(artifactId: number) {
+        deletingId = artifactId;
+        try {
+            const response = await fetch('/api/artifact/userStatus', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ artifactId })
+            });
+            if (response.ok) {
+                data.groups = data.groups.map(g => ({
+                    ...g,
+                    entries: g.entries.filter(e => e.artifactId !== artifactId)
+                })).filter(g => g.entries.length > 0);
+            }
+        } finally {
+            deletingId = null;
+        }
     }
 
     async function setAsFinished(artifactId: number) {
@@ -89,15 +109,23 @@
                             <TableHeadCell>End date</TableHeadCell>
                             {#if group.key === 'end_date_not_finished'}
                                 <TableHeadCell>Action</TableHeadCell>
+                            {:else if group.key === 'orphaned_artifact'}
+                                <TableHeadCell>Actions</TableHeadCell>
                             {/if}
                         </TableHead>
                         <TableBody>
                             {#each group.entries as entry (entry.artifactId + group.key)}
                                 <TableBodyRow>
-                                    <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
-                                    <TableBodyCell><a href="/{ARTIFACT_HREF[entry.type]}/{entry.artifactId}" class="hover:underline text-primary-600 dark:text-primary-400">{entry.title}</a></TableBodyCell>
                                     <TableBodyCell>
-                                        <Badge color={TYPE_COLOR[entry.type] ?? 'dark'}>{TYPE_LABEL[entry.type] ?? entry.type}</Badge>
+                                        {#if entry.type && ARTIFACT_HREF[entry.type]}
+                                            <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
+                                            <a href="/{ARTIFACT_HREF[entry.type]}/{entry.artifactId}" class="hover:underline text-primary-600 dark:text-primary-400">{entry.title}</a>
+                                        {:else}
+                                            <span class="text-gray-500 dark:text-gray-400">ID: {entry.artifactId}</span>
+                                        {/if}
+                                    </TableBodyCell>
+                                    <TableBodyCell>
+                                        <Badge color={entry.type ? TYPE_COLOR[entry.type] : 'gray'}>{entry.type ? (TYPE_LABEL[entry.type] ?? entry.type) : 'Unknown'}</Badge>
                                     </TableBodyCell>
                                     <TableBodyCell>{entry.status ?? '—'}</TableBodyCell>
                                     <TableBodyCell>{entry.score ?? '—'}</TableBodyCell>
@@ -111,6 +139,16 @@
                                                 on:click={() => setAsFinished(entry.artifactId)}
                                             >
                                                 {updatingId === entry.artifactId ? 'Setting...' : 'Set Finished'}
+                                            </button>
+                                        </TableBodyCell>
+                                    {:else if group.key === 'orphaned_artifact'}
+                                        <TableBodyCell>
+                                            <button 
+                                                class="inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                disabled={deletingId === entry.artifactId}
+                                                on:click={() => deleteEntry(entry.artifactId)}
+                                            >
+                                                {deletingId === entry.artifactId ? 'Deleting...' : 'Delete'}
                                             </button>
                                         </TableBodyCell>
                                     {/if}

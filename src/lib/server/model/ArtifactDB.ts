@@ -388,6 +388,10 @@ export class ArtifactDB {
         await runDbQuery(query, params);
     }
 
+    static async removeUserArtifact(userId: number, artifactId: number): Promise<void> {
+        await runDbQuery(`DELETE FROM user_artifact WHERE userId = ? AND artifactId = ?`, [userId, artifactId]);
+    }
+
     // ========================================
     // Delete Operations
     // ========================================

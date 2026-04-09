@@ -96,29 +96,34 @@ const updateMAL = async (animeId: number, malId: string) => {
             await RatingDB.updateRating(animeId, RatingType.MAL, malAnime.score);
         }
         const releaseDate = MAL.parseAiredDate(malAnime.aired);
-        const durationPerEpisode = (MAL.parsePerEpisodeDuration(malAnime.duration) ?? 20) * 60;
+        const parsedDuration = MAL.parsePerEpisodeDuration(malAnime.duration);
+        const durationPerEpisode = (parsedDuration ?? 20) * 60;
 
         let duration = 0;
-        const malAnimeEpisodes = await MAL.getAnimeEpisodes(malId);
-        for (const episode of malAnimeEpisodes) {
-            const episodeNumber = episode.mal_id;
-            const episodeReleaseDate = episode.aired ? new Date(episode.aired) : undefined;
-            const episodeTitle = episode.title;
-            const animeEpisode = anime.children.find(child => child.childIndex === episodeNumber)
-            if (!animeEpisode) {
-                await AnimeDB.createAnimeEpisode(anime.id, episodeNumber, episodeTitle, episodeReleaseDate, durationPerEpisode);
-            } else {
-                await AnimeDB.updateAnimeEpisode(animeEpisode.id, episodeNumber, episodeTitle, episodeReleaseDate, durationPerEpisode);
+        if (malAnime.episodes) {
+            const malAnimeEpisodes = await MAL.getAnimeEpisodes(malId);
+            for (const episode of malAnimeEpisodes) {
+                const episodeNumber = episode.mal_id;
+                const episodeReleaseDate = episode.aired ? new Date(episode.aired) : undefined;
+                const episodeTitle = episode.title;
+                const animeEpisode = anime.children.find(child => child.childIndex === episodeNumber)
+                if (!animeEpisode) {
+                    await AnimeDB.createAnimeEpisode(anime.id, episodeNumber, episodeTitle, episodeReleaseDate, durationPerEpisode);
+                } else {
+                    await AnimeDB.updateAnimeEpisode(animeEpisode.id, episodeNumber, episodeTitle, episodeReleaseDate, durationPerEpisode);
+                }
+                duration += durationPerEpisode;
             }
-            duration += durationPerEpisode;
-        }
-        for (const animeEpisode of anime.children) {
-            const episode = malAnimeEpisodes.find(child => child.mal_id === animeEpisode.childIndex);
-            if (!episode) {
-                await AnimeDB.deleteAnimeEpisode(animeEpisode.id);
+            for (const animeEpisode of anime.children) {
+                const episode = malAnimeEpisodes.find(child => child.mal_id === animeEpisode.childIndex);
+                if (!episode) {
+                    await AnimeDB.deleteAnimeEpisode(animeEpisode.id);
+                }
             }
         }
-       
+        if (duration === 0 && malAnime.duration) {
+            duration = MAL.parseDuration(malAnime.duration) * 60;
+        }
         await AnimeDB.updateAnime(animeId, malAnime.title, releaseDate, duration);
     } catch {
         return error(500, "Failed to Update TMDB");
