@@ -13,3 +13,13 @@ export async function POST({ request, locals }: RequestEvent) {
     
     return json({ success: true });
 }
+
+export async function DELETE({ request, locals }: RequestEvent) {
+    const user = User.deserialize(locals.user);
+    if (user.id < 0) {
+        error(500, "invalid user");
+    }
+    const { artifactId } = await request.json();
+    await ArtifactDB.removeUserArtifact(user.id, artifactId);
+    return json({ success: true });
+}

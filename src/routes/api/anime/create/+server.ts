@@ -69,7 +69,8 @@ export async function POST({ request, locals }: RequestEvent) {
         ratings
     );
 
-    const durationPerEpisode = (MAL.parsePerEpisodeDuration(malAnime.duration) ?? 20) * 60;
+    const parsedDuration = MAL.parsePerEpisodeDuration(malAnime.duration);
+    const durationPerEpisode = (parsedDuration ?? 20) * 60;
 
     let duration = 0;
     if (malAnime.episodes) {
@@ -81,6 +82,9 @@ export async function POST({ request, locals }: RequestEvent) {
             await AnimeDB.createAnimeEpisode(anime.id, episodeNumber, episodeTitle, episodeReleaseDate, durationPerEpisode);
             duration += durationPerEpisode;
         }
+    }
+    if (duration === 0 && malAnime.duration) {
+        duration = MAL.parseDuration(malAnime.duration) * 60;
     }
     await ArtifactDB.updateDuration(anime.id, duration);
 

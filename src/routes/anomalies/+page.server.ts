@@ -14,8 +14,8 @@ const TRACKED_TYPES = [
 
 export type AnomalyEntry = {
 	artifactId: number;
-	title: string;
-	type: ArtifactType;
+	title: string | null;
+	type: ArtifactType | null;
 	status: UserArtifactStatus | null;
 	score: number | null;
 	startDate: string | null;
@@ -44,6 +44,15 @@ export const load: PageServerLoad = async ({ locals }) => {
 		JOIN artifact ON artifact.id = user_artifact.artifactId
 		WHERE user_artifact.userId = ? AND artifact.type IN (${placeholders})`,
 		[user.id, ...TRACKED_TYPES]
+	);
+
+	const orphaned = await getDbRows<Omit<AnomalyEntry, 'title' | 'type'>>(
+		`SELECT user_artifact.artifactId, user_artifact.status, user_artifact.score,
+			user_artifact.startDate, user_artifact.endDate
+		FROM user_artifact
+		LEFT JOIN artifact ON artifact.id = user_artifact.artifactId
+		WHERE user_artifact.userId = ? AND artifact.id IS NULL`,
+		[user.id]
 	);
 
 	const groups: AnomalyGroup[] = [
@@ -87,8 +96,37 @@ export const load: PageServerLoad = async ({ locals }) => {
 				(e.status === UserArtifactStatus.FINISHED || e.status === UserArtifactStatus.DROPPED) &&
 				(e.score === null || e.score === 0)
 			)
+		},
+		{
+			key: 'orphaned_artifact',
+			label: 'Relation to non-existing artifact',
+			description: 'A user_artifact entry references an artifact that no longer exists in the database.',
+			entries: orphaned.map(e => ({ ...e, title: null, type: null }))
 		}
 	];
+
+	const animeNoEpisodes = await getDbRows<AnomalyEntry>(
+		`SELECT artifact.id AS artifactId, artifact.title, artifact.type,
+			user_artifact.status, user_artifact.score,
+			user_artifact.startDate, user_artifact.endDate
+		FROM user_artifact
+		JOIN artifact ON artifact.id = user_artifact.artifactId
+		WHERE user_artifact.userId = ?
+		  AND artifact.type = ?
+		  AND NOT EXISTS (
+			SELECT 1 FROM artifact AS ep WHERE ep.parent_artifact_id = artifact.id
+		  )`,
+		[user.id, ArtifactType.ANIME]
+	);
+
+	if (animeNoEpisodes.length > 0) {
+		groups.push({
+			key: 'anime_no_episodes',
+			label: 'Anime — no episodes in database',
+			description: 'Anime entries in your collection that have no episode records in the database.',
+			entries: animeNoEpisodes
+		});
+	}
 
 	return {
 		groups: groups.filter(g => g.entries.length > 0)

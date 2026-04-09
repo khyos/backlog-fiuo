@@ -64,6 +64,7 @@
                 <DropdownItem href="/stats">Stats</DropdownItem>
                 <DropdownItem href="/anomalies">Anomalies</DropdownItem>
                 <DropdownItem href="/senscritique/import">SC Import</DropdownItem>
+                <DropdownItem href="/mal/import">MAL Import</DropdownItem>
                 <DropdownItem href="/signout">Sign out</DropdownItem>
             </DropdownGroup>
         {:else}

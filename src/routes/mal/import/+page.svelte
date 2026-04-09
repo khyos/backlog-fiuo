@@ -5,7 +5,6 @@
         Button,
         Input,
         Label,
-        Select,
         Spinner,
         Table,
         TableBody,
@@ -14,85 +13,61 @@
         TableHead,
         TableHeadCell,
     } from "flowbite-svelte";
-    import { SearchOutline } from "flowbite-svelte-icons";
 
     // -------------------------------------------------------------------------
     // Types
     // -------------------------------------------------------------------------
 
-    interface ReconcileItem {
-        id: number;
+    interface MALReconcileItem {
+        malId: string;
         title: string;
-        originalTitle: string | null;
-        universe: number;
-        universeLabel: string;
-        year: number | null;
-        url: string;
-        coverUrl: string | null;
-        genres: string[];
-        creators: string;
-        communityRating: number | null;
-        userRating: number | null;
-        dateDone: string | null;
-        isDone: boolean;
-        isWished: boolean;
-        scId: string;
+        malUrl: string;
+        malScore: number | null;
+        malStatus: string;
+        finishDate: string | null;
+        startDate: string | null;
         dbId: number | null;
         dbType: string | null;
         dbScore: number | null;
         dbEndDate: string | null;
+        dbStartDate: string | null;
     }
 
-    interface ReconcileResult {
+    interface MALReconcileResult {
         username: string;
-        displayName: string;
-        extractedAt: string;
-        totalInCollection: number;
-        exportedCount: number;
+        fetchedAt: string;
+        totalFetched: number;
         matchedCount: number;
         missingCount: number;
-        items: ReconcileItem[];
+        items: MALReconcileItem[];
     }
 
     // -------------------------------------------------------------------------
     // State
     // -------------------------------------------------------------------------
 
-    let username: string = '';
-    let universe: string = 'film';
-    let mode: string = 'all';
-    let status: 'idle' | 'loading' | 'done' | 'error' = 'idle';
+    let fileInput: HTMLInputElement | null = null;
+    let selectedFileName: string = '';
+    let fetchStatus: 'idle' | 'loading' | 'done' | 'error' = 'idle';
     let errorMessage: string = '';
-    let result: ReconcileResult | null = null;
+    let result: MALReconcileResult | null = null;
 
     /** Filter for the table: all | matched | missing | desync */
     let tableFilter: 'all' | 'matched' | 'missing' | 'desync' = 'all';
     /** Search within results */
     let tableSearch: string = '';
 
-    const universeOptions = [
-        { value: 'film',   name: 'Films' },
-        { value: 'game',   name: 'Games' },
-        { value: 'tvshow', name: 'TV Shows / Anime' },
-    ];
-
-    const modeOptions = [
-        { value: 'done',   name: 'Done' },
-        { value: 'wished', name: 'Wished' },
-        { value: 'all',    name: 'Done + Wished' },
-    ];
+    const MAL_STATUS_LABELS: Record<string, string> = {
+        'Completed':      'Completed',
+        'Watching':       'Watching',
+        'Plan to Watch':  'Plan to Watch',
+        'On-Hold':        'On Hold',
+        'Dropped':        'Dropped',
+    };
 
     // -------------------------------------------------------------------------
-    // Create-page URL helpers
+    // Helpers
     // -------------------------------------------------------------------------
-
-    /**
-     * Returns the URL of the create page pre-filled with the SC id for items not yet in the DB.
-     * When the universe is tvshow (series on SC), the user can choose movie/tvshow/anime.
-     */
-    function createUrl(item: ReconcileItem, type: 'movie' | 'game' | 'tvshow' | 'anime'): string {
-        return `/${type}/create?scId=${encodeURIComponent(item.scId)}&title=${encodeURIComponent(item.title)}`;
-    }
 
     function formatDate(dateStr: string | null): string {
         if (!dateStr) return '—';
@@ -112,8 +87,29 @@
         return `${y}-${m}-${day}`;
     }
 
-    function artifactUrl(item: ReconcileItem): string {
+    function artifactUrl(item: MALReconcileItem): string {
         return `/${item.dbType}/${item.dbId}`;
+    }
+
+    function createUrl(item: MALReconcileItem): string {
+        return `/anime/create?malId=${encodeURIComponent(item.malId)}&title=${encodeURIComponent(item.title)}`;
+    }
+
+    function isDesynced(item: MALReconcileItem): boolean {
+        if (item.dbId === null) return false;
+        const scoreDesynced = item.malScore !== null && item.dbScore !== item.malScore * 10;
+        const malFinish = item.finishDate;
+        const dbFinish = toLocalDateString(item.dbEndDate);
+        const endDateDesynced = item.finishDate !== null && malFinish !== dbFinish;
+        const malStart = item.startDate;
+        const dbStart = toLocalDateString(item.dbStartDate);
+        const startDateDesynced = item.startDate !== null && malStart !== dbStart;
+        return scoreDesynced || endDateDesynced || startDateDesynced;
+    }
+
+    function onFileChange(event: Event): void {
+        const input = event.currentTarget as HTMLInputElement;
+        selectedFileName = input.files?.[0]?.name ?? '';
     }
 
     // -------------------------------------------------------------------------
@@ -126,84 +122,103 @@
         if (tableFilter === 'desync' && !isDesynced(item)) return false;
         if (tableSearch.trim()) {
             const q = tableSearch.toLowerCase();
-            return item.title.toLowerCase().includes(q) || (item.originalTitle ?? '').toLowerCase().includes(q);
+            return item.title.toLowerCase().includes(q);
         }
         return true;
     });
 
     // -------------------------------------------------------------------------
-    // Fetch
+    // Reconcile
     // -------------------------------------------------------------------------
 
     async function reconcile(): Promise<void> {
-        if (!username.trim()) return;
-        status = 'loading';
+        const file = fileInput?.files?.[0];
+        if (!file) return;
+        fetchStatus = 'loading';
         errorMessage = '';
         result = null;
         tableFilter = 'all';
         tableSearch = '';
 
         try {
-            const params = new URLSearchParams({
-                username: username.trim(),
-                universe,
-                mode,
+            const xmlContent = await file.text();
+            const response = await fetch('/api/mal/reconcile', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ xmlContent }),
             });
-            const response = await fetch(`/api/senscritique/reconcile?${params}`);
             if (!response.ok) {
                 const body = await response.text();
                 throw new Error(body || `HTTP ${response.status}`);
             }
             result = await response.json();
-            status = 'done';
+            fetchStatus = 'done';
         } catch (e) {
             errorMessage = e instanceof Error ? e.message : String(e);
-            status = 'error';
+            fetchStatus = 'error';
         }
     }
 
-    function handleKeyUp(event: KeyboardEvent): void {
-        if (event.key === 'Enter' && username.trim()) reconcile();
-    }
-
     // -------------------------------------------------------------------------
-    // Helpers
+    // Sync actions
     // -------------------------------------------------------------------------
 
-    /** Tracks update state per item id: 'idle' | 'loading' | 'done' | 'error' */
-    let dateUpdateState: Record<number, 'idle' | 'loading' | 'done' | 'error'> = {};
-    let scoreUpdateState: Record<number, 'idle' | 'loading' | 'done' | 'error'> = {};
+    let dateUpdateState: Record<string, 'idle' | 'loading' | 'done' | 'error'> = {};
+    let startDateUpdateState: Record<string, 'idle' | 'loading' | 'done' | 'error'> = {};
+    let scoreUpdateState: Record<string, 'idle' | 'loading' | 'done' | 'error'> = {};
 
-    async function syncDate(item: ReconcileItem): Promise<void> {
-        if (!item.dbId || !item.dateDone) return;
-        dateUpdateState = { ...dateUpdateState, [item.id]: 'loading' };
+    async function syncDate(item: MALReconcileItem): Promise<void> {
+        if (!item.dbId || !item.finishDate) return;
+        dateUpdateState = { ...dateUpdateState, [item.malId]: 'loading' };
         try {
-            const startEnd = item.universe === 1 ? 'both' : 'end';
             const res = await fetch(`/api/artifact/${item.dbId}/userDate`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ date: item.dateDone, startEnd }),
+                body: JSON.stringify({ date: item.finishDate, startEnd: 'end' }),
             });
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            // Update local state so the DB Date cell refreshes
             if (result) {
                 result = {
                     ...result,
                     items: result.items.map((i) =>
-                        i.id === item.id ? { ...i, dbEndDate: item.dateDone } : i
+                        i.malId === item.malId ? { ...i, dbEndDate: item.finishDate } : i
                     ),
                 };
             }
-            dateUpdateState = { ...dateUpdateState, [item.id]: 'done' };
+            dateUpdateState = { ...dateUpdateState, [item.malId]: 'done' };
         } catch {
-            dateUpdateState = { ...dateUpdateState, [item.id]: 'error' };
+            dateUpdateState = { ...dateUpdateState, [item.malId]: 'error' };
         }
     }
 
-    async function syncScore(item: ReconcileItem): Promise<void> {
-        if (!item.dbId || item.userRating === null) return;
-        scoreUpdateState = { ...scoreUpdateState, [item.id]: 'loading' };
-        const score = item.userRating * 10;
+    async function syncStartDate(item: MALReconcileItem): Promise<void> {
+        if (!item.dbId || !item.startDate) return;
+        startDateUpdateState = { ...startDateUpdateState, [item.malId]: 'loading' };
+        try {
+            const res = await fetch(`/api/artifact/${item.dbId}/userDate`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ date: item.startDate, startEnd: 'start' }),
+            });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            if (result) {
+                result = {
+                    ...result,
+                    items: result.items.map((i) =>
+                        i.malId === item.malId ? { ...i, dbStartDate: item.startDate } : i
+                    ),
+                };
+            }
+            startDateUpdateState = { ...startDateUpdateState, [item.malId]: 'done' };
+        } catch {
+            startDateUpdateState = { ...startDateUpdateState, [item.malId]: 'error' };
+        }
+    }
+
+    async function syncScore(item: MALReconcileItem): Promise<void> {
+        if (!item.dbId || item.malScore === null) return;
+        scoreUpdateState = { ...scoreUpdateState, [item.malId]: 'loading' };
+        const score = item.malScore * 10;
         try {
             const res = await fetch(`/api/artifact/${item.dbId}/userScore`, {
                 method: 'POST',
@@ -215,69 +230,58 @@
                 result = {
                     ...result,
                     items: result.items.map((i) =>
-                        i.id === item.id ? { ...i, dbScore: score } : i
+                        i.malId === item.malId ? { ...i, dbScore: score } : i
                     ),
                 };
             }
-            scoreUpdateState = { ...scoreUpdateState, [item.id]: 'done' };
+            scoreUpdateState = { ...scoreUpdateState, [item.malId]: 'done' };
         } catch {
-            scoreUpdateState = { ...scoreUpdateState, [item.id]: 'error' };
+            scoreUpdateState = { ...scoreUpdateState, [item.malId]: 'error' };
         }
-    }
-
-    function isDesynced(item: ReconcileItem): boolean {
-        if (item.dbId === null) return false;
-        const scoreDesynced = item.userRating !== null && item.dbScore !== item.userRating * 10;
-        const scDate = toLocalDateString(item.dateDone);
-        const dbDate = toLocalDateString(item.dbEndDate);
-        const dateDesynced = item.dateDone !== null && scDate !== dbDate;
-        return scoreDesynced || dateDesynced;
-    }
-
-    function scUniverseForItem(item: ReconcileItem): 'movie' | 'game' | 'tvshow' | 'serie' {
-        // SC universe numbers: 1=Films, 3=Jeux vidéo, 4=Séries
-        if (item.universe === 1) return 'movie';
-        if (item.universe === 3) return 'game';
-        return 'serie'; // 4 = Séries (tvshow or anime)
     }
 </script>
 
-<div class="max-w-7xl mx-auto p-4">
-    <h2 class="text-4xl font-extrabold dark:text-white mb-2">SensCritique Import</h2>
-    <p class="text-gray-500 dark:text-gray-400 mb-6">
-        Fetch a user's SensCritique collection and reconcile it with the local database.
+<div class="max-w-8xl mx-auto p-4">
+    <h2 class="text-4xl font-extrabold dark:text-white mb-2">MyAnimeList Import</h2>
+    <p class="text-gray-500 dark:text-gray-400 mb-4">
+        Reconcile your MAL anime list with the local database.
         Items already in the database are linked; missing items offer a quick path to create them.
     </p>
 
-    <!-- Search form -->
+    <!-- Instructions -->
+    <div class="mb-6 p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 text-sm text-blue-800 dark:text-blue-200">
+        <strong>How to export your MAL list:</strong>
+        <ol class="list-decimal ml-5 mt-1 space-y-1">
+            <li>Go to <a href="https://myanimelist.net/panel.php?go=export" target="_blank" rel="noopener noreferrer" class="underline">myanimelist.net/panel.php?go=export</a></li>
+            <li>Click <em>Export Anime List</em> and download the <code>.xml.gz</code> file</li>
+            <li>Extract the <code>.xml</code> file from the archive</li>
+            <li>Upload it below</li>
+        </ol>
+    </div>
+
+    <!-- Upload form -->
     <div class="flex flex-wrap gap-4 mb-6 items-end">
-        <div class="flex-1 min-w-48">
-            <Label for="sc-username" class="mb-1">SensCritique username</Label>
-            <Input
-                id="sc-username"
-                placeholder="e.g. johndoe"
-                autocomplete="off"
-                bind:value={username}
-                onkeyup={handleKeyUp}>
-                {#snippet right()}
-                    <SearchOutline />
-                {/snippet}
-            </Input>
+        <div class="flex-1 min-w-64">
+            <Label for="mal-file" class="mb-1">MAL XML export file</Label>
+            <input
+                id="mal-file"
+                type="file"
+                accept=".xml"
+                bind:this={fileInput}
+                onchange={onFileChange}
+                class="block w-full text-sm text-gray-900 dark:text-gray-100
+                       file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0
+                       file:text-sm file:font-medium
+                       file:bg-primary-600 file:text-white hover:file:bg-primary-700
+                       cursor-pointer"
+            />
         </div>
 
-        <div class="min-w-36">
-            <Label for="sc-universe" class="mb-1">Universe</Label>
-            <Select id="sc-universe" items={universeOptions} bind:value={universe} />
-        </div>
-
-        <div class="min-w-36">
-            <Label for="sc-mode" class="mb-1">Mode</Label>
-            <Select id="sc-mode" items={modeOptions} bind:value={mode} />
-        </div>
-
-        <Button onclick={reconcile} disabled={status === 'loading' || !username.trim()}>
-            {#if status === 'loading'}
-                <Spinner size="4" class="mr-2" />Fetching…
+        <Button
+            onclick={reconcile}
+            disabled={fetchStatus === 'loading' || !selectedFileName}>
+            {#if fetchStatus === 'loading'}
+                <Spinner size="4" class="mr-2" />Processing…
             {:else}
                 Reconcile
             {/if}
@@ -285,7 +289,7 @@
     </div>
 
     <!-- Error -->
-    {#if status === 'error'}
+    {#if fetchStatus === 'error'}
         <Alert color="red" class="mb-4" dismissable>
             {errorMessage}
         </Alert>
@@ -295,9 +299,9 @@
     {#if result}
         <div class="flex flex-wrap gap-3 mb-4 items-center">
             <span class="text-lg font-semibold dark:text-white">
-                {result.displayName}
+                {result.username}
             </span>
-            <Badge color="gray">{result.exportedCount} exported</Badge>
+            <Badge color="gray">{result.totalFetched} fetched</Badge>
             <Badge color="green">{result.matchedCount} in DB</Badge>
             <Badge color="red">{result.missingCount} missing</Badge>
         </div>
@@ -325,75 +329,55 @@
         <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
             <Table hoverable={true}>
                 <TableHead>
-                    <TableHeadCell>Cover</TableHeadCell>
                     <TableHeadCell class="max-w-48">Title</TableHeadCell>
-                    <TableHeadCell>Year</TableHeadCell>
-                    <TableHeadCell>Universe</TableHeadCell>
-                    <TableHeadCell>Your SC Rating</TableHeadCell>
-                    <TableHeadCell>SC Date</TableHeadCell>
+                    <TableHeadCell>MAL Status</TableHeadCell>
+                    <TableHeadCell>Your MAL Rating</TableHeadCell>
+                    <TableHeadCell>MAL Start Date</TableHeadCell>
+                    <TableHeadCell>MAL Finish Date</TableHeadCell>
                     <TableHeadCell>Your DB Rating</TableHeadCell>
-                    <TableHeadCell>DB Date</TableHeadCell>
+                    <TableHeadCell>DB Start Date</TableHeadCell>
+                    <TableHeadCell>DB End Date</TableHeadCell>
                     <TableHeadCell>Status</TableHeadCell>
                     <TableHeadCell>Actions</TableHeadCell>
                 </TableHead>
                 <TableBody>
-                    {#each filteredItems as item (item.id)}
+                    {#each filteredItems as item (item.malId)}
                         <TableBodyRow>
-                            <!-- Cover -->
-                            <TableBodyCell>
-                                {#if item.coverUrl}
-                                    <img
-                                        src={item.coverUrl}
-                                        alt={item.title}
-                                        class="w-10 h-14 object-cover rounded"
-                                        loading="lazy"
-                                    />
-                                {:else}
-                                    <div class="w-10 h-14 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center text-xs text-gray-400">
-                                        N/A
-                                    </div>
-                                {/if}
-                            </TableBodyCell>
-
                             <!-- Title -->
                             <TableBodyCell class="max-w-48">
                                 <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
-                                <a href={item.url}
+                                <a href={item.malUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     class="font-medium text-blue-600 hover:underline dark:text-blue-400 block truncate"
                                 >
                                     {item.title}
                                 </a>
-                                {#if item.originalTitle && item.originalTitle !== item.title}
-                                    <div class="text-xs text-gray-500 dark:text-gray-400 truncate">{item.originalTitle}</div>
-                                {/if}
-                                {#if item.creators}
-                                    <div class="text-xs text-gray-500 dark:text-gray-400 truncate">{item.creators}</div>
-                                {/if}
                             </TableBodyCell>
 
-                            <!-- Year -->
-                            <TableBodyCell>{item.year ?? '—'}</TableBodyCell>
-
-                            <!-- Universe -->
+                            <!-- MAL status -->
                             <TableBodyCell>
-                                <span class="text-xs">{item.universeLabel}</span>
+                                <span class="text-xs">{MAL_STATUS_LABELS[item.malStatus] ?? item.malStatus}</span>
                             </TableBodyCell>
 
-                            <!-- User SC rating -->
+                            <!-- User MAL rating -->
                             <TableBodyCell>
-                                {#if item.userRating !== null}
-                                    <span class="font-medium">{item.userRating}</span>
+                                {#if item.malScore !== null}
+                                    <span class="font-medium">{item.malScore}</span>
                                     <span class="text-xs text-gray-400">/10</span>
                                 {:else}
                                     —
                                 {/if}
                             </TableBodyCell>
 
-                            <!-- SC date done -->
+                            <!-- MAL start date -->
                             <TableBodyCell>
-                                <span class="text-xs">{formatDate(item.dateDone)}</span>
+                                <span class="text-xs">{formatDate(item.startDate)}</span>
+                            </TableBodyCell>
+
+                            <!-- MAL finish date -->
+                            <TableBodyCell>
+                                <span class="text-xs">{formatDate(item.finishDate)}</span>
                             </TableBodyCell>
 
                             <!-- DB user score -->
@@ -404,6 +388,11 @@
                                 {:else}
                                     —
                                 {/if}
+                            </TableBodyCell>
+
+                            <!-- DB start date -->
+                            <TableBodyCell>
+                                <span class="text-xs">{formatDate(item.dbStartDate)}</span>
                             </TableBodyCell>
 
                             <!-- DB end date -->
@@ -430,8 +419,8 @@
                                     <div class="flex flex-wrap gap-1 items-center">
                                         <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
                                         <Button size="xs" color="blue" href={artifactUrl(item)}>View →</Button>
-                                        {#if item.dateDone && toLocalDateString(item.dateDone) !== toLocalDateString(item.dbEndDate)}
-                                            {@const state = dateUpdateState[item.id] ?? 'idle'}
+                                        {#if item.finishDate && item.finishDate !== toLocalDateString(item.dbEndDate)}
+                                            {@const state = dateUpdateState[item.malId] ?? 'idle'}
                                             <Button
                                                 size="xs"
                                                 color={state === 'done' ? 'green' : state === 'error' ? 'red' : 'light'}
@@ -445,12 +434,31 @@
                                                 {:else if state === 'error'}
                                                     ✗ Error
                                                 {:else}
-                                                    Sync Date
+                                                    Sync End Date
                                                 {/if}
                                             </Button>
                                         {/if}
-                                        {#if item.userRating !== null && item.dbScore !== item.userRating * 10}
-                                            {@const state = scoreUpdateState[item.id] ?? 'idle'}
+                                        {#if item.startDate && item.startDate !== toLocalDateString(item.dbStartDate)}
+                                            {@const state = startDateUpdateState[item.malId] ?? 'idle'}
+                                            <Button
+                                                size="xs"
+                                                color={state === 'done' ? 'green' : state === 'error' ? 'red' : 'light'}
+                                                disabled={state === 'loading'}
+                                                onclick={() => syncStartDate(item)}
+                                            >
+                                                {#if state === 'loading'}
+                                                    <Spinner size="4" class="mr-1" />Syncing…
+                                                {:else if state === 'done'}
+                                                    ✓ Synced
+                                                {:else if state === 'error'}
+                                                    ✗ Error
+                                                {:else}
+                                                    Sync Start Date
+                                                {/if}
+                                            </Button>
+                                        {/if}
+                                        {#if item.malScore !== null && item.dbScore !== item.malScore * 10}
+                                            {@const state = scoreUpdateState[item.malId] ?? 'idle'}
                                             <Button
                                                 size="xs"
                                                 color={state === 'done' ? 'green' : state === 'error' ? 'red' : 'light'}
@@ -470,22 +478,10 @@
                                         {/if}
                                     </div>
                                 {:else}
-                                    {@const scUniverse = scUniverseForItem(item)}
-                                    <div class="flex flex-wrap gap-1">
-                                        {#if scUniverse === 'movie'}
-                                            <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
-                                            <Button size="xs" color="blue" href={createUrl(item, 'movie')} target="_blank" rel="noopener noreferrer">Create Movie</Button>
-                                        {:else if scUniverse === 'game'}
-                                            <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
-                                            <Button size="xs" color="blue" href={createUrl(item, 'game')} target="_blank" rel="noopener noreferrer">Create Game</Button>
-                                        {:else}
-                                            <!-- serie — could be TV show or anime -->
-                                            <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
-                                            <Button size="xs" color="blue" href={createUrl(item, 'tvshow')} target="_blank" rel="noopener noreferrer">Create TV Show</Button>
-                                            <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
-                                            <Button size="xs" color="blue" href={createUrl(item, 'anime')} target="_blank" rel="noopener noreferrer">Create Anime</Button>
-                                        {/if}
-                                    </div>
+                                    <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
+                                    <Button size="xs" color="blue" href={createUrl(item)} target="_blank" rel="noopener noreferrer">
+                                        Create Anime
+                                    </Button>
                                 {/if}
                             </TableBodyCell>
                         </TableBodyRow>

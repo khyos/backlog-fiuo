@@ -96,3 +96,50 @@ export const updateEndDate = async (date: Date | null) => {
         artifact: store.artifact
     }));
 }
+
+export const markFinishedUpTo = async (targetArtifactId: number) => {
+    const store = get(artifactItemStore);
+    const root = store.artifact;
+
+    const target = root.getArtifactById(targetArtifactId);
+    if (!target) throw new Error('Artifact Not Found');
+
+    const parent = target.parent;
+    if (!parent) throw new Error('Cannot mark root artifact');
+
+    const targetIndex = parent.children.indexOf(target);
+    const idsToMark: number[] = [];
+
+    if (parent.parent === null) {
+        // Target is a direct child of root
+        for (let i = 0; i <= targetIndex; i++) {
+            idsToMark.push(...root.children[i].getArtifactIds());
+        }
+        await updateStatusAPI(idsToMark, UserArtifactStatus.FINISHED);
+        for (let i = 0; i <= targetIndex; i++) {
+            root.children[i].updateUserStatus(UserArtifactStatus.FINISHED);
+        }
+    } else {
+        // Target is a 2nd level child; parent is a 1st level child
+        const firstLevelChild = parent;
+        const firstLevelIndex = root.children.indexOf(firstLevelChild);
+        for (let i = 0; i < firstLevelIndex; i++) {
+            idsToMark.push(...root.children[i].getArtifactIds());
+        }
+        for (let j = 0; j <= targetIndex; j++) {
+            idsToMark.push(firstLevelChild.children[j].id);
+        }
+        await updateStatusAPI(idsToMark, UserArtifactStatus.FINISHED);
+        for (let i = 0; i < firstLevelIndex; i++) {
+            root.children[i].updateUserStatus(UserArtifactStatus.FINISHED);
+        }
+        for (let j = 0; j <= targetIndex; j++) {
+            firstLevelChild.children[j].updateUserStatus(UserArtifactStatus.FINISHED);
+        }
+    }
+
+    artifactItemStore.update(s => ({
+        ...s,
+        artifact: root
+    }));
+}

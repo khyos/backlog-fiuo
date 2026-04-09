@@ -7,7 +7,7 @@
     import { UserArtifactStatus } from "$lib/model/UserArtifact";
     import { getAsyncInfo } from "$lib/services/ArtifactService";
     import { openLink } from "$lib/services/LinkService";
-    import { artifactItemStore, refreshArtifact, updateStatus, updateScore, updateDate, updateStartDate, updateEndDate } from "$lib/stores/ArtifactItemStore";
+    import { artifactItemStore, refreshArtifact, updateStatus, updateScore, updateDate, updateStartDate, updateEndDate, markFinishedUpTo } from "$lib/stores/ArtifactItemStore";
     import { TimeUtil } from "$lib/util/TimeUtil";
     import {
         Label,
@@ -23,6 +23,8 @@
         Spinner,
         Checkbox,
         Datepicker,
+        Dropdown,
+        DropdownItem,
     } from "flowbite-svelte";
     import { 
         PlusOutline, 
@@ -36,7 +38,8 @@
         EditOutline,
         ChevronDownOutline,
         ChevronRightOutline,
-        ChevronDoubleRightOutline
+        ChevronDoubleRightOutline,
+        DotsVerticalOutline
     } from "flowbite-svelte-icons";
     import { onMount } from "svelte";
     import { SvelteSet } from "svelte/reactivity";
@@ -409,17 +412,27 @@
                     
                     {#each artifact.children as firstLevelChild (firstLevelChild.id)}
                         <div class="child-item mb-4 border rounded-lg border-gray-300">
-                            <button 
-                                class="w-full flex items-center justify-between p-3 hover:bg-gray-100 transition-colors"
-                                on:click={() => toggleChild(firstLevelChild.id)}
-                            >
-                                <span class="font-medium">{firstLevelChild.title}</span>
-                                {#if expandedChildren.has(firstLevelChild.id)}
-                                    <ChevronDownOutline class="w-5 h-5 text-gray-600" />
-                                {:else}
-                                    <ChevronRightOutline class="w-5 h-5 text-gray-600" />
+                            <div class="flex items-center">
+                                <button 
+                                    class="flex-1 flex items-center justify-between p-3 hover:bg-gray-100 transition-colors"
+                                    on:click={() => toggleChild(firstLevelChild.id)}
+                                >
+                                    <span class="font-medium">{firstLevelChild.title}</span>
+                                    {#if expandedChildren.has(firstLevelChild.id)}
+                                        <ChevronDownOutline class="w-5 h-5 text-gray-600" />
+                                    {:else}
+                                        <ChevronRightOutline class="w-5 h-5 text-gray-600" />
+                                    {/if}
+                                </button>
+                                {#if userConnected}
+                                    <Button size="xs" color="light" class="!p-1.5 mx-2">
+                                        <DotsVerticalOutline class="w-4 h-4" />
+                                    </Button>
+                                    <Dropdown placement="bottom-end">
+                                        <DropdownItem onclick={() => markFinishedUpTo(firstLevelChild.id)}>Mark finished up to here</DropdownItem>
+                                    </Dropdown>
                                 {/if}
-                            </button>
+                            </div>
                             
                             {#if expandedChildren.has(firstLevelChild.id)}
                                 <div class="secondLevelChildren-list p-3 bg-gray-50">
@@ -454,10 +467,18 @@
                                                     </td>
                                                     {#if userConnected}
                                                     <td class="p-2">
-                                                        <Checkbox
-                                                            checked={secondLevelChild.userInfo?.status === UserArtifactStatus.FINISHED}
-                                                            onchange={(event) => handleCheckboxStatusChange(event, secondLevelChild)}
-                                                        />
+                                                        <div class="flex items-center gap-1">
+                                                            <Checkbox
+                                                                checked={secondLevelChild.userInfo?.status === UserArtifactStatus.FINISHED}
+                                                                onchange={(event) => handleCheckboxStatusChange(event, secondLevelChild)}
+                                                            />
+                                                            <Button size="xs" color="light" class="!p-1">
+                                                                <DotsVerticalOutline class="w-3 h-3" />
+                                                            </Button>
+                                                            <Dropdown placement="bottom-end">
+                                                                <DropdownItem onclick={() => markFinishedUpTo(secondLevelChild.id)}>Mark finished up to here</DropdownItem>
+                                                            </Dropdown>
+                                                        </div>
                                                     </td>
                                                     {/if}
                                                 </tr>
@@ -510,10 +531,18 @@
                                         </td>
                                         {#if userConnected}
                                         <td class="p-2">
-                                            <Checkbox
-                                                checked={secondLevelChild.userInfo?.status === UserArtifactStatus.FINISHED}
-                                                onchange={(event) => handleCheckboxStatusChange(event, secondLevelChild)}
-                                            />
+                                            <div class="flex items-center gap-1">
+                                                <Checkbox
+                                                    checked={secondLevelChild.userInfo?.status === UserArtifactStatus.FINISHED}
+                                                    onchange={(event) => handleCheckboxStatusChange(event, secondLevelChild)}
+                                                />
+                                                <Button size="xs" color="light" class="!p-1">
+                                                    <DotsVerticalOutline class="w-3 h-3" />
+                                                </Button>
+                                                <Dropdown placement="bottom-end">
+                                                    <DropdownItem onclick={() => markFinishedUpTo(secondLevelChild.id)}>Mark finished up to here</DropdownItem>
+                                                </Dropdown>
+                                            </div>
                                         </td>
                                         {/if}
                                     </tr>
