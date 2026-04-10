@@ -79,7 +79,7 @@
 </script>
 
 <div class="p-4 max-w-5xl mx-auto">
-    <h1 class="text-2xl font-bold mb-2 dark:text-white">Anomalies</h1>
+    <h1 class="text-2xl font-bold mb-2 dark:text-white">User Anomalies</h1>
     <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">
         Entries in your collection that may have inconsistent or missing data.
     </p>

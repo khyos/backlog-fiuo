@@ -108,13 +108,17 @@ export async function POST({ request, locals }: RequestEvent) {
 
 	let xmlContent: string;
 	try {
-		const body = await request.json();
-		xmlContent = body?.xmlContent;
-		if (typeof xmlContent !== 'string' || xmlContent.trim() === '') {
-			return error(400, 'Missing xmlContent in request body');
+		const formData = await request.formData();
+		const xmlFile = formData.get('xmlFile');
+		if (!xmlFile || typeof xmlFile === 'string') {
+			return error(400, 'No file uploaded');
 		}
-	} catch {
-		return error(400, 'Invalid JSON body');
+		xmlContent = await xmlFile.text();
+		if (xmlContent.trim() === '') {
+			return error(400, 'Uploaded file is empty');
+		}
+	} catch (e) {
+		return error(400, 'Invalid form data' + (e instanceof Error ? `: ${e.message}` : ''));
 	}
 
 	try {

@@ -75,6 +75,13 @@ export async function POST({ request, locals }: RequestEvent) {
     let duration = 0;
     if (malAnime.episodes) {
         const animeEpisodes = await MAL.getAnimeEpisodes(malId);
+        if (animeEpisodes.length === 0 && malAnime.episodes > 1) {
+            animeEpisodes.push(...Array.from({ length: malAnime.episodes }, (_, i) => ({
+                mal_id: i + 1,
+                title: `Episode ${i + 1}`,
+                aired: undefined
+            })));
+        }
         for (const episode of animeEpisodes) {
             const episodeNumber = episode.mal_id;
             const episodeReleaseDate = episode.aired ? new Date(episode.aired) : undefined;
@@ -84,7 +91,11 @@ export async function POST({ request, locals }: RequestEvent) {
         }
     }
     if (duration === 0 && malAnime.duration) {
-        duration = MAL.parseDuration(malAnime.duration) * 60;
+        if (malAnime.episodes > 1) {
+            duration = malAnime.episodes * durationPerEpisode;
+        } else {
+            duration = MAL.parseDuration(malAnime.duration) * 60;
+        }
     }
     await ArtifactDB.updateDuration(anime.id, duration);
 

@@ -141,11 +141,11 @@
         tableSearch = '';
 
         try {
-            const xmlContent = await file.text();
+            const formData = new FormData();
+            formData.append('xmlFile', file);
             const response = await fetch('/api/mal/reconcile', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ xmlContent }),
+                body: formData,
             });
             if (!response.ok) {
                 const body = await response.text();
