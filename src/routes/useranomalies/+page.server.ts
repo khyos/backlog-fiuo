@@ -32,7 +32,7 @@ export type AnomalyGroup = {
 export const load: PageServerLoad = async ({ locals }) => {
 	const user = User.deserialize(locals.user);
 	if (user.id < 0) {
-		error(401, 'Please sign in to view anomalies');
+		error(401, 'Please sign in to view user anomalies');
 	}
 
 	const placeholders = TRACKED_TYPES.map(() => '?').join(', ');
@@ -104,29 +104,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 			entries: orphaned.map(e => ({ ...e, title: null, type: null }))
 		}
 	];
-
-	const animeNoEpisodes = await getDbRows<AnomalyEntry>(
-		`SELECT artifact.id AS artifactId, artifact.title, artifact.type,
-			user_artifact.status, user_artifact.score,
-			user_artifact.startDate, user_artifact.endDate
-		FROM user_artifact
-		JOIN artifact ON artifact.id = user_artifact.artifactId
-		WHERE user_artifact.userId = ?
-		  AND artifact.type = ?
-		  AND NOT EXISTS (
-			SELECT 1 FROM artifact AS ep WHERE ep.parent_artifact_id = artifact.id
-		  )`,
-		[user.id, ArtifactType.ANIME]
-	);
-
-	if (animeNoEpisodes.length > 0) {
-		groups.push({
-			key: 'anime_no_episodes',
-			label: 'Anime — no episodes in database',
-			description: 'Anime entries in your collection that have no episode records in the database.',
-			entries: animeNoEpisodes
-		});
-	}
 
 	return {
 		groups: groups.filter(g => g.entries.length > 0)

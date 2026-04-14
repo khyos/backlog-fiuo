@@ -102,6 +102,13 @@ const updateMAL = async (animeId: number, malId: string) => {
         let duration = 0;
         if (malAnime.episodes) {
             const malAnimeEpisodes = await MAL.getAnimeEpisodes(malId);
+            if (malAnimeEpisodes.length === 0 && malAnime.episodes > 1) {
+                malAnimeEpisodes.push(...Array.from({ length: malAnime.episodes }, (_, i) => ({
+                    mal_id: i + 1,
+                    title: `Episode ${i + 1}`,
+                    aired: undefined
+                })));
+            }
             for (const episode of malAnimeEpisodes) {
                 const episodeNumber = episode.mal_id;
                 const episodeReleaseDate = episode.aired ? new Date(episode.aired) : undefined;
@@ -122,7 +129,11 @@ const updateMAL = async (animeId: number, malId: string) => {
             }
         }
         if (duration === 0 && malAnime.duration) {
-            duration = MAL.parseDuration(malAnime.duration) * 60;
+            if (malAnime.episodes > 1) {
+                duration = malAnime.episodes * durationPerEpisode;
+            } else {
+                duration = MAL.parseDuration(malAnime.duration) * 60;
+            }
         }
         await AnimeDB.updateAnime(animeId, malAnime.title, releaseDate, duration);
     } catch {

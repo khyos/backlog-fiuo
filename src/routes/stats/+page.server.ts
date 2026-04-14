@@ -26,6 +26,7 @@ export type StatEntry = {
 	score: number | null;
 	endDate: string | null;
 	startDate: string | null;
+	episodeCount: number | null;
 };
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -37,7 +38,11 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const placeholders = ALL_QUERIED_TYPES.map(() => '?').join(', ');
 	const entries = await getDbRows<StatEntry>(
 		`SELECT artifact.type, artifact.duration, user_artifact.status, user_artifact.score,
-			user_artifact.endDate, user_artifact.startDate
+			user_artifact.endDate, user_artifact.startDate,
+			CASE WHEN artifact.type = 'anime'
+				THEN (SELECT COUNT(*) FROM artifact child WHERE child.parent_artifact_id = artifact.id)
+				ELSE NULL
+			END AS episodeCount
 		FROM user_artifact
 		JOIN artifact ON artifact.id = user_artifact.artifactId
 		WHERE user_artifact.userId = ? AND artifact.type IN (${placeholders})`,

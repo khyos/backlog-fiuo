@@ -116,7 +116,46 @@
                 }));
             }
 
-            return { type, finishedCount: finishedInPeriod.length, totalDuration, averageScore, statusCounts, bars, episodeCount, episodeBars };
+        // Split anime into short (≤2 episodes) and regular (>2 episodes)
+        type AnimeBars = { finishedCount: number; totalDuration: number; bars: { label: string; showLabel: boolean; value: number }[] };
+        let animeShort: AnimeBars | null = null;
+        let animeRegular: AnimeBars | null = null;
+        if (type === ArtifactType.ANIME) {
+            const isShort = (e: StatEntry) => (e.episodeCount ?? 0) <= 2;
+            const shortFinished = finishedInPeriod.filter(isShort);
+            const regularFinished = finishedInPeriod.filter(e => !isShort(e));
+            const finishedTypeEntries = typeEntries.filter(e =>
+                e.status === UserArtifactStatus.FINISHED && e.endDate !== null
+            );
+            animeShort = {
+                finishedCount: shortFinished.length,
+                totalDuration: shortFinished.reduce((acc, e) => acc + (e.duration ?? 0), 0),
+                bars: subPeriods.map(sp => ({
+                    label: sp.label,
+                    showLabel: sp.displayLabel ?? false,
+                    value: finishedTypeEntries.filter(e => {
+                        if (!isShort(e)) return false;
+                        const ts = Date.parse(e.endDate!);
+                        return ts >= sp.start && ts <= sp.end;
+                    }).length
+                }))
+            };
+            animeRegular = {
+                finishedCount: regularFinished.length,
+                totalDuration: regularFinished.reduce((acc, e) => acc + (e.duration ?? 0), 0),
+                bars: subPeriods.map(sp => ({
+                    label: sp.label,
+                    showLabel: sp.displayLabel ?? false,
+                    value: finishedTypeEntries.filter(e => {
+                        if (isShort(e)) return false;
+                        const ts = Date.parse(e.endDate!);
+                        return ts >= sp.start && ts <= sp.end;
+                    }).length
+                }))
+            };
+        }
+
+        return { type, finishedCount: finishedInPeriod.length, totalDuration, averageScore, statusCounts, bars, episodeCount, episodeBars, animeShort, animeRegular };
         });
     }
 
@@ -220,8 +259,21 @@
 
                 <!-- Bar chart for temporal breakdown -->
                 <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
-                    <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1">Completed {SUB_PERIOD_LABEL[selectedPeriod]}</p>
-                    <BarChart bars={stat.bars} color={TYPE_COLOR[stat.type]} />
+                    {#if stat.type === ArtifactType.ANIME && stat.animeRegular && stat.animeShort}
+                        <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1">
+                            Series (&gt;2 episodes) completed {SUB_PERIOD_LABEL[selectedPeriod]}
+                            <span class="ml-2 font-medium text-gray-700 dark:text-gray-300">{stat.animeRegular.finishedCount}</span>
+                        </p>
+                        <BarChart bars={stat.animeRegular.bars} color={TYPE_COLOR[stat.type]} />
+                        <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mt-4 mb-1">
+                            Singles / OVAs (≤2 episodes) completed {SUB_PERIOD_LABEL[selectedPeriod]}
+                            <span class="ml-2 font-medium text-gray-700 dark:text-gray-300">{stat.animeShort.finishedCount}</span>
+                        </p>
+                        <BarChart bars={stat.animeShort.bars} color={TYPE_COLOR[stat.type]} />
+                    {:else}
+                        <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1">Completed {SUB_PERIOD_LABEL[selectedPeriod]}</p>
+                        <BarChart bars={stat.bars} color={TYPE_COLOR[stat.type]} />
+                    {/if}
                 </div>
 
                 <!-- Episode chart for anime / tvshow -->
