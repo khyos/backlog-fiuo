@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { HLTB } from './HLTB';
-import { got } from 'got';
+import got from 'got';
 import fs from 'fs';
 import path from 'path';
 import puppeteer from 'puppeteer';
