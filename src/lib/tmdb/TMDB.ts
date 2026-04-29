@@ -224,7 +224,7 @@ export class TMDB {
                 if (!usName && tmdbMovie.origin_country?.includes('US') && tmdbMovie.original_title) {
                     usName = tmdbMovie.original_title;
                 }
-            } else if (translation.iso_3166_1.toLowerCase() === tmdbMovie.origin_country?.[0].toLowerCase()) {
+            } else if (translation.iso_3166_1.toLowerCase() === tmdbMovie.origin_country?.[0]?.toLowerCase()) {
                 originCountryName = translation.data.title;
                 if (!originCountryName && tmdbMovie.original_title) {
                     originCountryName = tmdbMovie.original_title;
