@@ -35,7 +35,9 @@ describe('UserArtifact', () => {
             status: UserArtifactStatus.ON_GOING,
             score: 8.5,
             startDate: currentDate.toISOString(),
-            endDate: null
+            endDate: null,
+            ownerships: [],
+            availableSubscriptions: []
         });
     });
 
@@ -50,7 +52,9 @@ describe('UserArtifact', () => {
             status: null,
             score: null,
             startDate: null,
-            endDate: null
+            endDate: null,
+            ownerships: [],
+            availableSubscriptions: []
         });
     });
 
@@ -62,7 +66,9 @@ describe('UserArtifact', () => {
             status: UserArtifactStatus.ON_GOING,
             score: 8.5,
             startDate: currentDate.toISOString(),
-            endDate: null
+            endDate: null,
+            ownerships: [],
+            availableSubscriptions: []
         };
 
         const userArtifact = UserArtifact.fromJSON(json);
@@ -84,7 +90,9 @@ describe('UserArtifact', () => {
             status: null,
             score: null,
             startDate: null,
-            endDate: null
+            endDate: null,
+            ownerships: [],
+            availableSubscriptions: []
         };
 
         const userArtifact = UserArtifact.fromJSON(json);

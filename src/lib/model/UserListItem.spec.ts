@@ -55,7 +55,9 @@ describe('UserListItem', () => {
                 status: UserArtifactStatus.FINISHED,
                 score: 8.5,
                 startDate: currentDate.toISOString(),
-                endDate: currentDate.toISOString()
+                endDate: currentDate.toISOString(),
+                ownerships: [],
+                availableSubscriptions: []
             }
         };
 

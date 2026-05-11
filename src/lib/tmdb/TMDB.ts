@@ -329,4 +329,32 @@ export class TMDB {
             }   
         }
     }
+
+    static readonly PROVIDER_NAME_MAP: Record<string, string> = {
+        'Disney Plus': 'Disney+',
+        'Apple TV Plus': 'Apple TV+',
+    };
+
+    static async getWatchProviders(mediaType: 'movie' | 'tv', entries: { artifactId: number; tmdbId: string }[], country: string = 'FR'): Promise<Record<number, string[]>> {
+        const results = await Promise.all(
+            entries.map(async ({ artifactId, tmdbId }) => {
+                try {
+                    const response = await fetch(`https://api.themoviedb.org/3/${mediaType}/${tmdbId}/watch/providers`, {
+                        method: 'GET',
+                        headers: TMDB.getHeaders(),
+                        signal: AbortSignal.timeout(10000)
+                    });
+                    if (!response.ok) return { artifactId, providers: [] as string[] };
+                    const data = await response.json();
+                    const flatrate: { provider_name: string }[] = data?.results?.[country]?.flatrate ?? [];
+                    const providers = flatrate.map(p => TMDB.PROVIDER_NAME_MAP[p.provider_name] ?? p.provider_name);
+                    return { artifactId, providers };
+                } catch (e) {
+                    console.error(`TMDB getWatchProviders failed for ${mediaType}/${tmdbId}:`, ErrorUtil.getErrorMessage(e));
+                    return { artifactId, providers: [] as string[] };
+                }
+            })
+        );
+        return Object.fromEntries(results.map(({ artifactId, providers }) => [artifactId, providers]));
+    }
 }

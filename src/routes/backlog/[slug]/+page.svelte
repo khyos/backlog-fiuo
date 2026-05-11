@@ -96,7 +96,8 @@
     let prices: Record<string, Price>;
     const fetchPricesCb = async () => {
         const artifactIds = data.backlog.backlogItems.map(bi => bi.artifact.id);
-        prices = await fetchPrices(data.backlog.artifactType, artifactIds);  
+        prices = await fetchPrices(data.backlog.artifactType, artifactIds);
+        await refreshBacklog();
     }
 </script>
 

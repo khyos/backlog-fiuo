@@ -5,7 +5,9 @@ import { ArtifactDB } from "$lib/server/model/ArtifactDB";
 import { BacklogDB } from "$lib/server/model/BacklogDB";
 import { LinkDB } from "$lib/server/model/LinkDB";
 import { RatingDB } from "$lib/server/model/RatingDB";
+import { SubscriptionServiceDB } from "$lib/server/model/SubscriptionServiceDB";
 import { TagDB } from "$lib/server/model/TagDB";
+import { UserArtifactOwnershipDB } from "$lib/server/model/UserArtifactOwnershipDB";
 import { UserDB } from "$lib/server/model/UserDB";
 import { UserRatingDB } from "$lib/server/model/UserRatingDB";
 import { AnimeDB } from "$lib/server/model/anime/AnimeDB";
@@ -34,9 +36,13 @@ export class DBUtil {
             MovieDB.createMovieMovieGenreTable(),
             PlatformDB.createPlatformTable(),
             RatingDB.createRatingTable(),
+            SubscriptionServiceDB.createSubscriptionServiceTable(),
+            SubscriptionServiceDB.createArtifactSubscriptionTable(),
+            SubscriptionServiceDB.createUserSubscriptionTable(),
             TagDB.createTagTable(),
             TvshowDB.createTvshowGenreTable(),
             TvshowDB.createTvshowTvshowGenreTable(),
+            UserArtifactOwnershipDB.createUserArtifactOwnershipTable(),
             UserDB.createUserTable(),
             UserRatingDB.createUserRatingTable()
         ]);
@@ -46,5 +52,6 @@ export class DBUtil {
         await MAL.initGenres();
         await TMDB.initMovieGenres();
         await TMDB.initTvshowGenres();
+        await SubscriptionServiceDB.seedPredefinedServices();
     }
 }

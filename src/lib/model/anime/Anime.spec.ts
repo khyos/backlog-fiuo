@@ -192,7 +192,9 @@ describe('Anime', () => {
                 status: UserArtifactStatus.FINISHED,
                 score: 8.5,
                 startDate: null,
-                endDate: null
+                endDate: null,
+                ownerships: [],
+                availableSubscriptions: []
             },
             studio: 'Test Studio',
             source: 'Manga',

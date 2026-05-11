@@ -1,6 +1,6 @@
 <script lang="ts">
     import { Badge, Button, Dropdown, DropdownItem } from "flowbite-svelte";
-    import { AwardOutline, ChevronDownOutline, TagSolid } from "flowbite-svelte-icons";
+    import { AwardOutline, ChevronDownOutline, TagSolid, BookmarkOutline } from "flowbite-svelte-icons";
     import { draggable, dropzone } from "./dnd";
     import { BacklogRankingType } from "$lib/model/Backlog";
     import type { Price } from "$lib/types/itad/Price";
@@ -11,19 +11,40 @@
     import { LinkType } from "$lib/model/Link";
     import { TimeUtil } from "$lib/util/TimeUtil";
     import { removeTag, showAddTag } from "../actions/TagActions";
-    import { backlogStore } from "../stores/BacklogStore";
+    import { backlogStore, refreshBacklog } from "../stores/BacklogStore";
+    import { UserArtifactStatus } from "$lib/model/UserArtifact";
+    import { updateStatus as updateStatusAPI } from "$lib/services/ArtifactService";
 
     export let backlogItem: BacklogItem;
     export let canEdit: boolean = false;
     export let prices: Record<string, Price> | undefined = undefined;
+    export let showWishlistAction: boolean = false;
 
     $: backlogStoreInst = $backlogStore;
+    $: statusHighlight = (() => {
+        if (!showWishlistAction) return '';
+        const status = backlogItem.artifact.userInfo?.status;
+        if (!status) return 'border-l-4 border-red-500 pl-1';
+        if (status === UserArtifactStatus.ON_HOLD) return 'border-l-4 border-yellow-400 pl-1';
+        if (status === UserArtifactStatus.ON_GOING) return 'border-l-4 border-green-500 pl-1';
+        return '';
+    })();
+    $: hasNoStatus = showWishlistAction && !backlogItem.artifact.userInfo?.status;
     
     // Events
     export let onDeleteBacklogItem: (e: MouseEvent) => void;
     export let onMoveBacklogItem: (srcRank: number, targetRank: number) => Promise<void>;
 
+    const addToWishlist = async () => {
+        await updateStatusAPI([backlogItem.artifact.id], UserArtifactStatus.WISHLIST);
+        await refreshBacklog();
+    };
+
     let showFullTags = false;
+
+    $: compactBadgeCount = backlogItem.tags.length
+        + (backlogItem.artifact.userInfo?.ownerships?.length ?? 0)
+        + (backlogItem.artifact.userInfo?.availableSubscriptions?.length ?? 0);
 
     const showTags = () => {
         showFullTags = true;
@@ -44,7 +65,7 @@
 </script>
 
 <div
-    class="w-full"
+    class="w-full {statusHighlight}"
     use:draggable={{ canEdit: canEdit && backlogStoreInst.backlog.rankingType === BacklogRankingType.RANK, rank: backlogItem.rank }}
     use:dropzone={{ canEdit: canEdit && backlogStoreInst.backlog.rankingType === BacklogRankingType.RANK, rank: backlogItem.rank, onDrop: onMoveBacklogItem }}
 >
@@ -70,10 +91,20 @@
                         {/if}
                     </Badge>
                 {/each}
+                {#each backlogItem.artifact.userInfo?.ownerships ?? [] as ownership (ownership.id)}
+                    <Badge color="indigo" class="ml-1">
+                        {ownership.platform}
+                    </Badge>
+                {/each}
+                {#each backlogItem.artifact.userInfo?.availableSubscriptions ?? [] as sub (sub.id)}
+                    <Badge color="green" class="ml-1">
+                        {sub.name}
+                    </Badge>
+                {/each}
             </div>
         </div>
         <div id="compactTags" class="{showFullTags ? 'hidden' : 'block md:hidden'}">
-            {#if backlogItem.tags.length > 0}
+            {#if compactBadgeCount > 0}
                 <Badge class="font-semibold flex items-center gap-1 ml-1 mr-1">
                     <Button
                         id="showTags"
@@ -83,7 +114,7 @@
                         style="background-color: transparent; color: var(--tw-text-opacity)"
                     >
                         <TagSolid class="w-3 h-3" />
-                        <span>{backlogItem.tags.length}</span>
+                        <span>{compactBadgeCount}</span>
                     </Button>
                     
                 </Badge>
@@ -104,6 +135,11 @@
         {/if}
         {#if backlogStoreInst.backlog.rankingType === BacklogRankingType.WISHLIST}
             <Badge class="mr-1">{TimeUtil.formatDate(backlogItem.artifact.releaseDate)}</Badge>
+        {/if}
+        {#if hasNoStatus}
+            <Button size="xs" color="red" class="!p-1.5 mr-1" title="Add to wishlist" onclick={addToWishlist}>
+                <BookmarkOutline class="w-4 h-4" />
+            </Button>
         {/if}
         {#if canEdit}
             <Button size="xs" color="light" class="!p-1.5">
