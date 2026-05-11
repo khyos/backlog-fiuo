@@ -112,3 +112,55 @@ export const updateDate = async (artifactId: number, date: Date | null, startEnd
         alert("Failed to update date");
     });
 }
+
+export const addOwnership = async (artifactId: number, platform: string, note: string | null): Promise<number> => {
+    const response = await fetch(`/api/artifact/${artifactId}/ownership`, {
+        method: "POST",
+        body: JSON.stringify({ platform, note }),
+    });
+    if (!response.ok) {
+        throw new Error("Failed to add ownership");
+    }
+    const data = await response.json();
+    return data.id;
+}
+
+export const updateOwnership = async (artifactId: number, id: number, platform: string, note: string | null): Promise<void> => {
+    const response = await fetch(`/api/artifact/${artifactId}/ownership`, {
+        method: "PATCH",
+        body: JSON.stringify({ id, platform, note }),
+    });
+    if (!response.ok) {
+        throw new Error("Failed to update ownership");
+    }
+}
+
+export const deleteOwnership = async (artifactId: number, id: number): Promise<void> => {
+    const response = await fetch(`/api/artifact/${artifactId}/ownership`, {
+        method: "DELETE",
+        body: JSON.stringify({ id }),
+    });
+    if (!response.ok) {
+        throw new Error("Failed to delete ownership");
+    }
+}
+
+export const linkArtifactToSubscription = async (artifactId: number, serviceId: number): Promise<void> => {
+    const response = await fetch(`/api/artifact/${artifactId}/subscription`, {
+        method: "POST",
+        body: JSON.stringify({ serviceId }),
+    });
+    if (!response.ok) {
+        throw new Error("Failed to link subscription");
+    }
+}
+
+export const unlinkArtifactFromSubscription = async (artifactId: number, serviceId: number): Promise<void> => {
+    const response = await fetch(`/api/artifact/${artifactId}/subscription`, {
+        method: "DELETE",
+        body: JSON.stringify({ serviceId }),
+    });
+    if (!response.ok) {
+        throw new Error("Failed to unlink subscription");
+    }
+}

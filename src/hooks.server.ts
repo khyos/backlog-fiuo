@@ -4,6 +4,9 @@ import type { Handle } from "@sveltejs/kit";
 import jwt from "jsonwebtoken";
 import { error } from "@sveltejs/kit";
 import { checkRateLimit } from "$lib/util/RateLimitUtil";
+import { startSubscriptionSyncJob } from "$lib/server/jobs/SubscriptionSyncJob";
+
+startSubscriptionSyncJob();
 
 const AUTH_ROUTES = new Set(['/signin', '/signup']);
 

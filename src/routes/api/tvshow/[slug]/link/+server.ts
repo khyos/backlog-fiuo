@@ -6,6 +6,7 @@ import { RottenTomatoes } from "$lib/rottentomatoes/RottenTomatoes";
 import { SensCritique } from "$lib/senscritique/SensCritique";
 import { LinkDB } from "$lib/server/model/LinkDB";
 import { RatingDB } from "$lib/server/model/RatingDB";
+import { SubscriptionServiceDB } from "$lib/server/model/SubscriptionServiceDB";
 import { TMDB } from "$lib/tmdb/TMDB";
 import { error, json } from "@sveltejs/kit";
 import type { RequestEvent } from "./$types";
@@ -65,6 +66,13 @@ const setLinkInfo = async (tvshowId: number, type: LinkType, url: string): Promi
         if (rtRatings.audience) {
             await RatingDB.addRating(tvshowId, RatingType.ROTTEN_TOMATOES_AUDIENCE, rtRatings.audience);
         }
+    } else if (type === LinkType.TMDB) {
+        const [providersByArtifact, allServices] = await Promise.all([
+            TMDB.getWatchProviders('tv', [{ artifactId: tvshowId, tmdbId: url }]),
+            SubscriptionServiceDB.getAllServices()
+        ]);
+        const providerNames = providersByArtifact[tvshowId] ?? [];
+        await SubscriptionServiceDB.syncArtifactSubscriptions(tvshowId, providerNames, allServices);
     }
     return finalUrl;
 }
@@ -174,6 +182,12 @@ const updateTMDB = async (tvshowId: number, url: string) => {
             }
         }
         await TvshowDB.updateTvshow(tvshowId, title, releaseDate, duration);
+        const [providersByArtifact, allServices] = await Promise.all([
+            TMDB.getWatchProviders('tv', [{ artifactId: tvshowId, tmdbId: url }]),
+            SubscriptionServiceDB.getAllServices()
+        ]);
+        const providerNames = providersByArtifact[tvshowId] ?? [];
+        await SubscriptionServiceDB.syncArtifactSubscriptions(tvshowId, providerNames, allServices);
     } catch {
         return error(500, "Failed to Update TMDB");
     }

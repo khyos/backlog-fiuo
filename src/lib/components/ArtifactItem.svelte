@@ -5,9 +5,11 @@
     import { getLinkTypeLabel, getLinkTypesByArtifactType, Link, LinkType } from "$lib/model/Link";
     import { getMeanRatingColor, getRatingColor } from "$lib/model/Rating";
     import { UserArtifactStatus } from "$lib/model/UserArtifact";
+    import type { ISubscriptionService } from "$lib/model/SubscriptionService";
+    import type { IUserArtifactOwnership } from "$lib/model/UserArtifactOwnership";
     import { getAsyncInfo } from "$lib/services/ArtifactService";
     import { openLink } from "$lib/services/LinkService";
-    import { artifactItemStore, refreshArtifact, updateStatus, updateScore, updateDate, updateStartDate, updateEndDate, markFinishedUpTo } from "$lib/stores/ArtifactItemStore";
+    import { artifactItemStore, refreshArtifact, updateStatus, updateScore, updateDate, updateStartDate, updateEndDate, markFinishedUpTo, addOwnership, editOwnership, removeOwnership, addArtifactSubscription, removeArtifactSubscription } from "$lib/stores/ArtifactItemStore";
     import { TimeUtil } from "$lib/util/TimeUtil";
     import {
         Label,
@@ -15,6 +17,7 @@
         Modal,
         Input,
         Select,
+        Textarea,
         Card,
         Badge,
         Heading,
@@ -36,10 +39,13 @@
         StarSolid,
         LinkOutline,
         EditOutline,
+        TrashBinSolid,
         ChevronDownOutline,
         ChevronRightOutline,
         ChevronDoubleRightOutline,
-        DotsVerticalOutline
+        DotsVerticalOutline,
+        CheckCircleSolid,
+        CreditCardSolid,
     } from "flowbite-svelte-icons";
     import { onMount } from "svelte";
     import { SvelteSet } from "svelte/reactivity";
@@ -65,6 +71,79 @@
         value: LinkType,
         name: string
     }[] = [];
+
+    // Ownership state
+    let openAddOwnership = false;
+    let openEditOwnership = false;
+    let newOwnershipPlatform = '';
+    let newOwnershipNote = '';
+    let editingOwnership: IUserArtifactOwnership | null = null;
+    let editOwnershipPlatform = '';
+    let editOwnershipNote = '';
+
+    // Subscription state (admin linking)
+    let openManageSubscriptions = false;
+    let allSubscriptionServices: ISubscriptionService[] = [];
+    let artifactSubscriptionServices: ISubscriptionService[] = [];
+    let loadingSubscriptions = false;
+
+    const NON_GAME_OWNERSHIP_PLATFORMS = ['DVD', 'Blu-ray', 'VOD', '4K Blu-ray', 'Digital Download', 'VHS', 'Other'];
+
+    $: ownershipPlatformSuggestions = artifact.type === ArtifactType.GAME
+        ? platforms.map(p => p.title)
+        : NON_GAME_OWNERSHIP_PLATFORMS;
+
+    async function openManageSubscriptionsModal() {
+        openManageSubscriptions = true;
+        loadingSubscriptions = true;
+        try {
+            const [allRes, artRes] = await Promise.all([
+                fetch(`/api/subscription?artifactType=${artifact.type}`),
+                fetch(`/api/artifact/${artifact.id}/subscription`)
+            ]);
+            allSubscriptionServices = await allRes.json();
+            artifactSubscriptionServices = await artRes.json();
+        } finally {
+            loadingSubscriptions = false;
+        }
+    }
+
+    async function toggleArtifactSubscription(service: ISubscriptionService) {
+        const isLinked = artifactSubscriptionServices.some(s => s.id === service.id);
+        if (isLinked) {
+            await removeArtifactSubscription(service.id);
+            artifactSubscriptionServices = artifactSubscriptionServices.filter(s => s.id !== service.id);
+        } else {
+            await addArtifactSubscription(service.id);
+            artifactSubscriptionServices = [...artifactSubscriptionServices, service];
+        }
+    }
+
+    async function handleAddOwnership() {
+        if (!newOwnershipPlatform.trim()) return;
+        await addOwnership(newOwnershipPlatform.trim(), newOwnershipNote.trim() || null);
+        newOwnershipPlatform = '';
+        newOwnershipNote = '';
+        openAddOwnership = false;
+    }
+
+    function openEditOwnershipModal(ownership: IUserArtifactOwnership) {
+        editingOwnership = ownership;
+        editOwnershipPlatform = ownership.platform;
+        editOwnershipNote = ownership.note ?? '';
+        openEditOwnership = true;
+    }
+
+    async function handleEditOwnership() {
+        if (!editingOwnership || !editOwnershipPlatform.trim()) return;
+        await editOwnership(editingOwnership, editOwnershipPlatform.trim(), editOwnershipNote.trim() || null);
+        openEditOwnership = false;
+        editingOwnership = null;
+    }
+
+    async function handleRemoveOwnership(id: number) {
+        await removeOwnership(id);
+    }
 
     const USER_STATUSES = [
         { value: null, name: 'None' },
@@ -355,6 +434,58 @@
                             placeholder="Pick a end date" />
                     {/if}
                 </div>
+
+                <!-- Subscription availability -->
+                {#if artifact.userInfo?.availableSubscriptions && artifact.userInfo.availableSubscriptions.length > 0}
+                    <div class="mt-4 bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-200 dark:border-green-800">
+                        <div class="flex items-center mb-2">
+                            <CheckCircleSolid class="w-4 h-4 mr-1 text-green-500" />
+                            <span class="font-medium text-green-700 dark:text-green-400">Available on your subscriptions</span>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            {#each artifact.userInfo.availableSubscriptions as sub (sub.id)}
+                                <Badge color="green">{sub.name}</Badge>
+                            {/each}
+                        </div>
+                    </div>
+                {/if}
+
+                <!-- Ownership -->
+                <div class="mt-4 bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center">
+                            <CreditCardSolid class="w-4 h-4 mr-1 text-blue-500" />
+                            <span class="font-medium">Your copies</span>
+                        </div>
+                        <Button size="xs" color="light" onclick={() => (openAddOwnership = true)}>
+                            <PlusOutline class="w-3 h-3 mr-1" /> Add
+                        </Button>
+                    </div>
+                    {#if artifact.userInfo?.ownerships && artifact.userInfo.ownerships.length > 0}
+                        <div class="flex flex-col gap-2">
+                            {#each artifact.userInfo.ownerships as ownership (ownership.id)}
+                                <div class="flex items-start justify-between bg-white dark:bg-gray-700 rounded p-2 text-sm">
+                                    <div>
+                                        <span class="font-medium">{ownership.platform}</span>
+                                        {#if ownership.note}
+                                            <p class="text-gray-500 dark:text-gray-400 text-xs mt-0.5">{ownership.note}</p>
+                                        {/if}
+                                    </div>
+                                    <div class="flex gap-1 ml-2 shrink-0">
+                                        <Button size="xs" color="light" class="!p-1" onclick={() => openEditOwnershipModal(ownership)}>
+                                            <EditOutline class="w-3 h-3" />
+                                        </Button>
+                                        <Button size="xs" color="red" class="!p-1" onclick={() => handleRemoveOwnership(ownership.id)}>
+                                            <TrashBinSolid class="w-3 h-3" />
+                                        </Button>
+                                    </div>
+                                </div>
+                            {/each}
+                        </div>
+                    {:else}
+                        <p class="text-sm text-gray-500 dark:text-gray-400 italic">No copies recorded</p>
+                    {/if}
+                </div>
             {/if}
         </div>
         
@@ -415,7 +546,7 @@
                             <div class="flex items-center">
                                 <button 
                                     class="flex-1 flex items-center justify-between p-3 hover:bg-gray-100 transition-colors"
-                                    on:click={() => toggleChild(firstLevelChild.id)}
+                                    onclick={() => toggleChild(firstLevelChild.id)}
                                 >
                                     <span class="font-medium">{firstLevelChild.title}</span>
                                     {#if expandedChildren.has(firstLevelChild.id)}
@@ -574,6 +705,20 @@
                     {/each}
                 </div>
             </div>
+
+            {#if canEdit}
+                <div class="mb-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center">
+                            <CheckCircleSolid class="w-4 h-4 mr-2 text-green-500" />
+                            <P weight="medium" class="text-lg">Subscriptions</P>
+                        </div>
+                        <Button size="xs" color="green" onclick={openManageSubscriptionsModal}>
+                            <EditOutline class="mr-1 w-3 h-3" /> Manage
+                        </Button>
+                    </div>
+                </div>
+            {/if}
         
             <div>
                 <div class="flex items-center justify-between mb-2">
@@ -609,8 +754,8 @@
                     {#each artifact.links as link (link.type)}
                         <div class="flex items-center justify-between bg-gray-50 dark:bg-gray-800 p-2 rounded">
                             <button
-                                on:click={(event) => handleLinkClick(event, artifact.type, link.type, link.url)}
-                                on:auxclick={(event) => handleLinkClick(event, artifact.type, link.type, link.url)}
+                                onclick={(event) => handleLinkClick(event, artifact.type, link.type, link.url)}
+                                onauxclick={(event) => handleLinkClick(event, artifact.type, link.type, link.url)}
                                 class="text-blue-600 hover:underline flex-1 truncate" style="text-align:left"
                             >
                                 <span class="font-medium">{link.type}:</span> {link.url}
@@ -714,3 +859,100 @@
         <Button color="alternative" onclick={() => (openAddLink = false)}>Cancel</Button>
     {/snippet}
 </Modal>
+
+<!-- Add Ownership Modal -->
+<Modal title="Add a copy" bind:open={openAddOwnership} autoclose={false} size="sm">
+    <div class="flex flex-col gap-4">
+        <div>
+            <Label for="ownershipPlatform" class="mb-2">Platform / Format</Label>
+            <Input
+                type="text"
+                id="ownershipPlatform"
+                placeholder="e.g. PlayStation 4, Blu-ray, VOD…"
+                list="platformSuggestions"
+                bind:value={newOwnershipPlatform}
+            />
+            <datalist id="platformSuggestions">
+                {#each ownershipPlatformSuggestions as suggestion (suggestion)}
+                    <option value={suggestion}></option>
+                {/each}
+            </datalist>
+        </div>
+        <div>
+            <Label for="ownershipNote" class="mb-2">Note <span class="text-gray-400 font-normal">(optional)</span></Label>
+            <Textarea
+                id="ownershipNote"
+                placeholder="e.g. Amazon Prime Video, physical edition…"
+                rows={2}
+                bind:value={newOwnershipNote}
+            />
+        </div>
+    </div>
+    {#snippet footer()}
+        <Button color="green" onclick={handleAddOwnership} disabled={!newOwnershipPlatform.trim()}>Add</Button>
+        <Button color="alternative" onclick={() => (openAddOwnership = false)}>Cancel</Button>
+    {/snippet}
+</Modal>
+
+<!-- Edit Ownership Modal -->
+<Modal title="Edit copy" bind:open={openEditOwnership} autoclose={false} size="sm">
+    <div class="flex flex-col gap-4">
+        <div>
+            <Label for="editOwnershipPlatform" class="mb-2">Platform / Format</Label>
+            <Input
+                type="text"
+                id="editOwnershipPlatform"
+                list="editPlatformSuggestions"
+                bind:value={editOwnershipPlatform}
+            />
+            <datalist id="editPlatformSuggestions">
+                {#each ownershipPlatformSuggestions as suggestion (suggestion)}
+                    <option value={suggestion}></option>
+                {/each}
+            </datalist>
+        </div>
+        <div>
+            <Label for="editOwnershipNote" class="mb-2">Note <span class="text-gray-400 font-normal">(optional)</span></Label>
+            <Textarea
+                id="editOwnershipNote"
+                rows={2}
+                bind:value={editOwnershipNote}
+            />
+        </div>
+    </div>
+    {#snippet footer()}
+        <Button color="green" onclick={handleEditOwnership} disabled={!editOwnershipPlatform.trim()}>Save</Button>
+        <Button color="alternative" onclick={() => (openEditOwnership = false)}>Cancel</Button>
+    {/snippet}
+</Modal>
+
+<!-- Manage Artifact Subscriptions Modal (admin/contributor) -->
+{#if canEdit}
+<Modal title="Manage subscription availability" bind:open={openManageSubscriptions} size="sm">
+    {#if loadingSubscriptions}
+        <div class="flex justify-center py-6"><Spinner /></div>
+    {:else}
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+            Select which subscription services include this artifact.
+        </p>
+        <div class="flex flex-col gap-2">
+            {#each allSubscriptionServices as service (service.id)}
+                {@const linked = artifactSubscriptionServices.some(s => s.id === service.id)}
+                <button
+                    class="flex items-center justify-between p-2 rounded border text-left transition-colors
+                           {linked ? 'bg-green-50 border-green-300 dark:bg-green-900/20 dark:border-green-700' : 'border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'}"
+                    onclick={() => toggleArtifactSubscription(service)}
+                >
+                    <span class="text-sm font-medium">{service.name}</span>
+                    {#if linked}
+                        <CheckCircleSolid class="w-4 h-4 text-green-500 shrink-0" />
+                    {/if}
+                </button>
+            {/each}
+        </div>
+    {/if}
+    {#snippet footer()}
+        <Button color="alternative" onclick={() => (openManageSubscriptions = false)}>Close</Button>
+    {/snippet}
+</Modal>
+{/if}

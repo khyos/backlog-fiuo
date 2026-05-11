@@ -3,6 +3,7 @@ import type { Backlog } from "$lib/model/Backlog";
 import type { Tag } from "$lib/model/Tag";
 import { User, UserRights } from "$lib/model/User";
 import { AnimeDB } from "./anime/AnimeDB";
+import { ArtifactDB } from "./ArtifactDB";
 import { BacklogDB } from "./BacklogDB";
 import { GameDB } from "./game/GameDB";
 import { MovieDB } from "./movie/MovieDB";
@@ -52,6 +53,15 @@ export class BacklogUtil {
         const backlog = await BacklogDB.getBacklogByIdWithItems(backlogId);
         if (!backlog) {
             return null;
+        }
+
+        if (user.id !== -1) {
+            const artifactIds = backlog.backlogItems.map(item => item.artifact.id);
+            if (artifactIds.length > 0) {
+                const userInfos = await ArtifactDB.getUserInfos(user.id, artifactIds);
+                const userInfoMap = Object.fromEntries(userInfos.map(ui => [ui.artifactId, ui]));
+                backlog.backlogItems.forEach(item => item.artifact.setUserInfos(userInfoMap));
+            }
         }
     
         const backlogTags = BacklogUtil.extractUniqueTagsFromBacklog(backlog);

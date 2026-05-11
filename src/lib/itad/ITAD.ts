@@ -15,10 +15,28 @@ export type ITAD_Price = {
     }[]
 }
 
+export type ITAD_Subscription = {
+    id: string,
+    subs: {
+        id: number,
+        name: string,
+        leaving: string | null
+    }[]
+}
+
 export class ITAD {
     static async getPrices(gameIds: string[]): Promise<ITAD_Price[]> {
         const response = await fetch(`https://api.isthereanydeal.com/games/prices/v3?key=${ITA_APP_ID}&country=FR&shops=6,16,28,35,36,37,52,61,62,`, {
             method: 'POST',
+            body: JSON.stringify(gameIds)
+        });
+        return (await response.json());
+    }
+
+    static async getSubscriptions(gameIds: string[]): Promise<ITAD_Subscription[]> {
+        const response = await fetch(`https://api.isthereanydeal.com/games/subs/v1?key=${ITA_APP_ID}&country=US`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(gameIds)
         });
         return (await response.json());

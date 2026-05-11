@@ -12,6 +12,8 @@ import { GameDB } from './game/GameDB';
 import { BacklogDB } from './BacklogDB';
 import { RatingDB } from './RatingDB';
 import { LinkDB } from './LinkDB';
+import { SubscriptionServiceDB } from './SubscriptionServiceDB';
+import { UserArtifactOwnershipDB } from './UserArtifactOwnershipDB';
 
 describe('ArtifactDB', () => {
     // Shared cleanup function to eliminate duplication
@@ -19,6 +21,9 @@ describe('ArtifactDB', () => {
         await runDbQueriesParallel([
             { query: 'DELETE FROM movie_movie_genre' },
             { query: 'DELETE FROM game_game_genre' },
+            { query: 'DELETE FROM user_artifact_ownership' },
+            { query: 'DELETE FROM artifact_subscription' },
+            { query: 'DELETE FROM user_subscription' },
             { query: 'DELETE FROM user_artifact' },
             { query: 'DELETE FROM backlog_items' },
             { query: 'DELETE FROM backlog_item_tag' },
@@ -51,6 +56,12 @@ describe('ArtifactDB', () => {
         // Create additional tables needed for comprehensive testing
         await RatingDB.createRatingTable();
         await LinkDB.createLinkTable();
+
+        // Create subscription and ownership tables
+        await SubscriptionServiceDB.createSubscriptionServiceTable();
+        await SubscriptionServiceDB.createArtifactSubscriptionTable();
+        await SubscriptionServiceDB.createUserSubscriptionTable();
+        await UserArtifactOwnershipDB.createUserArtifactOwnershipTable();
     });
 
     beforeEach(async () => {

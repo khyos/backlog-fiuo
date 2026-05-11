@@ -9,6 +9,7 @@ import { OpenCritic } from "$lib/opencritic/OpenCritic";
 import { SensCritique } from "$lib/senscritique/SensCritique";
 import { LinkDB } from "$lib/server/model/LinkDB";
 import { RatingDB } from "$lib/server/model/RatingDB";
+import { SubscriptionServiceDB } from "$lib/server/model/SubscriptionServiceDB";
 import { GameDB } from "$lib/server/model/game/GameDB";
 import { Steam } from "$lib/steam/Steam";
 import { error, json } from "@sveltejs/kit";
@@ -73,6 +74,14 @@ const setLinkInfo = async (gameId: number, type: LinkType, url: string): Promise
         }
     } else if (type === LinkType.ITAD) {
         finalUrl = await ITAD.getIdFromSlug(url);
+        if (finalUrl) {
+            const [subscriptions, allServices] = await Promise.all([
+                ITAD.getSubscriptions([finalUrl]),
+                SubscriptionServiceDB.getAllServices()
+            ]);
+            const serviceNames = subscriptions[0]?.subs.map(s => s.name) ?? [];
+            await SubscriptionServiceDB.syncArtifactSubscriptions(gameId, serviceNames, allServices);
+        }
     }
     return finalUrl;
 }
@@ -140,6 +149,17 @@ export async function PUT({ params, request, locals }: RequestEvent) {
                     }
                 } catch {
                     return error(500, "Failed to Update STEAM");
+                }
+            } else if (type === LinkType.ITAD) {
+                try {
+                    const [subscriptions, allServices] = await Promise.all([
+                        ITAD.getSubscriptions([url]),
+                        SubscriptionServiceDB.getAllServices()
+                    ]);
+                    const serviceNames = subscriptions[0]?.subs.map(s => s.name) ?? [];
+                    await SubscriptionServiceDB.syncArtifactSubscriptions(gameId, serviceNames, allServices);
+                } catch {
+                    return error(500, "Failed to Update ITAD subscriptions");
                 }
             }
         }

@@ -126,6 +126,7 @@
                 {backlogItem}
                 canEdit={data.canEdit}
                 {prices}
+                showWishlistAction={true}
                 onDeleteBacklogItem={deleteBacklogItemCb}
                 onMoveBacklogItem={moveBacklogItem}
             />

@@ -1,10 +1,16 @@
 import { type Artifact } from "$lib/model/Artifact";
 import { UserArtifactStatus } from "$lib/model/UserArtifact";
+import type { IUserArtifactOwnership } from "$lib/model/UserArtifactOwnership";
 import {
     getArtifact,
     updateStatus as updateStatusAPI,
     updateScore as updateScoreAPI,
-    updateDate as updateDateAPI
+    updateDate as updateDateAPI,
+    addOwnership as addOwnershipAPI,
+    updateOwnership as updateOwnershipAPI,
+    deleteOwnership as deleteOwnershipAPI,
+    linkArtifactToSubscription as linkSubscriptionAPI,
+    unlinkArtifactFromSubscription as unlinkSubscriptionAPI
 } from "$lib/services/ArtifactService";
 import { get, writable } from "svelte/store";
 
@@ -142,4 +148,53 @@ export const markFinishedUpTo = async (targetArtifactId: number) => {
         ...s,
         artifact: root
     }));
+}
+
+export const addOwnership = async (platform: string, note: string | null) => {
+    const store = get(artifactItemStore);
+    const artifact = store.artifact;
+    const id = await addOwnershipAPI(artifact.id, platform, note);
+    if (artifact.userInfo) {
+        artifact.userInfo.ownerships = [
+            ...artifact.userInfo.ownerships,
+            { __type: 'UserArtifactOwnership', id, userId: artifact.userInfo.userId, artifactId: artifact.id, platform, note }
+        ];
+    }
+    artifactItemStore.update(s => ({ ...s, artifact }));
+}
+
+export const editOwnership = async (ownership: IUserArtifactOwnership, platform: string, note: string | null) => {
+    const store = get(artifactItemStore);
+    const artifact = store.artifact;
+    await updateOwnershipAPI(artifact.id, ownership.id, platform, note);
+    if (artifact.userInfo) {
+        artifact.userInfo.ownerships = artifact.userInfo.ownerships.map(o =>
+            o.id === ownership.id ? { ...o, platform, note } : o
+        );
+    }
+    artifactItemStore.update(s => ({ ...s, artifact }));
+}
+
+export const removeOwnership = async (ownershipId: number) => {
+    const store = get(artifactItemStore);
+    const artifact = store.artifact;
+    await deleteOwnershipAPI(artifact.id, ownershipId);
+    if (artifact.userInfo) {
+        artifact.userInfo.ownerships = artifact.userInfo.ownerships.filter(o => o.id !== ownershipId);
+    }
+    artifactItemStore.update(s => ({ ...s, artifact }));
+}
+
+export const addArtifactSubscription = async (serviceId: number) => {
+    const store = get(artifactItemStore);
+    const artifact = store.artifact;
+    await linkSubscriptionAPI(artifact.id, serviceId);
+    artifactItemStore.update(s => ({ ...s, artifact }));
+}
+
+export const removeArtifactSubscription = async (serviceId: number) => {
+    const store = get(artifactItemStore);
+    const artifact = store.artifact;
+    await unlinkSubscriptionAPI(artifact.id, serviceId);
+    artifactItemStore.update(s => ({ ...s, artifact }));
 }

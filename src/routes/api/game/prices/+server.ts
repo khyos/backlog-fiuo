@@ -1,6 +1,7 @@
 import { ITAD } from "$lib/itad/ITAD";
 import { LinkType } from "$lib/model/Link";
 import { LinkDB } from "$lib/server/model/LinkDB";
+import { SubscriptionServiceDB } from "$lib/server/model/SubscriptionServiceDB";
 import { json } from "@sveltejs/kit";
 import type { RequestEvent } from "./$types";
 import type { Price } from "$lib/types/itad/Price";
@@ -9,7 +10,24 @@ export async function POST({ request }: RequestEvent) {
     const { artifactIds } = await request.json();
     const idsMapping = await LinkDB.getLinksMultiple(LinkType.ITAD, artifactIds);
     const itadIds = Object.values(idsMapping);
-    const prices = await ITAD.getPrices(itadIds);
+
+    const [prices, subscriptions, allServices] = await Promise.all([
+        ITAD.getPrices(itadIds),
+        ITAD.getSubscriptions(itadIds),
+        SubscriptionServiceDB.getAllServices()
+    ]);
+
+    // Sync artifact_subscription for each game
+    const subsById = new Map(subscriptions.map(s => [s.id, s.subs.map(sub => sub.name)]));
+    await Promise.all(
+        artifactIds.map((artifactId: number) => {
+            const itadId = idsMapping[artifactId];
+            if (!itadId) return Promise.resolve();
+            const serviceNames = subsById.get(itadId) ?? [];
+            return SubscriptionServiceDB.syncArtifactSubscriptions(artifactId, serviceNames, allServices);
+        })
+    );
+
     const pricesResult = await Promise.all(
         prices.map(async price => {
             return {

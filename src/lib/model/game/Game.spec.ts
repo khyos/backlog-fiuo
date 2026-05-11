@@ -192,7 +192,9 @@ describe('Game', () => {
                 status: UserArtifactStatus.FINISHED,
                 score: 8.5,
                 startDate: null,
-                endDate: null
+                endDate: null,
+                ownerships: [],
+                availableSubscriptions: []
             },
             platforms: [{
                 __type: 'Platform',

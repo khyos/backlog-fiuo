@@ -7,6 +7,8 @@ import { BacklogOrder, BacklogRankingType } from "$lib/model/Backlog";
 import { Genre } from "$lib/model/Genre";
 import { runDbQueries, runDbQuery, getDbRow, getDbRows, runDbInsert } from "../database";
 import { type IBacklogItemDB } from "./BacklogDB";
+import { SubscriptionServiceDB } from "./SubscriptionServiceDB";
+import { UserArtifactOwnershipDB } from "./UserArtifactOwnershipDB";
 
 export interface IGenreDB {
     id: number;
@@ -138,7 +140,9 @@ export class ArtifactDB {
                     status: row.status,
                     score: row.score,
                     startDate: row.startDate,
-                    endDate: row.endDate
+                    endDate: row.endDate,
+                    ownerships: [],
+                    availableSubscriptions: []
                 }
             });
         });
@@ -175,7 +179,9 @@ export class ArtifactDB {
                     status: row.status,
                     score: row.score,
                     startDate: row.startDate,
-                    endDate: row.endDate
+                    endDate: row.endDate,
+                    ownerships: [],
+                    availableSubscriptions: []
                 }
             });
         });
@@ -223,15 +229,23 @@ export class ArtifactDB {
     }
 
     static async getUserInfos(userId: number, artifactIds: number[]): Promise<UserArtifact[]> {
-        const questionMarks = new Array(artifactIds.length).fill('?').join(',');
-        const rows = await getDbRows<IUserArtifactDB>(`SELECT * FROM user_artifact WHERE userId = ? AND artifactId IN (${questionMarks})`, [userId, ...artifactIds]);
+        if (artifactIds.length === 0) return [];
+        const questionMarks = artifactIds.map(() => '?').join(',');
+        const [rows, ownershipsMap, subscriptionsMap] = await Promise.all([
+            getDbRows<IUserArtifactDB>(`SELECT * FROM user_artifact WHERE userId = ? AND artifactId IN (${questionMarks})`, [userId, ...artifactIds]),
+            UserArtifactOwnershipDB.getOwnershipsForUserBatch(userId, artifactIds),
+            SubscriptionServiceDB.getAvailableSubscriptionsForUserBatch(userId, artifactIds)
+        ]);
+
         return rows.map(row => new UserArtifact(
             row.userId,
             row.artifactId,
             row.status,
             row.score,
             row.startDate ? new Date(row.startDate) : null,
-            row.endDate ? new Date(row.endDate) : null
+            row.endDate ? new Date(row.endDate) : null,
+            (ownershipsMap.get(row.artifactId) ?? []).map(o => o.toJSON()),
+            (subscriptionsMap.get(row.artifactId) ?? []).map(s => s.toJSON())
         ));
     }
 

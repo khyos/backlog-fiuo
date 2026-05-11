@@ -6,6 +6,7 @@ import { RottenTomatoes } from "$lib/rottentomatoes/RottenTomatoes";
 import { SensCritique } from "$lib/senscritique/SensCritique";
 import { LinkDB } from "$lib/server/model/LinkDB";
 import { RatingDB } from "$lib/server/model/RatingDB";
+import { SubscriptionServiceDB } from "$lib/server/model/SubscriptionServiceDB";
 import { MovieDB } from "$lib/server/model/movie/MovieDB";
 import { TMDB } from "$lib/tmdb/TMDB";
 import { error, json } from "@sveltejs/kit";
@@ -64,6 +65,13 @@ const setLinkInfo = async (movieId: number, type: LinkType, url: string): Promis
         if (rtRatings.audience) {
             await RatingDB.updateRating(movieId, RatingType.ROTTEN_TOMATOES_AUDIENCE, rtRatings.audience);
         }
+    } else if (type === LinkType.TMDB) {
+        const [providersByArtifact, allServices] = await Promise.all([
+            TMDB.getWatchProviders('movie', [{ artifactId: movieId, tmdbId: url }]),
+            SubscriptionServiceDB.getAllServices()
+        ]);
+        const providerNames = providersByArtifact[movieId] ?? [];
+        await SubscriptionServiceDB.syncArtifactSubscriptions(movieId, providerNames, allServices);
     }
     return finalUrl;
 }
@@ -93,6 +101,12 @@ export async function PUT({ params, request, locals }: RequestEvent) {
 
                     const duration = tmdbMovie.runtime * 60;
                     await MovieDB.updateMovie(movieId, title, releaseDate, duration);
+                    const [providersByArtifact, allServices] = await Promise.all([
+                        TMDB.getWatchProviders('movie', [{ artifactId: movieId, tmdbId: url }]),
+                        SubscriptionServiceDB.getAllServices()
+                    ]);
+                    const providerNames = providersByArtifact[movieId] ?? [];
+                    await SubscriptionServiceDB.syncArtifactSubscriptions(movieId, providerNames, allServices);
                 } catch {
                     return error(500, "Failed to Update TMDB");
                 }
