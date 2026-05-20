@@ -16,7 +16,7 @@ export async function GET({ url, locals }: RequestEvent) {
 
     let tmdbResults;
     try {
-        tmdbResults = await TMDB.searchMovie(query);
+        tmdbResults = await TMDB.searchTvshow(query);
     } catch (e) {
         tmdbResults = {
             error: ErrorUtil.getErrorMessage(e)
@@ -24,7 +24,7 @@ export async function GET({ url, locals }: RequestEvent) {
     }
     let scResults;
     try {
-        scResults = await SensCritique.searchMovie(query);
+        scResults = await SensCritique.searchTvshow(query);
     } catch (e) {
         scResults = {
             error: ErrorUtil.getErrorMessage(e)
@@ -32,7 +32,7 @@ export async function GET({ url, locals }: RequestEvent) {
     }
     let mcResults;
     try {
-        mcResults = await MetaCritic.searchMovie(query);
+        mcResults = await MetaCritic.searchTvshow(query);
     } catch (e) {
         mcResults = {
             error: ErrorUtil.getErrorMessage(e)
@@ -40,7 +40,7 @@ export async function GET({ url, locals }: RequestEvent) {
     }
     let rtResults;
     try {
-        rtResults = await RottenTomatoes.searchMovie(query);
+        rtResults = await RottenTomatoes.searchTvshow(query);
     } catch (e) {
         rtResults = {
             error: ErrorUtil.getErrorMessage(e)

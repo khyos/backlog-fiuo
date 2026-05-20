@@ -17,31 +17,28 @@ export async function POST({ request, locals }: RequestEvent) {
     }
     const { malId, scId } = await request.json();
     if (!malId) {
-        error(500, 'No MyAnimeList ID provided');
+        return error(400, 'No MyAnimeList ID provided');
     }
-    
+
     const alreadyExists = await LinkDB.exists(LinkType.MAL, malId, ArtifactType.ANIME);
     if (alreadyExists) {
-        error(500, 'Anime already exists in list');
+        return error(409, 'Anime already exists in list');
     }
-    
+
     const malAnime = await MAL.getAnime(malId);
     if (!malAnime) {
-        error(500, 'Could not fetch anime from MyAnimeList');
+        return error(500, 'Could not fetch anime from MyAnimeList');
     }
-    
+
     const links: Link[] = [];
     const ratings: Rating[] = [];
 
-    // Add MAL link
     links.push(new Link(LinkType.MAL, malId));
 
-    // Add MAL rating if available
     if (malAnime.score) {
         ratings.push(new Rating(RatingType.MAL, malAnime.score));
     }
 
-    // Add SensCritique link and rating if provided
     if (scId) {
         links.push(new Link(LinkType.SENSCRITIQUE, scId));
         const scRating = await SensCritique.getTvshowRating(scId);

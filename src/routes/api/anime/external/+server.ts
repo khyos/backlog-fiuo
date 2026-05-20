@@ -23,7 +23,7 @@ export async function GET({ url, locals }: RequestEvent) {
 
     let scResults;
     try {
-        scResults = await SensCritique.searchTvshow(query); // Assuming they have anime/tv shows
+        scResults = await SensCritique.searchTvshow(query);
     } catch (error) {
         scResults = {
             error: ErrorUtil.getErrorMessage(error)

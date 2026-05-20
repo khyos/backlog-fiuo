@@ -74,7 +74,7 @@
         
         searchStatus = 'started';
         try {
-            const response = await fetch(`/api/anime/findAnimeInfo?query=${encodeURIComponent(searchTerm)}`);
+            const response = await fetch(`/api/anime/external?query=${encodeURIComponent(searchTerm)}`);
             if (!response.ok) {
                 throw new Error('Search failed');
             }
@@ -146,7 +146,7 @@
         });
 
         try {
-            const response = await fetch("/api/anime/create", {
+            const response = await fetch("/api/anime", {
                 method: "POST",
                 headers: {
                     'Content-Type': 'application/json'

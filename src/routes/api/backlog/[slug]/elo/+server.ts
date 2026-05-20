@@ -14,7 +14,7 @@ export async function POST({ params, request, locals }: RequestEvent) {
 	const { winnerArtifactId, loserArtifactId } = await request.json();
     try {
         await BacklogDB.eloFight(backlogId, winnerArtifactId, loserArtifactId);
-        return json({});
+        return json({ success: true });
     } catch (e) {
         return error(500, ErrorUtil.getErrorMessage(e));
     }

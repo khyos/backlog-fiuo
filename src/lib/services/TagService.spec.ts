@@ -18,7 +18,7 @@ describe('TagService', () => {
 
             await createTag('test-tag', ArtifactType.GAME);
 
-            expect(mockFetch).toHaveBeenCalledWith('/api/tag/create', {
+            expect(mockFetch).toHaveBeenCalledWith('/api/tag', {
                 method: 'POST',
                 body: JSON.stringify({
                     id: 'test-tag',

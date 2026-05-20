@@ -18,7 +18,7 @@ export class MovieDB {
         const row = await ArtifactDB.getArtifactById(id);
         if (!row) return null;
 
-        const releaseDate = new Date(parseInt(row.releaseDate, 10));
+        const releaseDate = new Date(row.releaseDate);
         const movie = new Movie(row.id, row.title, row.type, releaseDate, row.duration);
         
         movie.genres = await MovieDB.getAssignedGenres(id);
@@ -38,7 +38,7 @@ export class MovieDB {
     }
 
     static deserialize(artifactJSON: IArtifactDB): Movie {
-        const releaseDate = new Date(parseInt(artifactJSON.releaseDate, 10));
+        const releaseDate = new Date(artifactJSON.releaseDate);
         return new Movie(artifactJSON.id, artifactJSON.title, artifactJSON.type, releaseDate, artifactJSON.duration);
     }
 
@@ -80,7 +80,7 @@ export class MovieDB {
         );
 
         const backlogItems: BacklogItem[] = await Promise.all(dbBacklockItems.map(async row => {
-            const releaseDate = new Date(parseInt(row.releaseDate, 10));
+            const releaseDate = new Date(row.releaseDate);
             const movie = new Movie(row.artifactId, row.title, row.type, releaseDate, row.duration);
             movie.genres = await MovieDB.getAssignedGenres(row.artifactId);
             movie.ratings = await RatingDB.getRatings(row.artifactId);

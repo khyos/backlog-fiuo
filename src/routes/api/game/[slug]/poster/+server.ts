@@ -1,7 +1,7 @@
 import { IGDB } from "$lib/igdb/IGDB";
 import { LinkType } from "$lib/model/Link";
 import { GameDB } from "$lib/server/model/game/GameDB";
-import { error, text } from "@sveltejs/kit";
+import { error, json } from "@sveltejs/kit";
 import type { RequestEvent } from "./$types";
 
 export async function GET({ params }: RequestEvent) {
@@ -12,9 +12,9 @@ export async function GET({ params }: RequestEvent) {
         if (link) {
             const url = await IGDB.getImageURL(link.url);
             if (url) {
-                return text(url);
+                return json({ url });
             }
         }
 	}
-	error(404, 'Not found');
+	return error(404, 'Not found');
 }

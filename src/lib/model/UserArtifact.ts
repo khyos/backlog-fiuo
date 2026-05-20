@@ -17,8 +17,8 @@ export interface IUserArtifactDB {
     artifactId: number
     status: UserArtifactStatus | null
     score: number | null
-    startDate: string | null
-    endDate: string | null
+    startDate: number | null
+    endDate: number | null
 }
 
 export interface IUserArtifact extends ISerializable {

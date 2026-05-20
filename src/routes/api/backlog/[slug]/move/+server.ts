@@ -14,7 +14,7 @@ export async function POST({ params, request, locals }: RequestEvent) {
 	const { srcRank, targetRank } = await request.json();
     try {
         await BacklogDB.moveBacklogItem(backlogId, srcRank, targetRank);
-        return json({ moved: backlogId });
+        return json({ success: true });
     } catch (e) {
         return error(500, ErrorUtil.getErrorMessage(e));
     }

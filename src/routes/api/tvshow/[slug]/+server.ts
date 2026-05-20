@@ -9,7 +9,7 @@ export async function GET({ params }: RequestEvent) {
 	if (tvshow) {
 		return json(tvshow.toJSON());
 	}
-	error(404, 'Not found');
+	return error(404, 'Not found');
 }
 
 export async function DELETE({ params, locals }: RequestEvent) {
@@ -19,5 +19,5 @@ export async function DELETE({ params, locals }: RequestEvent) {
     }
 	const tvshowId = parseInt(params.slug);
     await TvshowDB.deleteTvshow(tvshowId);
-    return json({ deleted: tvshowId });
+    return json({ success: true });
 }

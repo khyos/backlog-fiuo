@@ -9,7 +9,7 @@ export async function GET({ params }: RequestEvent) {
 	if (anime) {
 		return json(anime.toJSON());
 	}
-	error(404, 'Not found');
+	return error(404, 'Not found');
 }
 
 export async function DELETE({ params, locals }: RequestEvent) {
@@ -19,5 +19,5 @@ export async function DELETE({ params, locals }: RequestEvent) {
     }
 	const animeId = parseInt(params.slug);
     await AnimeDB.deleteAnime(animeId);
-    return json({ deleted: animeId });
+    return json({ success: true });
 }

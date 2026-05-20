@@ -1,9 +1,10 @@
 import { describe, expect, test, beforeAll, afterAll, beforeEach, vi } from 'vitest';
-import { runDbQueriesParallel } from '../database';
+import { runDbQueries } from '../database';
 import { BacklogDB } from './BacklogDB';
 import { BacklogItemDB } from './BacklogItemDB';
 import { TagDB } from './TagDB';
 import { UserDB } from './UserDB';
+import { ArtifactDB } from './ArtifactDB';
 import { ArtifactType } from '$lib/model/Artifact';
 import { BacklogRankingType, BacklogType } from '$lib/model/Backlog';
 import { User, UserRole } from '$lib/model/User';
@@ -26,13 +27,14 @@ const mockArtifactDBMethods = async () => {
 
 describe('BacklogDB', () => {
     const cleanupTestData = async () => {
-        await runDbQueriesParallel([
+        await runDbQueries([
             { query: 'DELETE FROM backlog_item_tag' },
             { query: 'DELETE FROM backlog_items' },
             { query: 'DELETE FROM backlog' },
             { query: 'DELETE FROM tag' },
+            { query: 'DELETE FROM artifact' },
             { query: 'DELETE FROM user' },
-            { query: 'DELETE FROM sqlite_sequence WHERE name IN ("backlog", "backlog_items", "user")' }
+            { query: 'DELETE FROM sqlite_sequence WHERE name IN ("backlog", "backlog_items", "artifact", "user")' }
         ]);
     };
 
@@ -43,6 +45,7 @@ describe('BacklogDB', () => {
         await BacklogDB.createBacklogItemTagTable();
         await TagDB.createTagTable();
         await UserDB.createUserTable();
+        await ArtifactDB.createArtifactTable();
         
         // Mock artifact DB methods
         await mockArtifactDBMethods();
@@ -54,6 +57,14 @@ describe('BacklogDB', () => {
         // Set up test users
         await UserDB.signUp('testuser1', 'password123');
         await UserDB.signUp('testuser2', 'password456');
+
+        // Set up stub artifacts for backlog item tests (fake IDs used across tests)
+        await runDbQueries([
+            { query: "INSERT INTO artifact (id, title, type, releaseDate, duration) VALUES (100, 'Test Artifact 1', 'game', '2020-01-01', 60)" },
+            { query: "INSERT INTO artifact (id, title, type, releaseDate, duration) VALUES (200, 'Test Artifact 2', 'game', '2020-01-01', 60)" },
+            { query: "INSERT INTO artifact (id, title, type, releaseDate, duration) VALUES (300, 'Test Artifact 3', 'game', '2020-01-01', 60)" },
+            { query: "INSERT INTO artifact (id, title, type, releaseDate, duration) VALUES (400, 'Test Artifact 4', 'game', '2020-01-01', 60)" }
+        ]);
         
         // Set up test tags
         await TagDB.createTag('action', ArtifactType.GAME, TagType.DEFAULT);
@@ -713,13 +724,12 @@ describe('BacklogDB', () => {
 
     describe('Error handling and edge cases', () => {
         test('should handle invalid user IDs in createBacklog', async () => {
-            // Negative user ID
-            const backlog1 = await BacklogDB.createBacklog(-1, 'Test', BacklogType.STANDARD, ArtifactType.GAME, BacklogRankingType.RANK);
-            expect(backlog1).not.toBeNull(); // The method might still create the backlog
-            
-            // Zero user ID
-            const backlog2 = await BacklogDB.createBacklog(0, 'Test', BacklogType.STANDARD, ArtifactType.GAME, BacklogRankingType.RANK);
-            expect(backlog2).not.toBeNull();
+            // With FK constraints, creating a backlog for a non-existent user must fail
+            await expect(BacklogDB.createBacklog(-1, 'Test', BacklogType.STANDARD, ArtifactType.GAME, BacklogRankingType.RANK))
+                .rejects.toThrow();
+
+            await expect(BacklogDB.createBacklog(0, 'Test', BacklogType.STANDARD, ArtifactType.GAME, BacklogRankingType.RANK))
+                .rejects.toThrow();
         });
 
         test('should handle very long backlog titles', async () => {

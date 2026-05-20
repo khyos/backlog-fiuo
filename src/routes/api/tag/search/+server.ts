@@ -6,9 +6,9 @@ import { ArtifactType } from "$lib/model/Artifact";
 export async function GET({ url }: RequestEvent) {
     const artifactType = url.searchParams.get('artifactType') as ArtifactType | null;
     if (artifactType === null) {
-        return error(500, 'artifactType should not be null');
+        return error(400, 'artifactType should not be null');
     } else if (!Object.values(ArtifactType).includes(artifactType)) {
-        return error(500, 'invalid artifactType');
+        return error(400, 'invalid artifactType');
     }
     const page : number = parseInt(url.searchParams.get('page') ?? '0', 10);
     const pageSize : number = parseInt(url.searchParams.get('pageSize') ?? '10', 10);

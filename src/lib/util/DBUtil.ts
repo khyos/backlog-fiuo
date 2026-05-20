@@ -9,7 +9,6 @@ import { SubscriptionServiceDB } from "$lib/server/model/SubscriptionServiceDB";
 import { TagDB } from "$lib/server/model/TagDB";
 import { UserArtifactOwnershipDB } from "$lib/server/model/UserArtifactOwnershipDB";
 import { UserDB } from "$lib/server/model/UserDB";
-import { UserRatingDB } from "$lib/server/model/UserRatingDB";
 import { AnimeDB } from "$lib/server/model/anime/AnimeDB";
 import { GameDB } from "$lib/server/model/game/GameDB";
 import { PlatformDB } from "$lib/server/model/game/PlatformDB";
@@ -28,6 +27,7 @@ export class DBUtil {
             BacklogDB.createBacklogTable(),
             BacklogDB.createBacklogItemsTable(),
             BacklogDB.createBacklogItemTagTable(),
+            BacklogDB.createBacklogUniqueTypeIndex(),
             GameDB.createGamePlatformTable(),
             GameDB.createGameGenreTable(),
             GameDB.createGameGameGenreTable(),
@@ -43,8 +43,7 @@ export class DBUtil {
             TvshowDB.createTvshowGenreTable(),
             TvshowDB.createTvshowTvshowGenreTable(),
             UserArtifactOwnershipDB.createUserArtifactOwnershipTable(),
-            UserDB.createUserTable(),
-            UserRatingDB.createUserRatingTable()
+            UserDB.createUserTable()
         ]);
 
         await IGDB.initGenres();

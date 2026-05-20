@@ -6,18 +6,18 @@ import type { RequestEvent } from "./$types";
 export async function POST({ request, locals }: RequestEvent) {
     const user = User.deserialize(locals.user);
     if (user.id < 0) {
-        error(500, "invalid user");
+        return error(401, "Unauthorized");
     }
     const { artifactIds, status } = await request.json();
-    ArtifactDB.setUserStatus(user.id, artifactIds, status);
-    
+    await ArtifactDB.setUserStatus(user.id, artifactIds, status);
+
     return json({ success: true });
 }
 
 export async function DELETE({ request, locals }: RequestEvent) {
     const user = User.deserialize(locals.user);
     if (user.id < 0) {
-        error(500, "invalid user");
+        return error(401, "Unauthorized");
     }
     const { artifactId } = await request.json();
     await ArtifactDB.removeUserArtifact(user.id, artifactId);

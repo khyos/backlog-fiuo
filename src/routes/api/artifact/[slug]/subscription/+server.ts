@@ -12,12 +12,12 @@ export async function GET({ params }: RequestEvent) {
 export async function POST({ params, request, locals }: RequestEvent) {
     const user = User.deserialize(locals.user);
     if (!user.hasRight(UserRights.EDIT_ARTIFACT)) {
-        error(403, "Forbidden");
+        return error(403, "Forbidden");
     }
     const artifactId = parseInt(params.slug);
     const { serviceId } = await request.json();
     if (!serviceId || typeof serviceId !== 'number') {
-        error(400, "serviceId is required");
+        return error(400, "serviceId is required");
     }
     await SubscriptionServiceDB.linkArtifactToService(artifactId, serviceId);
     return json({ success: true });
@@ -26,12 +26,12 @@ export async function POST({ params, request, locals }: RequestEvent) {
 export async function DELETE({ params, request, locals }: RequestEvent) {
     const user = User.deserialize(locals.user);
     if (!user.hasRight(UserRights.EDIT_ARTIFACT)) {
-        error(403, "Forbidden");
+        return error(403, "Forbidden");
     }
     const artifactId = parseInt(params.slug);
     const { serviceId } = await request.json();
     if (!serviceId || typeof serviceId !== 'number') {
-        error(400, "serviceId is required");
+        return error(400, "serviceId is required");
     }
     await SubscriptionServiceDB.unlinkArtifactFromService(artifactId, serviceId);
     return json({ success: true });

@@ -17,7 +17,7 @@ export async function POST({ request, locals }: RequestEvent) {
     }
     try {
         await BacklogDB.moveItemToOtherBacklog(fromBacklogId, toBacklogId, artifactId, keepTags);
-        return json({ result: 'ok' });
+        return json({ success: true });
     } catch (e) {
         return error(500, ErrorUtil.getErrorMessage(e));
     }

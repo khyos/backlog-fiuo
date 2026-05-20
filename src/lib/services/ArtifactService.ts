@@ -21,7 +21,7 @@ export async function getAsyncInfo(artifactType: ArtifactType, artifactId: numbe
         asyncInfo.description = info?.synopsis;
     } else if (artifactType === ArtifactType.GAME) {
         const response = await fetch(`/api/game/${artifactId}/poster`);
-        asyncInfo.poster = await response.text();
+        asyncInfo.poster = (await response.json()).url;
     } else if (artifactType === ArtifactType.MOVIE) {
         const response = await fetch(`/api/movie/${artifactId}/tmdb`);
         const info = await response.json();

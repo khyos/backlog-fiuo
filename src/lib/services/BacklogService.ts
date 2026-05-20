@@ -17,8 +17,8 @@ export async function fetchBacklogs(artifactType: ArtifactType): Promise<Backlog
     return await response.json();
 };
 
-export async function addBacklogItem(backlogId: number, artifactId: number) {
-    const response = await fetch(`/api/backlog/${backlogId}/add`, {
+export async function addBacklogItem(backlogId: number, artifactId: number): Promise<void> {
+    const response = await fetch(`/api/backlog/${backlogId}/items`, {
         method: "POST",
         body: JSON.stringify({
             artifactId: artifactId
@@ -27,12 +27,11 @@ export async function addBacklogItem(backlogId: number, artifactId: number) {
     if (!response.ok) {
         throw new Error('Error while adding Backlog Item');
     }
-    return response.json();
 };
 
-export async function deleteBacklogItem(backlogId: number, artifactId: number) {
-    const response = await fetch(`/api/backlog/${backlogId}/delete`, {
-        method: "POST",
+export async function deleteBacklogItem(backlogId: number, artifactId: number): Promise<void> {
+    const response = await fetch(`/api/backlog/${backlogId}/items`, {
+        method: "DELETE",
         body: JSON.stringify({
             artifactId: artifactId,
         })
@@ -40,7 +39,6 @@ export async function deleteBacklogItem(backlogId: number, artifactId: number) {
     if (!response.ok) {
         throw new Error('Error while deleting Backlog Item');
     }
-    return response.json();
 };
 
 export async function moveBacklogItemToOtherBacklog(fromBacklogId: number, toBacklogId: number, artifactId: number, keepTags: boolean) {

@@ -1,6 +1,6 @@
 import { ITAD } from "$lib/itad/ITAD";
 import { LinkType } from "$lib/model/Link";
-import { error, text } from "@sveltejs/kit";
+import { error, json } from "@sveltejs/kit";
 import type { RequestEvent } from "./$types";
 import { ArtifactType } from "$lib/model/Artifact";
 import { IGDB } from "$lib/igdb/IGDB";
@@ -8,18 +8,18 @@ import { IGDB } from "$lib/igdb/IGDB";
 export async function GET({ url }: RequestEvent) {
     const artifactType = url.searchParams.get('artifactType') as ArtifactType | null;
     if (artifactType !== null && !Object.values(ArtifactType).includes(artifactType)) {
-        error(500, 'Invalid artifactType')
+        return error(400, 'Invalid artifactType');
     }
     const linkType = url.searchParams.get('linkType') as LinkType | null;
     if (linkType === null) {
-        error(500, 'Missing Link Type')
+        return error(400, 'Missing Link Type');
     }
     const linkUrl: string | null = url.searchParams.get('linkUrl');
     if (linkUrl === null) {
-        error(500, 'Missing Link URL')
+        return error(400, 'Missing Link URL');
     }
     const result = await getURLFromId(artifactType, linkType, linkUrl);
-    return text(result);
+    return json({ url: result });
 }
 
 const getURLFromId = async function(artifactType: ArtifactType | null, type: LinkType, url: string): Promise<string> {

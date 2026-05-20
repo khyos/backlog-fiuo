@@ -28,6 +28,7 @@ export async function connectDatabase() {
             console.log(`Connected to the database at ${dbPath}`)
         }
     });
+    db.run('PRAGMA foreign_keys = ON');
     return db;
 }
 

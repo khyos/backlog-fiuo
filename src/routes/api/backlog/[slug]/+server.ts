@@ -30,5 +30,5 @@ export async function DELETE({ params, locals }: RequestEvent) {
         return error(authorization.status, authorization.message);
     }
     await BacklogDB.deleteBacklog(backlogId);
-    return json({ deleted: backlogId });
+    return json({ success: true });
 }

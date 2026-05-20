@@ -6,14 +6,14 @@ import type { RequestEvent } from "./$types";
 export async function POST({ params, request, locals }: RequestEvent) {
     const user = User.deserialize(locals.user);
     if (user.id < 0) {
-        error(500, "invalid user");
+        return error(401, "Unauthorized");
     }
     const artifactId = parseInt(params.slug);
     const { score } = await request.json();
     if (score < 0 || score > 100) {
-        error(500, "invalid score");
-    } 
-    ArtifactDB.setUserScore(user.id, artifactId, score);
-    
+        return error(400, "Score must be between 0 and 100");
+    }
+    await ArtifactDB.setUserScore(user.id, artifactId, score);
+
     return json({ success: true });
 }

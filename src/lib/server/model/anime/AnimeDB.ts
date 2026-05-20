@@ -20,7 +20,7 @@ export class AnimeDB {
         const row = await ArtifactDB.getArtifactById(id);
         if (!row) return null;
 
-        const releaseDate = new Date(parseInt(row.releaseDate, 10));
+        const releaseDate = new Date(row.releaseDate);
         const anime = new Anime(row.id, row.title, row.type, releaseDate, row.duration);
         
         anime.genres = await AnimeDB.getAssignedGenres(id);
@@ -44,7 +44,7 @@ export class AnimeDB {
     }
 
     static deserialize(artifactJSON: IArtifactDB): Anime {
-        const releaseDate = new Date(parseInt(artifactJSON.releaseDate, 10));
+        const releaseDate = new Date(artifactJSON.releaseDate);
         return new Anime(artifactJSON.id, artifactJSON.title, artifactJSON.type, releaseDate, artifactJSON.duration);
     }
 
@@ -55,7 +55,7 @@ export class AnimeDB {
         for (const anime of animes) {
             const episodeRows = await ArtifactDB.getChildrenByParentId(anime.id);
             anime.children = episodeRows.map((row: IArtifactDB) => {
-                const releaseDate = new Date(parseInt(row.releaseDate, 10));
+                const releaseDate = new Date(row.releaseDate);
                 return new AnimeEpisode(row.id, row.child_index, row.title, row.type, releaseDate, row.duration);
             });
         }
@@ -94,7 +94,7 @@ export class AnimeDB {
     static async getUserOngoingAnimes(userId: number, fetchOnhold: boolean = false): Promise<Anime[]> {
         const rows = await ArtifactDB.getUserOngoingArtifacts(userId, ArtifactType.ANIME, fetchOnhold);
         const animes: Anime[] = rows.map((row) => {
-            const releaseDate = new Date(parseInt(row.releaseDate, 10));
+            const releaseDate = new Date(row.releaseDate);
             return new Anime(row.id, row.title, row.type, releaseDate, row.duration);
         });
         await this.fetchEpisodes(animes);
@@ -109,7 +109,7 @@ export class AnimeDB {
         );
 
         const backlogItems: BacklogItem[] = await Promise.all(dbBacklockItems.map(async row => {
-            const releaseDate = new Date(parseInt(row.releaseDate, 10));
+            const releaseDate = new Date(row.releaseDate);
             const anime = new Anime(row.artifactId, row.title, row.type, releaseDate, row.duration);
             anime.genres = await AnimeDB.getAssignedGenres(row.artifactId);
             anime.ratings = await RatingDB.getRatings(row.artifactId);
@@ -152,7 +152,7 @@ export class AnimeDB {
     static async createAnimeEpisode(animeId: number, episodeNumber: number, title: string, releaseDate: Date = new Date(7258118400000), duration: number = 0): Promise<AnimeEpisode> {
         const animeEpisodeId = await runDbInsert(
             `INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES (?, ?, ?, ?, ?, ?)`,
-            [title, ArtifactType.ANIME_EPISODE, animeId, episodeNumber, releaseDate.getTime().toString(), duration]
+            [title, ArtifactType.ANIME_EPISODE, animeId, episodeNumber, releaseDate.getTime(), duration]
         );
         return new AnimeEpisode(animeEpisodeId, episodeNumber, title, ArtifactType.ANIME_EPISODE, releaseDate, duration);
     }

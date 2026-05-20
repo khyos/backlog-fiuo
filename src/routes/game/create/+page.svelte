@@ -123,7 +123,7 @@
         
         searchStatus = 'started';
         try {
-            const response = await fetch(`/api/game/findGameInfo?query=${encodeURIComponent(searchTerm)}`);
+            const response = await fetch(`/api/game/external?query=${encodeURIComponent(searchTerm)}`);
             if (!response.ok) {
                 throw new Error('Search failed');
             }
@@ -195,7 +195,7 @@
         });
 
         try {
-            const response = await fetch("/api/game/create", {
+            const response = await fetch("/api/game", {
                 method: "POST",
                 headers: {
                     'Content-Type': 'application/json'
