@@ -33,7 +33,7 @@
         const title = (document.getElementById("title") as HTMLInputElement)
             ?.value;
 
-        fetch("/api/backlog/create", {
+        fetch("/api/backlog", {
             method: "POST",
             body: JSON.stringify({
                 title: title,

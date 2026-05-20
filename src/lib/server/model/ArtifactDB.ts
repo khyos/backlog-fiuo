@@ -125,7 +125,7 @@ export class ArtifactDB {
                 title: row.title,
                 type: row.type,
                 duration: row.duration,
-                releaseDate: new Date(parseInt(row.releaseDate, 10)).toString(),
+                releaseDate: new Date(row.releaseDate).toString(),
                 links: [],
                 genres: [],
                 ratings: [],
@@ -156,7 +156,7 @@ export class ArtifactDB {
                        WHERE artifact.type = ? AND user_artifact.userId = ? AND user_artifact.status = 'ongoing'`;
         const params = [artifactType, userId];
         const rows = await getDbRows<IUserListItemDB>(query, params);
-        
+
         const userListItems = rows.map((row) => {
             return artifactFromJSON(artifactType, {
                 __type: 'Artifact',
@@ -164,7 +164,7 @@ export class ArtifactDB {
                 title: row.title,
                 type: row.type,
                 duration: row.duration,
-                releaseDate: new Date(parseInt(row.releaseDate, 10)).toString(),
+                releaseDate: new Date(row.releaseDate).toString(),
                 links: [],
                 genres: [],
                 ratings: [],
@@ -270,7 +270,7 @@ export class ArtifactDB {
             sqlOrder = 'releaseDate ASC';
         }
 
-        return await getDbRows<IBacklogItemDB>(`SELECT *, CAST(strftime('%s', dateAdded) AS INTEGER) AS dateAdded${rank}
+        return await getDbRows<IBacklogItemDB>(`SELECT *${rank}
                 FROM backlog_items
                 INNER JOIN artifact ON backlog_items.artifactId = artifact.id
                 WHERE backlogId = ?
@@ -288,7 +288,7 @@ export class ArtifactDB {
         duration: number = 0
     ): Promise<number> {
         const query = `INSERT INTO artifact (title, description, type, releaseDate, duration) VALUES (?, ?, ?, ?, ?)`;
-        const params = [title, description, artifactType, releaseDate.getTime().toString(), duration];
+        const params = [title, description, artifactType, releaseDate.getTime(), duration];
         return await runDbInsert(query, params);
     }
 
@@ -301,8 +301,8 @@ export class ArtifactDB {
         releaseDate: Date = new Date(7258118400000),
         duration: number = 0
     ): Promise<void> {
-        return await runDbQuery(`UPDATE artifact SET title = ?, releaseDate = ?, duration = ? WHERE id = ?`, 
-            [title, releaseDate.getTime().toString(), duration, id]);
+        return await runDbQuery(`UPDATE artifact SET title = ?, releaseDate = ?, duration = ? WHERE id = ?`,
+            [title, releaseDate.getTime(), duration, id]);
     }
 
     static async updateArtifactWithIndex(
@@ -312,8 +312,8 @@ export class ArtifactDB {
         releaseDate: Date = new Date(7258118400000),
         duration: number = 0
     ): Promise<void> {
-        return await runDbQuery(`UPDATE artifact SET child_index = ?, title = ?, releaseDate = ?, duration = ? WHERE id = ?`, 
-            [childIndex, title, releaseDate.getTime().toString(), duration, id]);
+        return await runDbQuery(`UPDATE artifact SET child_index = ?, title = ?, releaseDate = ?, duration = ? WHERE id = ?`,
+            [childIndex, title, releaseDate.getTime(), duration, id]);
     }
 
     static async updateDuration(artifactId: number, duration: number = 0): Promise<void> {
@@ -367,33 +367,34 @@ export class ArtifactDB {
     }
 
     static async setUserDate(userId: number, artifactId: number, date: string | null, startEnd: 'start' | 'end' | 'both'): Promise<void> {
+        const dateMs = date ? new Date(date).getTime() : null;
         const userInfo = await ArtifactDB.getUserInfo(userId, artifactId);
         let query: string;
-        let params: (string | null | number)[];
+        let params: (number | null)[];
         
         if (userInfo) {
             if (startEnd === 'start') {
                 query = `UPDATE user_artifact SET startDate = ? WHERE userId = ? AND artifactId = ?`;
-                params = [date, userId, artifactId];
+                params = [dateMs, userId, artifactId];
             } else if (startEnd === 'end') {
                 query = `UPDATE user_artifact SET endDate = ? WHERE userId = ? AND artifactId = ?`;
-                params = [date, userId, artifactId];
+                params = [dateMs, userId, artifactId];
             } else if (startEnd === 'both') {
                 query = `UPDATE user_artifact SET startDate = ?, endDate = ? WHERE userId = ? AND artifactId = ?`;
-                params = [date, date, userId, artifactId];
+                params = [dateMs, dateMs, userId, artifactId];
             } else {
                 throw new Error('Invalid startEnd parameter');
             }
         } else {
             if (startEnd === 'start') {
                 query = `INSERT INTO user_artifact (userId, artifactId, startDate) VALUES (?, ?, ?)`;
-                params = [userId, artifactId, date];
+                params = [userId, artifactId, dateMs];
             } else if (startEnd === 'end') {
                 query = `INSERT INTO user_artifact (userId, artifactId, endDate) VALUES (?, ?, ?)`;
-                params = [userId, artifactId, date];
+                params = [userId, artifactId, dateMs];
             } else if (startEnd === 'both') {
                 query = `INSERT INTO user_artifact (userId, artifactId, startDate, endDate) VALUES (?, ?, ?, ?)`;
-                params = [userId, artifactId, date, date];
+                params = [userId, artifactId, dateMs, dateMs];
             } else {
                 throw new Error('Invalid startEnd parameter');
             }
@@ -417,14 +418,20 @@ export class ArtifactDB {
         const id = artifact.id;
         const artifactIdsToDelete = artifact.getArtifactIds();
         const questionMarks = new Array(artifactIdsToDelete.length).fill('?').join(',');
+
+        // Delete all related data before touching the artifact rows
         await runDbQueries([
-            {
-                query: `DELETE FROM artifact WHERE id IN (${questionMarks})`,
-                params: artifactIdsToDelete
-            },
             {
                 query: `DELETE FROM user_artifact WHERE artifactId IN (${questionMarks})`,
                 params: artifactIdsToDelete
+            },
+            {
+                query: `DELETE FROM user_artifact_ownership WHERE artifactId IN (${questionMarks})`,
+                params: artifactIdsToDelete
+            },
+            {
+                query: `DELETE FROM artifact_subscription WHERE artifactId = ?`,
+                params: [id]
             },
             {
                 query: `DELETE FROM ${genreMapTableName} WHERE artifactId = ?`,
@@ -439,24 +446,39 @@ export class ArtifactDB {
                 params: [id]
             },
             {
-                query: `DELETE FROM backlog_items WHERE artifactId = ?`,
+                query: `DELETE FROM backlog_item_tag WHERE artifactId = ?`,
                 params: [id]
             },
             {
-                query: `DELETE FROM backlog_item_tag WHERE artifactId = ?`,
+                query: `DELETE FROM backlog_items WHERE artifactId = ?`,
                 params: [id]
             }
         ]);
+
+        // Delete artifact rows deepest-first to satisfy the self-referential FK constraint.
+        // getArtifactIds() returns [parent, ...children] in depth-first preorder,
+        // so reversing gives leaves first (valid bottom-up deletion order).
+        for (const artifactId of [...artifactIdsToDelete].reverse()) {
+            await runDbQuery(`DELETE FROM artifact WHERE id = ?`, [artifactId]);
+        }
     }
 
     static async deleteChildArtifact(artifactId: number): Promise<void> {
         await runDbQueries([
             {
-                query: `DELETE FROM artifact WHERE id = ?`,
+                query: `DELETE FROM user_artifact WHERE artifactId = ?`,
                 params: [artifactId]
             },
             {
-                query: `DELETE FROM user_artifact WHERE artifactId = ?`,
+                query: `DELETE FROM user_artifact_ownership WHERE artifactId = ?`,
+                params: [artifactId]
+            },
+             {
+                query: `DELETE FROM rating WHERE artifactId = ?`,
+                params: [artifactId]
+            },
+            {
+                query: `DELETE FROM artifact WHERE id = ?`,
                 params: [artifactId]
             }
         ]);
@@ -498,7 +520,6 @@ export class ArtifactDB {
     // Table Creation Methods
     // ========================================
     static async createArtifactTable() {
-        // TODO release date should be moved to TIMESTAMP
         await runDbQuery(`CREATE TABLE IF NOT EXISTS artifact (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             title TEXT NOT NULL,
@@ -507,8 +528,8 @@ export class ArtifactDB {
             parent_artifact_id INTEGER,
             child_index INTEGER,
             duration INTEGER,
-            releaseDate TEXT,
-            FOREIGN KEY (parent_artifact_id) REFERENCES artifact_new(id)
+            releaseDate INTEGER,
+            FOREIGN KEY (parent_artifact_id) REFERENCES artifact(id)
         )`);
     }
 
@@ -518,9 +539,11 @@ export class ArtifactDB {
             artifactId INTEGER NOT NULL,
             status TEXT,
             score INTEGER,
-            startDate TIMESTAMP,
-            endDate TIMESTAMP,
-            PRIMARY KEY (userId, artifactId)
+            startDate INTEGER,
+            endDate INTEGER,
+            PRIMARY KEY (userId, artifactId),
+            FOREIGN KEY (userId) REFERENCES user(id),
+            FOREIGN KEY (artifactId) REFERENCES artifact(id)
         )`);
     }
 

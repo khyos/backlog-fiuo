@@ -9,7 +9,7 @@ export async function GET({ url, locals }: RequestEvent) {
     const pageSize : number = parseInt(url.searchParams.get('pageSize') ?? '10', 10);
 	const artifactType = url.searchParams.get('artifactType') as ArtifactType | null;
 	if (artifactType !== null && !Object.values(ArtifactType).includes(artifactType)) {
-		return error(500, 'invalid artifactType');
+		return error(400, 'invalid artifactType');
 	}
 	const user = User.deserialize(locals.user);
 	const backlogs = await BacklogDB.getBacklogs(user.id, page, pageSize, artifactType);

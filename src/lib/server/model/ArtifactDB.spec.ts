@@ -1,4 +1,4 @@
-import { db, runDbInsert, runDbQueries, runDbQueriesParallel } from '../database';
+import { db, runDbInsert, runDbQueries } from '../database';
 import { describe, expect, test, beforeAll, afterAll, beforeEach } from 'vitest';
 import { ArtifactType, Artifact, type IArtifactDB } from '$lib/model/Artifact';
 import { UserArtifactStatus } from '$lib/model/UserArtifact';
@@ -14,26 +14,28 @@ import { RatingDB } from './RatingDB';
 import { LinkDB } from './LinkDB';
 import { SubscriptionServiceDB } from './SubscriptionServiceDB';
 import { UserArtifactOwnershipDB } from './UserArtifactOwnershipDB';
+import { UserDB } from './UserDB';
 
 describe('ArtifactDB', () => {
     // Shared cleanup function to eliminate duplication
     const cleanupTestData = async () => {
-        await runDbQueriesParallel([
+        await runDbQueries([
             { query: 'DELETE FROM movie_movie_genre' },
             { query: 'DELETE FROM game_game_genre' },
             { query: 'DELETE FROM user_artifact_ownership' },
             { query: 'DELETE FROM artifact_subscription' },
             { query: 'DELETE FROM user_subscription' },
             { query: 'DELETE FROM user_artifact' },
-            { query: 'DELETE FROM backlog_items' },
             { query: 'DELETE FROM backlog_item_tag' },
+            { query: 'DELETE FROM backlog_items' },
             { query: 'DELETE FROM backlog' },
             { query: 'DELETE FROM rating' },
             { query: 'DELETE FROM link' },
             { query: 'DELETE FROM artifact' },
             { query: 'DELETE FROM movie_genre' },
             { query: 'DELETE FROM game_genre' },
-            { query: 'DELETE FROM sqlite_sequence WHERE name IN ("artifact", "movie_genre", "game_genre", "backlog", "rating", "link")' }
+            { query: 'DELETE FROM user' },
+            { query: 'DELETE FROM sqlite_sequence WHERE name IN ("artifact", "movie_genre", "game_genre", "backlog", "rating", "link", "user")' }
         ]);
     };
 
@@ -58,6 +60,7 @@ describe('ArtifactDB', () => {
         await LinkDB.createLinkTable();
 
         // Create subscription and ownership tables
+        await UserDB.createUserTable();
         await SubscriptionServiceDB.createSubscriptionServiceTable();
         await SubscriptionServiceDB.createArtifactSubscriptionTable();
         await SubscriptionServiceDB.createUserSubscriptionTable();
@@ -67,6 +70,9 @@ describe('ArtifactDB', () => {
     beforeEach(async () => {
         // Clean up data before each test using the shared cleanup function
         await cleanupTestData();
+        // Create test users (id=1, id=2) for user_artifact FK requirements
+        await runDbInsert("INSERT INTO user (id, username, password, role) VALUES (1, 'testuser', 'hash', 'user')");
+        await runDbInsert("INSERT INTO user (id, username, password, role) VALUES (2, 'testuser2', 'hash', 'user')");
     });
 
     afterAll(async () => {
@@ -103,9 +109,9 @@ describe('ArtifactDB', () => {
         test('getArtifacts should support search functionality', async () => {
             // Insert test data
             await runDbQueries([
-                { query: "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('The Matrix', 'movie', '833414400000', 136)" },
-                { query: "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Inception', 'movie', '1279238400000', 148)" },
-                { query: "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('The Dark Knight', 'movie', '1216339200000', 152)" }
+                { query: "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('The Matrix', 'movie', '1996-05-30T00:00:00.000Z', 136)" },
+                { query: "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Inception', 'movie', '2010-07-16T00:00:00.000Z', 148)" },
+                { query: "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('The Dark Knight', 'movie', '2008-07-18T00:00:00.000Z', 152)" }
             ]);
 
             const searchResults = await ArtifactDB.getArtifacts(ArtifactType.MOVIE, 0, 10, 'matrix');
@@ -458,8 +464,8 @@ describe('ArtifactDB', () => {
 
         test('getUserList should return UserList with artifacts and user info', async () => {
             // Insert test artifacts
-            const movieId1 = await runDbInsert( "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Test Movie 1', 'movie', '1577836800000', 120)");
-            const movieId2 = await runDbInsert( "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Test Movie 2', 'movie', '1609459200000', 140)");
+            const movieId1 = await runDbInsert( "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Test Movie 1', 'movie', '2020-01-01T00:00:00.000Z', 120)");
+            const movieId2 = await runDbInsert( "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Test Movie 2', 'movie', '2021-01-01T00:00:00.000Z', 140)");
 
             // Insert user artifacts with various statuses and scores
             await runDbQueries( [
@@ -496,7 +502,7 @@ describe('ArtifactDB', () => {
 
         test('getUserOngoingList should return empty UserList for user with no ongoing artifacts', async () => {
             // Insert artifact with finished status
-            const movieId = await runDbInsert( "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Finished Movie', 'movie', '1577836800000', 120)");
+            const movieId = await runDbInsert( "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Finished Movie', 'movie', '2020-01-01T00:00:00.000Z', 120)");
             await runDbQueries( [
                 { query: "INSERT INTO user_artifact (userId, artifactId, status, score) VALUES (1, ?, 'finished', 9)", params: [movieId] }
             ]);
@@ -511,9 +517,9 @@ describe('ArtifactDB', () => {
 
         test('getUserOngoingList should return only ongoing artifacts', async () => {
             // Insert test artifacts
-            const ongoingId = await runDbInsert( "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Ongoing Movie', 'movie', '1577836800000', 120)");
-            const finishedId = await runDbInsert( "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Finished Movie', 'movie', '1609459200000', 140)");
-            const wishlistId = await runDbInsert( "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Wishlist Movie', 'movie', '1640995200000', 130)");
+            const ongoingId = await runDbInsert( "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Ongoing Movie', 'movie', '2020-01-01T00:00:00.000Z', 120)");
+            const finishedId = await runDbInsert( "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Finished Movie', 'movie', '2021-01-01T00:00:00.000Z', 140)");
+            const wishlistId = await runDbInsert( "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Wishlist Movie', 'movie', '2022-01-01T00:00:00.000Z', 130)");
 
             // Insert user artifacts with different statuses
             await runDbQueries( [
@@ -549,9 +555,9 @@ describe('ArtifactDB', () => {
             const backlogId = await runDbInsert( "INSERT INTO backlog (userId, title, artifactType, rankingType) VALUES (1, 'Test Backlog', 'game', 'elo')");
             
             // Create artifacts
-            const gameId1 = await runDbInsert( "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Game A', 'game', '1609459200000', 1000)");
-            const gameId2 = await runDbInsert( "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Game B', 'game', '1577836800000', 1500)");
-            const gameId3 = await runDbInsert( "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Game C', 'game', '1640995200000', 800)");
+            const gameId1 = await runDbInsert( "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Game A', 'game', '2021-01-01T00:00:00.000Z', 1000)");
+            const gameId2 = await runDbInsert( "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Game B', 'game', '2020-01-01T00:00:00.000Z', 1500)");
+            const gameId3 = await runDbInsert( "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Game C', 'game', '2022-01-01T00:00:00.000Z', 800)");
 
             // Add items to backlog with different ELO scores
             await runDbQueries( [
@@ -580,9 +586,9 @@ describe('ArtifactDB', () => {
             const backlogId = await runDbInsert( "INSERT INTO backlog (userId, title, artifactType, rankingType) VALUES (1, 'Wishlist Backlog', 'movie', 'wishlist')");
             
             // Create artifacts with different release dates
-            const movieId1 = await runDbInsert( "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Movie 2021', 'movie', '1609459200000', 120)");
-            const movieId2 = await runDbInsert( "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Movie 2020', 'movie', '1577836800000', 140)");
-            const movieId3 = await runDbInsert( "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Movie 2022', 'movie', '1640995200000', 130)");
+            const movieId1 = await runDbInsert( "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Movie 2021', 'movie', '2021-01-01T00:00:00.000Z', 120)");
+            const movieId2 = await runDbInsert( "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Movie 2020', 'movie', '2020-01-01T00:00:00.000Z', 140)");
+            const movieId3 = await runDbInsert( "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Movie 2022', 'movie', '2022-01-01T00:00:00.000Z', 130)");
 
             // Add items to backlog
             await runDbQueries( [
@@ -595,7 +601,7 @@ describe('ArtifactDB', () => {
             
             expect(items).toHaveLength(3);
             // Verify all items have ranks assigned correctly based on release date
-            const moviesByReleaseDate = items.sort((a, b) => parseInt(a.releaseDate) - parseInt(b.releaseDate));
+            const moviesByReleaseDate = items.sort((a, b) => new Date(a.releaseDate).getTime() - new Date(b.releaseDate).getTime());
             expect(moviesByReleaseDate[0].title).toBe('Movie 2020'); // Oldest release
             expect(moviesByReleaseDate[0].rank).toBe(1);
             expect(moviesByReleaseDate[1].title).toBe('Movie 2021'); // Middle release
@@ -611,8 +617,8 @@ describe('ArtifactDB', () => {
             const backlogId = await runDbInsert( "INSERT INTO backlog (userId, title, artifactType, rankingType) VALUES (1, 'Test Order Backlog', 'game', 'rank')");
             
             // Create artifacts
-            const gameId1 = await runDbInsert( "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Early Game', 'game', '1577836800000', 1000)");
-            const gameId2 = await runDbInsert( "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Later Game', 'game', '1640995200000', 1500)");
+            const gameId1 = await runDbInsert( "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Early Game', 'game', '2020-01-01T00:00:00.000Z', 1000)");
+            const gameId2 = await runDbInsert( "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Later Game', 'game', '2022-01-01T00:00:00.000Z', 1500)");
 
             // Add items with different dates
             await runDbQueries( [
@@ -828,7 +834,7 @@ describe('ArtifactDB', () => {
             const artifact = await ArtifactDB.getArtifactById(artifactId);
             expect(artifact!.title).toBe('Updated Title');
             expect(artifact!.duration).toBe(120);
-            expect(artifact!.releaseDate).toBe(newReleaseDate.getTime().toString());
+            expect(artifact!.releaseDate).toBe(newReleaseDate.getTime());
         });
 
         test('updateDuration should update artifact duration', async () => {
@@ -865,7 +871,7 @@ describe('ArtifactDB', () => {
             expect(updatedArtifact).not.toBeNull();
             expect(updatedArtifact!.title).toBe('Updated Episode Title');
             expect(updatedArtifact!.child_index).toBe(5);
-            expect(updatedArtifact!.releaseDate).toBe(newReleaseDate.getTime().toString());
+            expect(updatedArtifact!.releaseDate).toBe(newReleaseDate.getTime());
             expect(updatedArtifact!.duration).toBe(50);
             expect(updatedArtifact!.parent_artifact_id).toBe(parentId); // Should remain unchanged
         });
@@ -887,7 +893,7 @@ describe('ArtifactDB', () => {
             expect(updatedArtifact).not.toBeNull();
             expect(updatedArtifact!.title).toBe('New Episode Title');
             expect(updatedArtifact!.child_index).toBe(3);
-            expect(updatedArtifact!.releaseDate).toBe(new Date(7258118400000).getTime().toString()); // Default date
+            expect(updatedArtifact!.releaseDate).toBe(new Date(7258118400000).getTime()); // Default date
             expect(updatedArtifact!.duration).toBe(0); // Default duration
         });
 
@@ -1320,8 +1326,8 @@ describe('ArtifactDB', () => {
 
         test('updateArtifact should handle non-existent artifact', async () => {
             // Test with a real artifact first to see the expected behavior
-            const artifactId = await runDbInsert( "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Test Artifact', 'game', '1609459200000', 60)");
-            
+            const artifactId = await runDbInsert( "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Test Artifact', 'game', '2021-01-01T00:00:00.000Z', 60)");
+
             // This should complete without throwing for existing artifact
             await expect(ArtifactDB.updateArtifact(artifactId, 'Updated Title', new Date('2023-01-01'), 120))
                 .resolves.not.toThrow();
@@ -1333,7 +1339,7 @@ describe('ArtifactDB', () => {
         });
 
         test('setUserScore should handle edge cases', async () => {
-            const artifactId = await runDbInsert( "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Test Artifact', 'game', '1609459200000', 60)");
+            const artifactId = await runDbInsert( "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Test Artifact', 'game', '2021-01-01T00:00:00.000Z', 60)");
 
             // Test with minimum and maximum scores
             await expect(ArtifactDB.setUserScore(1, artifactId, 0)).resolves.not.toThrow();
@@ -1360,7 +1366,7 @@ describe('ArtifactDB', () => {
         });
 
         test('updateDuration should handle edge values', async () => {
-            const artifactId = await runDbInsert( "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Test Artifact', 'game', '1609459200000', 60)");
+            const artifactId = await runDbInsert( "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Test Artifact', 'game', '2021-01-01T00:00:00.000Z', 60)");
 
             // Test with zero duration
             await expect(ArtifactDB.updateDuration(artifactId, 0)).resolves.not.toThrow();

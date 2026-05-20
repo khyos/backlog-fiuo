@@ -190,7 +190,7 @@ describe('PlatformDB', () => {
             await PlatformDB.addPlatform(2, 'PlayStation 5');
 
             // Create a game
-            const gameId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Test Game', 'game', '1609459200000', 0)");
+            const gameId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Test Game', 'game', '2021-01-01T00:00:00.000Z', 0)");
 
             // Assign platforms to the game using GameDB
             await GameDB.addPlatform(gameId, 1);
@@ -212,7 +212,7 @@ describe('PlatformDB', () => {
             await PlatformDB.addPlatform(3, 'Xbox Series X');
 
             // Create a game
-            const gameId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Test Game', 'game', '1609459200000', 0)");
+            const gameId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Test Game', 'game', '2021-01-01T00:00:00.000Z', 0)");
 
             // Initially assign PC and PlayStation 5
             await GameDB.updatePlatforms(gameId, [1, 2]);
@@ -289,9 +289,9 @@ describe('PlatformDB', () => {
             await PlatformDB.addPlatform(4, 'Nintendo Switch');
 
             // Create multiple games
-            const game1Id = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Cyberpunk 2077', 'game', '1607472000000', 0)");
-            const game2Id = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('The Legend of Zelda: Breath of the Wild', 'game', '1488326400000', 0)");
-            const game3Id = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Halo Infinite', 'game', '1638835200000', 0)");
+            const game1Id = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Cyberpunk 2077', 'game', '2020-12-09T00:00:00.000Z', 0)");
+            const game2Id = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('The Legend of Zelda: Breath of the Wild', 'game', '2017-03-01T00:00:00.000Z', 0)");
+            const game3Id = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Halo Infinite', 'game', '2021-12-07T00:00:00.000Z', 0)");
 
             // Assign platforms to games
             await GameDB.updatePlatforms(game1Id, [1, 2, 3]); // Multi-platform game

@@ -1,4 +1,4 @@
-import { runDbInsert, runDbQueries, runDbQueriesParallel } from '../../database';
+import { runDbInsert, runDbQueries } from '../../database';
 import { describe, expect, test, beforeAll, afterAll, beforeEach } from 'vitest';
 import { ArtifactType } from '$lib/model/Artifact';
 import { UserArtifactStatus } from '$lib/model/UserArtifact';
@@ -15,16 +15,17 @@ import { RatingDB } from '../RatingDB';
 import { LinkDB } from '../LinkDB';
 import { TagDB } from '../TagDB';
 import { PlatformDB } from './PlatformDB';
+import { UserDB } from '../UserDB';
 
 describe('GameDB', () => {
     // Shared cleanup function to eliminate duplication
     const cleanupTestData = async () => {
-        await runDbQueriesParallel([
+        await runDbQueries([
             { query: 'DELETE FROM game_game_genre' },
             { query: 'DELETE FROM game_platform' },
             { query: 'DELETE FROM user_artifact' },
-            { query: 'DELETE FROM backlog_items' },
             { query: 'DELETE FROM backlog_item_tag' },
+            { query: 'DELETE FROM backlog_items' },
             { query: 'DELETE FROM backlog' },
             { query: 'DELETE FROM rating' },
             { query: 'DELETE FROM link' },
@@ -32,7 +33,8 @@ describe('GameDB', () => {
             { query: 'DELETE FROM artifact' },
             { query: 'DELETE FROM game_genre' },
             { query: 'DELETE FROM platform' },
-            { query: 'DELETE FROM sqlite_sequence WHERE name IN ("artifact", "game_genre", "platform", "backlog", "rating", "link")' }
+            { query: 'DELETE FROM user' },
+            { query: 'DELETE FROM sqlite_sequence WHERE name IN ("artifact", "game_genre", "platform", "backlog", "rating", "link", "user")' }
         ]);
     };
 
@@ -56,11 +58,14 @@ describe('GameDB', () => {
         await RatingDB.createRatingTable();
         await LinkDB.createLinkTable();
         await TagDB.createTagTable();
+        await UserDB.createUserTable();
     });
 
     beforeEach(async () => {
         // Clean up data before each test using the shared cleanup function
         await cleanupTestData();
+        // Create test user (id=1) for user_artifact and backlog FK requirements
+        await runDbInsert("INSERT INTO user (id, username, password, role) VALUES (1, 'testuser', 'hash', 'user')");
     });
 
     afterAll(async () => {
@@ -76,7 +81,7 @@ describe('GameDB', () => {
     describe('Basic Getters', () => {
         test('getById should return game by ID', async () => {
             // Insert test game
-            const gameId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('The Legend of Zelda: Breath of the Wild', 'game', '1488240000000', 7200)");
+            const gameId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('The Legend of Zelda: Breath of the Wild', 'game', '2017-02-28T00:00:00.000Z', 7200)");
 
             const game = await GameDB.getById(gameId);
             expect(game).not.toBeNull();
@@ -94,9 +99,9 @@ describe('GameDB', () => {
         test('getGames should return paginated games', async () => {
             // Insert test games
             await runDbQueries([
-                { query: "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Super Mario Odyssey', 'game', '1509494400000', 1440)" },
-                { query: "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('God of War', 'game', '1524700800000', 2400)" },
-                { query: "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Cyberpunk 2077', 'game', '1607558400000', 5760)" }
+                { query: "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Super Mario Odyssey', 'game', '2017-11-01T00:00:00.000Z', 1440)" },
+                { query: "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('God of War', 'game', '2018-04-26T00:00:00.000Z', 2400)" },
+                { query: "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Cyberpunk 2077', 'game', '2020-12-10T00:00:00.000Z', 5760)" }
             ]);
 
             const games = await GameDB.getGames(0, 10);
@@ -110,9 +115,9 @@ describe('GameDB', () => {
         test('getGames should support search functionality', async () => {
             // Insert test games
             await runDbQueries([
-                { query: "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('The Witcher 3', 'game', '1431993600000', 5760)" },
-                { query: "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Witcher 2', 'game', '1305504000000', 2400)" },
-                { query: "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Cyberpunk 2077', 'game', '1607558400000', 5760)" }
+                { query: "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('The Witcher 3', 'game', '2015-05-19T00:00:00.000Z', 5760)" },
+                { query: "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Witcher 2', 'game', '2011-05-16T00:00:00.000Z', 2400)" },
+                { query: "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Cyberpunk 2077', 'game', '2020-12-10T00:00:00.000Z', 5760)" }
             ]);
 
             const searchResults = await GameDB.getGames(0, 10, 'witcher');
@@ -124,7 +129,7 @@ describe('GameDB', () => {
             // Insert multiple games
             const gameIds = [];
             for (let i = 1; i <= 5; i++) {
-                const gameId = await runDbInsert(`INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Game ${i}', 'game', '1431993600000', 1440)`);
+                const gameId = await runDbInsert(`INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Game ${i}', 'game', '2015-05-19T00:00:00.000Z', 1440)`);
                 gameIds.push(gameId);
             }
 
@@ -149,7 +154,7 @@ describe('GameDB', () => {
     describe('Platform Methods', () => {
         test('getPlatforms should return platforms for a game', async () => {
             // Insert game and platforms
-            const gameId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Test Game', 'game', '1431993600000', 1440)");
+            const gameId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Test Game', 'game', '2015-05-19T00:00:00.000Z', 1440)");
             const platform1Id = await runDbInsert("INSERT INTO platform (title) VALUES ('PlayStation 5')");
             const platform2Id = await runDbInsert("INSERT INTO platform (title) VALUES ('Xbox Series X')");
 
@@ -167,7 +172,7 @@ describe('GameDB', () => {
         });
 
         test('getPlatforms should return empty array for game with no platforms', async () => {
-            const gameId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('No Platform Game', 'game', '1431993600000', 1440)");
+            const gameId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('No Platform Game', 'game', '2015-05-19T00:00:00.000Z', 1440)");
 
             const platforms = await GameDB.getPlatforms(gameId);
             expect(platforms).toHaveLength(0);
@@ -189,7 +194,7 @@ describe('GameDB', () => {
         });
 
         test('addPlatform should add platform to game', async () => {
-            const gameId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Test Game', 'game', '1431993600000', 1440)");
+            const gameId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Test Game', 'game', '2015-05-19T00:00:00.000Z', 1440)");
             const platformId = await runDbInsert("INSERT INTO platform (title) VALUES ('Steam Deck')");
 
             await GameDB.addPlatform(gameId, platformId);
@@ -200,7 +205,7 @@ describe('GameDB', () => {
         });
 
         test('deletePlatform should remove platform from game', async () => {
-            const gameId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Test Game', 'game', '1431993600000', 1440)");
+            const gameId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Test Game', 'game', '2015-05-19T00:00:00.000Z', 1440)");
             const platformId = await runDbInsert("INSERT INTO platform (title) VALUES ('Xbox One')");
 
             // Add then remove platform
@@ -212,7 +217,7 @@ describe('GameDB', () => {
         });
 
         test('updatePlatforms should update platform assignments', async () => {
-            const gameId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Test Game', 'game', '1431993600000', 1440)");
+            const gameId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Test Game', 'game', '2015-05-19T00:00:00.000Z', 1440)");
             
             // Insert platforms
             const platform1Id = await runDbInsert("INSERT INTO platform (title) VALUES ('PlayStation 5')");
@@ -236,7 +241,7 @@ describe('GameDB', () => {
         });
 
         test('updatePlatforms should handle empty arrays', async () => {
-            const gameId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Test Game', 'game', '1431993600000', 1440)");
+            const gameId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Test Game', 'game', '2015-05-19T00:00:00.000Z', 1440)");
             const platformId = await runDbInsert("INSERT INTO platform (title) VALUES ('PlayStation 5')");
 
             // Initially assign platform
@@ -278,7 +283,7 @@ describe('GameDB', () => {
 
         test('assignGenre and getAssignedGenres should work together', async () => {
             // Insert game and genres
-            const gameId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Test Game', 'game', '1431993600000', 1440)");
+            const gameId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Test Game', 'game', '2015-05-19T00:00:00.000Z', 1440)");
 
             await runDbQueries([
                 { query: "INSERT INTO game_genre (id, title) VALUES (1, 'Action')" },
@@ -298,7 +303,7 @@ describe('GameDB', () => {
 
         test('unassignGenre should remove genre assignment', async () => {
             // Insert game and genre
-            const gameId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Test Game', 'game', '1431993600000', 1440)");
+            const gameId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Test Game', 'game', '2015-05-19T00:00:00.000Z', 1440)");
             await runDbQueries([
                 { query: "INSERT INTO game_genre (id, title) VALUES (1, 'Simulation')" }
             ]);
@@ -313,7 +318,7 @@ describe('GameDB', () => {
 
         test('updateAssignedGenres should update genre assignments', async () => {
             // Insert game and genres
-            const gameId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Test Game', 'game', '1431993600000', 1440)");
+            const gameId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Test Game', 'game', '2015-05-19T00:00:00.000Z', 1440)");
 
             await runDbQueries([
                 { query: "INSERT INTO game_genre (id, title) VALUES (1, 'Action')" },
@@ -339,7 +344,7 @@ describe('GameDB', () => {
 
         test('updateAssignedGenres should handle empty arrays', async () => {
             // Insert game and genres
-            const gameId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Test Game', 'game', '1431993600000', 1440)");
+            const gameId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Test Game', 'game', '2015-05-19T00:00:00.000Z', 1440)");
 
             await runDbQueries([
                 { query: "INSERT INTO game_genre (id, title) VALUES (1, 'Action')" },
@@ -364,8 +369,8 @@ describe('GameDB', () => {
             const backlogId = await runDbInsert("INSERT INTO backlog (userId, title, artifactType, rankingType) VALUES (1, 'Game Backlog', 'game', 'elo')");
             
             // Create games
-            const gameId1 = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Game A', 'game', '1609459200000', 1440)");
-            const gameId2 = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Game B', 'game', '1577836800000', 1440)");
+            const gameId1 = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Game A', 'game', '2021-01-01T00:00:00.000Z', 1440)");
+            const gameId2 = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Game B', 'game', '2020-01-01T00:00:00.000Z', 1440)");
 
             // Add items to backlog with different ELO scores
             await runDbQueries([
@@ -460,7 +465,7 @@ describe('GameDB', () => {
     describe('Update Operations', () => {
         test('updateGame should update game properties', async () => {
             // Create game
-            const gameId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Original Title', 'game', '1431993600000', 1440)");
+            const gameId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Original Title', 'game', '2015-05-19T00:00:00.000Z', 1440)");
 
             // Update game
             const newReleaseDate = new Date('2024-01-01');
@@ -474,7 +479,7 @@ describe('GameDB', () => {
 
         test('updateGame should work with default parameters', async () => {
             // Create game
-            const gameId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Original Title', 'game', '1431993600000', 1440)");
+            const gameId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Original Title', 'game', '2015-05-19T00:00:00.000Z', 1440)");
 
             // Update only title
             await GameDB.updateGame(gameId, 'New Title');
@@ -487,7 +492,7 @@ describe('GameDB', () => {
 
         test('updateDuration should update game duration', async () => {
             // Create game
-            const gameId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Test Game', 'game', '1431993600000', 1440)");
+            const gameId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Test Game', 'game', '2015-05-19T00:00:00.000Z', 1440)");
 
             // Update duration
             await GameDB.updateDuration(gameId, 2400);
@@ -501,7 +506,7 @@ describe('GameDB', () => {
     describe('Delete Operations', () => {
         test('deleteGame should delete game and all related data', async () => {
             // Create game with platforms and genres
-            const gameId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Game to Delete', 'game', '1431993600000', 1440)");
+            const gameId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Game to Delete', 'game', '2015-05-19T00:00:00.000Z', 1440)");
             
             // Add platforms
             const platformId = await runDbInsert("INSERT INTO platform (title) VALUES ('PlayStation 5')");
@@ -581,9 +586,8 @@ describe('GameDB', () => {
         });
 
         test('assignGenre should handle non-existent game or genre', async () => {
-            // These operations may fail silently or throw - behavior depends on implementation
-            // Testing that they don't cause crashes
-            await expect(GameDB.assignGenre(99999, 1)).resolves.not.toThrow();
+            // FK constraints are enforced: inserting with a non-existent artifactId rejects
+            await expect(GameDB.assignGenre(99999, 1)).rejects.toThrow();
         });
 
         test('updateGame should handle non-existent game', async () => {

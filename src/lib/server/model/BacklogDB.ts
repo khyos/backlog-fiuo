@@ -37,7 +37,7 @@ export class BacklogDB {
             return null;
         }
         
-        const backlogId = await runDbInsert(`INSERT INTO backlog (userId, title, artifactType, rankingType) VALUES (?, ?, ?, ?)`, [userId, title, artifactType, rankingType]);
+        const backlogId = await runDbInsert(`INSERT INTO backlog (userId, title, type, artifactType, rankingType) VALUES (?, ?, ?, ?, ?)`, [userId, title, type, artifactType, rankingType]);
         return new Backlog(backlogId, userId, type, rankingType, title, artifactType);
     }
     
@@ -139,8 +139,8 @@ export class BacklogDB {
     static async deleteBacklogItem(backlogId: number, artifactId: number): Promise<void> {
         const row = await getDbRow<IBacklogItemDB>(`SELECT * FROM backlog_items WHERE backlogId = ? AND artifactId = ?`, [backlogId, artifactId]);
         if (row) {
-            await runDbQuery(`DELETE FROM backlog_items WHERE backlogId = ? AND artifactId = ?`, [backlogId, artifactId]);
             await runDbQuery(`DELETE FROM backlog_item_tag WHERE backlogId = ? AND artifactId = ?`, [backlogId, artifactId]);
+            await runDbQuery(`DELETE FROM backlog_items WHERE backlogId = ? AND artifactId = ?`, [backlogId, artifactId]);
             await runDbQuery(`UPDATE backlog_items SET rank = rank - 1 WHERE backlogId = ? AND rank > ?`, [backlogId, row.rank]);
         }
     }
@@ -154,6 +154,10 @@ export class BacklogDB {
         const hasAlreadyArtifact = await this.hasBacklogItem(toBacklogId, artifactId);
         if (hasAlreadyArtifact) {
             throw new Error("Artifact already in target Backlog.");
+        }
+        const sourceItem = await getDbRow<IBacklogItemDB>(`SELECT * FROM backlog_items WHERE backlogId = ? AND artifactId = ?`, [fromBacklogId, artifactId]);
+        if (!sourceItem) {
+            return;
         }
         const rank = await BacklogDB.getBacklogMaxRank(toBacklogId);
         await this.addBacklogItem(toBacklogId, artifactId, rank + 1);
@@ -193,6 +197,8 @@ export class BacklogDB {
     }
 
     static async deleteBacklog(id: number): Promise<void> {
+        await runDbQuery(`DELETE FROM backlog_item_tag WHERE backlogId = ?`, [id]);
+        await runDbQuery(`DELETE FROM backlog_items WHERE backlogId = ?`, [id]);
         await runDbQuery(`DELETE FROM backlog WHERE id = ?`, [id]);
     }
 
@@ -293,7 +299,8 @@ export class BacklogDB {
             type TEXT NOT NULL DEFAULT 'standard',
             rankingType TEXT NOT NULL,
             title TEXT NOT NULL,
-            artifactType TEXT NOT NULL
+            artifactType TEXT NOT NULL,
+            FOREIGN KEY (userId) REFERENCES user(id)
         )`);
     }
 
@@ -301,10 +308,12 @@ export class BacklogDB {
         await runDbQuery(`CREATE TABLE IF NOT EXISTS backlog_items (
             backlogId INTEGER NOT NULL,
             artifactId INTEGER NOT NULL,
-            dateAdded TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            dateAdded INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
             rank INTEGER NOT NULL,
             elo INTEGER NOT NULL DEFAULT 1200,
-            PRIMARY KEY (backlogId, artifactId)
+            PRIMARY KEY (backlogId, artifactId),
+            FOREIGN KEY (backlogId) REFERENCES backlog(id),
+            FOREIGN KEY (artifactId) REFERENCES artifact(id)
         )`);
     }
 
@@ -313,7 +322,14 @@ export class BacklogDB {
             backlogId INTEGER NOT NULL,
             artifactId INTEGER NOT NULL,
             tagId TEXT NOT NULL,
-            PRIMARY KEY (backlogId, artifactId, tagId)
+            PRIMARY KEY (backlogId, artifactId, tagId),
+            FOREIGN KEY (backlogId, artifactId) REFERENCES backlog_items(backlogId, artifactId)
         )`);
+    }
+
+    static async createBacklogUniqueTypeIndex() {
+        await runDbQuery(`CREATE UNIQUE INDEX IF NOT EXISTS idx_backlog_unique_type
+            ON backlog (userId, type, artifactType)
+            WHERE type != 'standard'`);
     }
 }

@@ -20,7 +20,7 @@ export class GameDB {
         const row = await ArtifactDB.getArtifactById(id);
         if (!row) return null;
 
-        const releaseDate = new Date(parseInt(row.releaseDate, 10));
+        const releaseDate = new Date(row.releaseDate);
         const game = new Game(row.id, row.title, row.type, releaseDate, row.duration);
         
         game.platforms = await GameDB.getPlatforms(id);
@@ -41,7 +41,7 @@ export class GameDB {
     }
 
     static deserialize(artifactJSON: IArtifactDB): Game {
-        const releaseDate = new Date(parseInt(artifactJSON.releaseDate, 10));
+        const releaseDate = new Date(artifactJSON.releaseDate);
         return new Game(artifactJSON.id, artifactJSON.title, artifactJSON.type, releaseDate, artifactJSON.duration);
     }
 
@@ -114,7 +114,7 @@ export class GameDB {
         );
 
         const backlogItems: BacklogItem[] = await Promise.all(dbBacklockItems.map(async row => {
-            const releaseDate = new Date(parseInt(row.releaseDate, 10));
+            const releaseDate = new Date(row.releaseDate);
             const game = new Game(row.artifactId, row.title, row.type, releaseDate, row.duration);
             game.genres = await GameDB.getAssignedGenres(row.artifactId);
             game.platforms = await GameDB.getPlatforms(row.artifactId);
@@ -167,7 +167,7 @@ export class GameDB {
     static async updateGame(gameId: number, title: string, releaseDate: Date = new Date(7258118400000)): Promise<void> {
         await runDbQuery(
             `UPDATE artifact SET title = ?, releaseDate = ? WHERE id = ?`,
-            [title, releaseDate.getTime().toString(), gameId]
+            [title, releaseDate.getTime(), gameId]
         );
     }
 
@@ -204,8 +204,8 @@ export class GameDB {
     static async deleteGame(id: number) {
         const game = await GameDB.getById(id);
         if (game) {
-            await ArtifactDB.deleteArtifactAndChildren(game, 'game_game_genre');
             await runDbQuery(`DELETE FROM game_platform WHERE artifactId = ?`, [id]);
+            await ArtifactDB.deleteArtifactAndChildren(game, 'game_game_genre');
         }
     }
 

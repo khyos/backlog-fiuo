@@ -7,7 +7,6 @@ import { LinkDB } from '$lib/server/model/LinkDB';
 import { RatingDB } from '$lib/server/model/RatingDB';
 import { TagDB } from '$lib/server/model/TagDB';
 import { UserDB } from '$lib/server/model/UserDB';
-import { UserRatingDB } from '$lib/server/model/UserRatingDB';
 import { AnimeDB } from '$lib/server/model/anime/AnimeDB';
 import { GameDB } from '$lib/server/model/game/GameDB';
 import { PlatformDB } from '$lib/server/model/game/PlatformDB';
@@ -67,7 +66,6 @@ describe('DBUtil', () => {
             expect(TvshowDB.createTvshowGenreTable).toHaveBeenCalled();
             expect(TvshowDB.createTvshowTvshowGenreTable).toHaveBeenCalled();
             expect(UserDB.createUserTable).toHaveBeenCalled();
-            expect(UserRatingDB.createUserRatingTable).toHaveBeenCalled();
 
             // Verify external API initializations
             expect(IGDB.initGenres).toHaveBeenCalled();

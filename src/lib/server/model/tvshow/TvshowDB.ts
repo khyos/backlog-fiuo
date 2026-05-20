@@ -21,7 +21,7 @@ export class TvshowDB {
         const row = await ArtifactDB.getArtifactById(id);
         if (!row) return null;
 
-        const releaseDate = new Date(parseInt(row.releaseDate, 10));
+        const releaseDate = new Date(row.releaseDate);
         const tvshow = new Tvshow(row.id, row.title, row.type, releaseDate, row.duration);
         
         tvshow.genres = await TvshowDB.getAssignedGenres(id);
@@ -45,7 +45,7 @@ export class TvshowDB {
     }
 
     static deserialize(artifactJSON: IArtifactDB): Tvshow {
-        const releaseDate = new Date(parseInt(artifactJSON.releaseDate, 10));
+        const releaseDate = new Date(artifactJSON.releaseDate);
         return new Tvshow(artifactJSON.id, artifactJSON.title, artifactJSON.type, releaseDate, artifactJSON.duration);
     }
 
@@ -58,7 +58,7 @@ export class TvshowDB {
         for (const tvshow of tvshows) {
             const seasonRows = await ArtifactDB.getChildrenByParentId(tvshow.id);
             for (const row of seasonRows) {
-                const releaseDate = new Date(parseInt(row.releaseDate, 10));
+                const releaseDate = new Date(row.releaseDate);
                 const season = new TvshowSeason(row.id, row.child_index, row.title, row.type, releaseDate, row.duration);
                 tvshow.children.push(season);
                 seasons.push(season);
@@ -74,7 +74,7 @@ export class TvshowDB {
         for (const season of seasons) {
             const episodeRows = await ArtifactDB.getChildrenByParentId(season.id);
             season.children = episodeRows.map((row: IArtifactDB) => {
-                const releaseDate = new Date(parseInt(row.releaseDate, 10));
+                const releaseDate = new Date(row.releaseDate);
                 return new TvshowEpisode(row.id, row.child_index, row.title, row.type, releaseDate, row.duration);
             });
         }
@@ -113,7 +113,7 @@ export class TvshowDB {
     static async getUserOngoingTvShows(userId: number, fetchOnhold: boolean = false): Promise<Tvshow[]> {
         const rows = await ArtifactDB.getUserOngoingArtifacts(userId, ArtifactType.TVSHOW, fetchOnhold);
         const tvShows: Tvshow[] = rows.map((row) => {
-            const releaseDate = new Date(parseInt(row.releaseDate, 10));
+            const releaseDate = new Date(row.releaseDate);
             return new Tvshow(row.id, row.title, row.type, releaseDate, row.duration);
         });
         await TvshowDB.fetchSeasons(tvShows, true);
@@ -128,7 +128,7 @@ export class TvshowDB {
         );
 
         const backlogItems: BacklogItem[] = await Promise.all(dbBacklockItems.map(async row => {
-            const releaseDate = new Date(parseInt(row.releaseDate, 10));
+            const releaseDate = new Date(row.releaseDate);
             const tvshow = new Tvshow(row.artifactId, row.title, row.type, releaseDate, row.duration);
             tvshow.genres = await TvshowDB.getAssignedGenres(row.artifactId);
             tvshow.ratings = await RatingDB.getRatings(row.artifactId);
@@ -171,7 +171,7 @@ export class TvshowDB {
     static async createTvshowSeason(tvshowId: number, seasonNumber: number, title: string, releaseDate: Date = new Date(7258118400000), duration: number = 0): Promise<TvshowSeason> {
         const tvshowSeasonId = await runDbInsert(
             `INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES (?, ?, ?, ?, ?, ?)`,
-            [title, ArtifactType.TVSHOW_SEASON, tvshowId, seasonNumber, releaseDate.getTime().toString(), duration]
+            [title, ArtifactType.TVSHOW_SEASON, tvshowId, seasonNumber, releaseDate.getTime(), duration]
         );
         return new TvshowSeason(tvshowSeasonId, seasonNumber, title, ArtifactType.TVSHOW_SEASON, releaseDate, duration);
     }
@@ -179,7 +179,7 @@ export class TvshowDB {
     static async createTvshowEpisode(tvshowSeasonId: number, episodeNumber: number, title: string, releaseDate: Date = new Date(7258118400000), duration: number = 0): Promise<TvshowEpisode> {
         const tvshowEpisodeId = await runDbInsert(
             `INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES (?, ?, ?, ?, ?, ?)`,
-            [title, ArtifactType.TVSHOW_EPISODE, tvshowSeasonId, episodeNumber, releaseDate.getTime().toString(), duration]
+            [title, ArtifactType.TVSHOW_EPISODE, tvshowSeasonId, episodeNumber, releaseDate.getTime(), duration]
         );
         return new TvshowEpisode(tvshowEpisodeId, episodeNumber, title, ArtifactType.TVSHOW_EPISODE, releaseDate, duration);
     }

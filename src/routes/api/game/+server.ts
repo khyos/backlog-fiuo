@@ -21,11 +21,11 @@ export async function POST({ request, locals }: RequestEvent) {
     }
     const { igdbId, hltbId, scId, ocId, mcId, steamId, itadId } = await request.json();
     if (!igdbId) {
-        error(500, 'No IGDB ID provided');
+        return error(400, 'No IGDB ID provided');
     }
     const alreadyExists = await LinkDB.exists(LinkType.IGDB, igdbId, ArtifactType.GAME);
     if (alreadyExists) {
-        error(500, 'Game already exists in list');
+        return error(409, 'Game already exists in list');
     }
     const igdbGame = await IGDB.getGame(igdbId);
     const links: Link[] = [];

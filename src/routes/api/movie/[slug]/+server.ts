@@ -9,7 +9,7 @@ export async function GET({ params }: RequestEvent) {
 	if (movie) {
 		return json(movie.toJSON());
 	}
-	error(404, 'Not found');
+	return error(404, 'Not found');
 }
 
 export async function DELETE({ params, locals }: RequestEvent) {
@@ -19,5 +19,5 @@ export async function DELETE({ params, locals }: RequestEvent) {
     }
 	const movieId = parseInt(params.slug);
     await MovieDB.deleteMovie(movieId);
-    return json({ deleted: movieId });
+    return json({ success: true });
 }

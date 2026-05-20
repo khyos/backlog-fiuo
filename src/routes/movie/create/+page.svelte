@@ -93,7 +93,7 @@
         
         searchStatus = 'started';
         try {
-            const response = await fetch(`/api/movie/findMovieInfo?query=${encodeURIComponent(searchTerm)}`);
+            const response = await fetch(`/api/movie/external?query=${encodeURIComponent(searchTerm)}`);
             if (!response.ok) {
                 throw new Error('Search failed');
             }
@@ -165,7 +165,7 @@
         });
 
         try {
-            const response = await fetch("/api/movie/create", {
+            const response = await fetch("/api/movie", {
                 method: "POST",
                 headers: {
                     'Content-Type': 'application/json'

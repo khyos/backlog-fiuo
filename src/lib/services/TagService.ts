@@ -1,7 +1,7 @@
 import type { ArtifactType } from "$lib/model/Artifact";
 
 export async function createTag(id: string, artifactType: ArtifactType): Promise<void> {
-    const response = await fetch(`/api/tag/create`, {
+    const response = await fetch(`/api/tag`, {
         method: "POST",
         body: JSON.stringify({
             id: id,

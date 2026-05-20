@@ -1,4 +1,4 @@
-import { runDbInsert, runDbQueries, runDbQueriesParallel } from '../../database';
+import { runDbInsert, runDbQueries } from '../../database';
 import { describe, expect, test, beforeAll, afterAll, beforeEach } from 'vitest';
 import { ArtifactType } from '$lib/model/Artifact';
 import { UserArtifactStatus } from '$lib/model/UserArtifact';
@@ -15,22 +15,24 @@ import { BacklogDB } from '../BacklogDB';
 import { RatingDB } from '../RatingDB';
 import { LinkDB } from '../LinkDB';
 import { TagDB } from '../TagDB';
+import { UserDB } from '../UserDB';
 
 describe('TvshowDB', () => {
     // Shared cleanup function to eliminate duplication
     const cleanupTestData = async () => {
-        await runDbQueriesParallel([
+        await runDbQueries([
             { query: 'DELETE FROM tvshow_tvshow_genre' },
             { query: 'DELETE FROM user_artifact' },
-            { query: 'DELETE FROM backlog_items' },
             { query: 'DELETE FROM backlog_item_tag' },
+            { query: 'DELETE FROM backlog_items' },
             { query: 'DELETE FROM backlog' },
             { query: 'DELETE FROM rating' },
             { query: 'DELETE FROM link' },
             { query: 'DELETE FROM tag' },
             { query: 'DELETE FROM artifact' },
             { query: 'DELETE FROM tvshow_genre' },
-            { query: 'DELETE FROM sqlite_sequence WHERE name IN ("artifact", "tvshow_genre", "backlog", "rating", "link")' }
+            { query: 'DELETE FROM user' },
+            { query: 'DELETE FROM sqlite_sequence WHERE name IN ("artifact", "tvshow_genre", "backlog", "rating", "link", "user")' }
         ]);
     };
 
@@ -52,11 +54,14 @@ describe('TvshowDB', () => {
         await RatingDB.createRatingTable();
         await LinkDB.createLinkTable();
         await TagDB.createTagTable();
+        await UserDB.createUserTable();
     });
 
     beforeEach(async () => {
         // Clean up data before each test using the shared cleanup function
         await cleanupTestData();
+        // Create test user (id=1) for user_artifact and backlog FK requirements
+        await runDbInsert("INSERT INTO user (id, username, password, role) VALUES (1, 'testuser', 'hash', 'user')");
     });
 
     afterAll(async () => {
@@ -72,7 +77,7 @@ describe('TvshowDB', () => {
     describe('Basic Getters', () => {
         test('getById should return tvshow by ID without seasons', async () => {
             // Insert test tvshow
-            const tvshowId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Breaking Bad', 'tvshow', '1232841600000', 2940)");
+            const tvshowId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Breaking Bad', 'tvshow', '2009-01-25T00:00:00.000Z', 2940)");
 
             const tvshow = await TvshowDB.getById(tvshowId, false);
             expect(tvshow).not.toBeNull();
@@ -84,12 +89,12 @@ describe('TvshowDB', () => {
 
         test('getById should return tvshow by ID with seasons when requested', async () => {
             // Insert test tvshow
-            const tvshowId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Game of Thrones', 'tvshow', '1302566400000', 4200)");
+            const tvshowId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Game of Thrones', 'tvshow', '2011-04-12T00:00:00.000Z', 4200)");
             
             // Insert seasons
             await runDbQueries([
-                { query: "INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Season 1', 'tvshow_season', ?, 1, '1302566400000', 600)", params: [tvshowId] },
-                { query: "INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Season 2', 'tvshow_season', ?, 2, '1333324800000', 580)", params: [tvshowId] }
+                { query: "INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Season 1', 'tvshow_season', ?, 1, '2011-04-12T00:00:00.000Z', 600)", params: [tvshowId] },
+                { query: "INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Season 2', 'tvshow_season', ?, 2, '2012-04-02T00:00:00.000Z', 580)", params: [tvshowId] }
             ]);
 
             const tvshow = await TvshowDB.getById(tvshowId, true);
@@ -105,13 +110,13 @@ describe('TvshowDB', () => {
 
         test('getById should return tvshow with seasons and episodes when requested', async () => {
             // Insert test tvshow and season
-            const tvshowId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('The Office', 'tvshow', '1143849600000', 5000)");
-            const seasonId = await runDbInsert("INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Season 1', 'tvshow_season', ?, 1, '1143849600000', 400)", [tvshowId]);
+            const tvshowId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('The Office', 'tvshow', '2006-04-01T00:00:00.000Z', 5000)");
+            const seasonId = await runDbInsert("INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Season 1', 'tvshow_season', ?, 1, '2006-04-01T00:00:00.000Z', 400)", [tvshowId]);
             
             // Insert episodes
             await runDbQueries([
-                { query: "INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Pilot', 'tvshow_episode', ?, 1, '1143849600000', 22)", params: [seasonId] },
-                { query: "INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Diversity Day', 'tvshow_episode', ?, 2, '1144454400000', 22)", params: [seasonId] }
+                { query: "INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Pilot', 'tvshow_episode', ?, 1, '2006-04-01T00:00:00.000Z', 22)", params: [seasonId] },
+                { query: "INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Diversity Day', 'tvshow_episode', ?, 2, '2006-04-08T00:00:00.000Z', 22)", params: [seasonId] }
             ]);
 
             const tvshow = await TvshowDB.getById(tvshowId, true, true);
@@ -132,9 +137,9 @@ describe('TvshowDB', () => {
         test('getTvshows should return paginated tvshows', async () => {
             // Insert test tvshows
             await runDbQueries([
-                { query: "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Stranger Things', 'tvshow', '1468800000000', 2520)" },
-                { query: "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('The Crown', 'tvshow', '1478448000000', 3600)" },
-                { query: "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('House of Cards', 'tvshow', '1359676800000', 4680)" }
+                { query: "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Stranger Things', 'tvshow', '2016-07-18T00:00:00.000Z', 2520)" },
+                { query: "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('The Crown', 'tvshow', '2016-11-06T16:00:00.000Z', 3600)" },
+                { query: "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('House of Cards', 'tvshow', '2013-02-01T00:00:00.000Z', 4680)" }
             ]);
 
             const tvshows = await TvshowDB.getTvshows(0, 10);
@@ -148,9 +153,9 @@ describe('TvshowDB', () => {
         test('getTvshows should support search functionality', async () => {
             // Insert test tvshows
             await runDbQueries([
-                { query: "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('The Walking Dead', 'tvshow', '1287619200000', 6000)" },
-                { query: "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('The Walking Dead: Fear the Walking Dead', 'tvshow', '1439424000000', 2400)" },
-                { query: "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Breaking Bad', 'tvshow', '1232841600000', 2940)" }
+                { query: "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('The Walking Dead', 'tvshow', '2010-10-21T00:00:00.000Z', 6000)" },
+                { query: "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('The Walking Dead: Fear the Walking Dead', 'tvshow', '2015-08-13T00:00:00.000Z', 2400)" },
+                { query: "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Breaking Bad', 'tvshow', '2009-01-25T00:00:00.000Z', 2940)" }
             ]);
 
             const searchResults = await TvshowDB.getTvshows(0, 10, 'walking dead');
@@ -161,7 +166,7 @@ describe('TvshowDB', () => {
         test('getTvshows should handle pagination correctly', async () => {
             // Insert multiple tvshows
             for (let i = 1; i <= 5; i++) {
-                await runDbInsert(`INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Tvshow ${i}', 'tvshow', '1232841600000', 1800)`);
+                await runDbInsert(`INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Tvshow ${i}', 'tvshow', '2009-01-25T00:00:00.000Z', 1800)`);
             }
 
             // Test first page
@@ -181,14 +186,14 @@ describe('TvshowDB', () => {
     describe('Children/Relationship Methods', () => {
         test('fetchSeasons should populate seasons for tvshow objects', async () => {
             // Create tvshows
-            const tvshowId1 = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Tvshow 1', 'tvshow', '1232841600000', 1800)");
-            const tvshowId2 = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Tvshow 2', 'tvshow', '1232841600000', 1800)");
+            const tvshowId1 = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Tvshow 1', 'tvshow', '2009-01-25T00:00:00.000Z', 1800)");
+            const tvshowId2 = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Tvshow 2', 'tvshow', '2009-01-25T00:00:00.000Z', 1800)");
 
             // Create seasons for both tvshows
             await runDbQueries([
-                { query: "INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Season 1', 'tvshow_season', ?, 1, '1232841600000', 600)", params: [tvshowId1] },
-                { query: "INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Season 2', 'tvshow_season', ?, 2, '1264377600000', 600)", params: [tvshowId1] },
-                { query: "INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('First Season', 'tvshow_season', ?, 1, '1232841600000', 600)", params: [tvshowId2] }
+                { query: "INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Season 1', 'tvshow_season', ?, 1, '2009-01-25T00:00:00.000Z', 600)", params: [tvshowId1] },
+                { query: "INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Season 2', 'tvshow_season', ?, 2, '2010-01-25T00:00:00.000Z', 600)", params: [tvshowId1] },
+                { query: "INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('First Season', 'tvshow_season', ?, 1, '2009-01-25T00:00:00.000Z', 600)", params: [tvshowId2] }
             ]);
 
             // Create tvshow objects without seasons
@@ -212,7 +217,7 @@ describe('TvshowDB', () => {
 
         test('fetchSeasons should handle tvshows with no seasons', async () => {
             // Create tvshow without seasons
-            const tvshowId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('No Seasons Tvshow', 'tvshow', '1232841600000', 1800)");
+            const tvshowId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('No Seasons Tvshow', 'tvshow', '2009-01-25T00:00:00.000Z', 1800)");
 
             const tvshows = [
                 new Tvshow(tvshowId, 'No Seasons Tvshow', ArtifactType.TVSHOW, new Date(1232841600000), 1800)
@@ -226,13 +231,13 @@ describe('TvshowDB', () => {
 
         test('fetchSeasons should populate episodes when requested', async () => {
             // Create tvshow and season
-            const tvshowId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Test Show', 'tvshow', '1232841600000', 1800)");
-            const seasonId = await runDbInsert("INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Season 1', 'tvshow_season', ?, 1, '1232841600000', 600)", [tvshowId]);
+            const tvshowId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Test Show', 'tvshow', '2009-01-25T00:00:00.000Z', 1800)");
+            const seasonId = await runDbInsert("INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Season 1', 'tvshow_season', ?, 1, '2009-01-25T00:00:00.000Z', 600)", [tvshowId]);
 
             // Create episodes
             await runDbQueries([
-                { query: "INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Episode 1', 'tvshow_episode', ?, 1, '1232841600000', 45)", params: [seasonId] },
-                { query: "INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Episode 2', 'tvshow_episode', ?, 2, '1233446400000', 45)", params: [seasonId] }
+                { query: "INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Episode 1', 'tvshow_episode', ?, 1, '2009-01-25T00:00:00.000Z', 45)", params: [seasonId] },
+                { query: "INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Episode 2', 'tvshow_episode', ?, 2, '2009-02-01T00:00:00.000Z', 45)", params: [seasonId] }
             ]);
 
             const tvshows = [
@@ -251,13 +256,13 @@ describe('TvshowDB', () => {
 
         test('fetchEpisodes should populate episodes for season objects', async () => {
             // Create season
-            const tvshowId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Parent Show', 'tvshow', '1232841600000', 1800)");
-            const seasonId = await runDbInsert("INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Season 1', 'tvshow_season', ?, 1, '1232841600000', 600)", [tvshowId]);
+            const tvshowId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Parent Show', 'tvshow', '2009-01-25T00:00:00.000Z', 1800)");
+            const seasonId = await runDbInsert("INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Season 1', 'tvshow_season', ?, 1, '2009-01-25T00:00:00.000Z', 600)", [tvshowId]);
 
             // Create episodes
             await runDbQueries([
-                { query: "INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Pilot', 'tvshow_episode', ?, 1, '1232841600000', 45)", params: [seasonId] },
-                { query: "INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Episode 2', 'tvshow_episode', ?, 2, '1233446400000', 45)", params: [seasonId] }
+                { query: "INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Pilot', 'tvshow_episode', ?, 1, '2009-01-25T00:00:00.000Z', 45)", params: [seasonId] },
+                { query: "INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Episode 2', 'tvshow_episode', ?, 2, '2009-02-01T00:00:00.000Z', 45)", params: [seasonId] }
             ]);
 
             // Create season object without episodes
@@ -313,7 +318,7 @@ describe('TvshowDB', () => {
 
         test('assignGenre and getAssignedGenres should work together', async () => {
             // Insert tvshow and genres
-            const tvshowId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Test Tvshow', 'tvshow', '1232841600000', 1800)");
+            const tvshowId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Test Tvshow', 'tvshow', '2009-01-25T00:00:00.000Z', 1800)");
 
             await runDbQueries([
                 { query: "INSERT INTO tvshow_genre (id, title) VALUES (1, 'Drama')" },
@@ -333,7 +338,7 @@ describe('TvshowDB', () => {
 
         test('unassignGenre should remove genre assignment', async () => {
             // Insert tvshow and genre
-            const tvshowId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Test Tvshow', 'tvshow', '1232841600000', 1800)");
+            const tvshowId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Test Tvshow', 'tvshow', '2009-01-25T00:00:00.000Z', 1800)");
             await runDbQueries([
                 { query: "INSERT INTO tvshow_genre (id, title) VALUES (1, 'Horror')" }
             ]);
@@ -348,7 +353,7 @@ describe('TvshowDB', () => {
 
         test('updateAssignedGenres should update genre assignments', async () => {
             // Insert tvshow and genres
-            const tvshowId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Test Tvshow', 'tvshow', '1232841600000', 1800)");
+            const tvshowId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Test Tvshow', 'tvshow', '2009-01-25T00:00:00.000Z', 1800)");
 
             await runDbQueries([
                 { query: "INSERT INTO tvshow_genre (id, title) VALUES (1, 'Drama')" },
@@ -374,7 +379,7 @@ describe('TvshowDB', () => {
 
         test('updateAssignedGenres should handle empty arrays', async () => {
             // Insert tvshow and genres
-            const tvshowId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Test Tvshow', 'tvshow', '1232841600000', 1800)");
+            const tvshowId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Test Tvshow', 'tvshow', '2009-01-25T00:00:00.000Z', 1800)");
 
             await runDbQueries([
                 { query: "INSERT INTO tvshow_genre (id, title) VALUES (1, 'Drama')" },
@@ -396,9 +401,9 @@ describe('TvshowDB', () => {
     describe('User-related Methods', () => {
         test('getUserOngoingTvShows should return only ongoing tvshows', async () => {
             // Insert tvshows
-            const ongoingId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Ongoing Show', 'tvshow', '1232841600000', 1800)");
-            const finishedId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Finished Show', 'tvshow', '1232841600000', 1800)");
-            const onholdId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('On Hold Show', 'tvshow', '1232841600000', 1800)");
+            const ongoingId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Ongoing Show', 'tvshow', '2009-01-25T00:00:00.000Z', 1800)");
+            const finishedId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Finished Show', 'tvshow', '2009-01-25T00:00:00.000Z', 1800)");
+            const onholdId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('On Hold Show', 'tvshow', '2009-01-25T00:00:00.000Z', 1800)");
 
             // Insert user artifacts with different statuses
             await runDbQueries([
@@ -421,12 +426,12 @@ describe('TvshowDB', () => {
 
         test('getUserOngoingTvShows should fetch seasons and episodes for returned tvshows', async () => {
             // Insert tvshow with seasons and episodes
-            const tvshowId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Ongoing Show', 'tvshow', '1232841600000', 1800)");
-            const seasonId = await runDbInsert("INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Season 1', 'tvshow_season', ?, 1, '1232841600000', 600)", [tvshowId]);
+            const tvshowId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Ongoing Show', 'tvshow', '2009-01-25T00:00:00.000Z', 1800)");
+            const seasonId = await runDbInsert("INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Season 1', 'tvshow_season', ?, 1, '2009-01-25T00:00:00.000Z', 600)", [tvshowId]);
             
             await runDbQueries([
-                { query: "INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Episode 1', 'tvshow_episode', ?, 1, '1232841600000', 45)", params: [seasonId] },
-                { query: "INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Episode 2', 'tvshow_episode', ?, 2, '1233446400000', 45)", params: [seasonId] }
+                { query: "INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Episode 1', 'tvshow_episode', ?, 1, '2009-01-25T00:00:00.000Z', 45)", params: [seasonId] },
+                { query: "INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Episode 2', 'tvshow_episode', ?, 2, '2009-02-01T00:00:00.000Z', 45)", params: [seasonId] }
             ]);
 
             // Set as ongoing
@@ -447,8 +452,8 @@ describe('TvshowDB', () => {
             const backlogId = await runDbInsert("INSERT INTO backlog (userId, title, artifactType, rankingType) VALUES (1, 'Tvshow Backlog', 'tvshow', 'elo')");
             
             // Create tvshows
-            const tvshowId1 = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Tvshow A', 'tvshow', '1609459200000', 1800)");
-            const tvshowId2 = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Tvshow B', 'tvshow', '1577836800000', 2400)");
+            const tvshowId1 = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Tvshow A', 'tvshow', '2021-01-01T00:00:00.000Z', 1800)");
+            const tvshowId2 = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Tvshow B', 'tvshow', '2020-01-01T00:00:00.000Z', 2400)");
 
             // Add items to backlog with different ELO scores
             await runDbQueries([
@@ -531,7 +536,7 @@ describe('TvshowDB', () => {
 
         test('createTvshowSeason should create new season', async () => {
             // Create parent tvshow
-            const tvshowId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Parent Show', 'tvshow', '1232841600000', 1800)");
+            const tvshowId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Parent Show', 'tvshow', '2009-01-25T00:00:00.000Z', 1800)");
 
             const seasonDate = new Date('2008-04-08');
             const season = await TvshowDB.createTvshowSeason(tvshowId, 1, 'Season 1', seasonDate, 600);
@@ -546,7 +551,7 @@ describe('TvshowDB', () => {
 
         test('createTvshowSeason should work with default parameters', async () => {
             // Create parent tvshow
-            const tvshowId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Parent Show', 'tvshow', '1232841600000', 1800)");
+            const tvshowId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Parent Show', 'tvshow', '2009-01-25T00:00:00.000Z', 1800)");
 
             const season = await TvshowDB.createTvshowSeason(tvshowId, 2, 'Season 2');
 
@@ -559,8 +564,8 @@ describe('TvshowDB', () => {
 
         test('createTvshowEpisode should create new episode', async () => {
             // Create parent tvshow and season
-            const tvshowId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Parent Show', 'tvshow', '1232841600000', 1800)");
-            const seasonId = await runDbInsert("INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Season 1', 'tvshow_season', ?, 1, '1232841600000', 600)", [tvshowId]);
+            const tvshowId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Parent Show', 'tvshow', '2009-01-25T00:00:00.000Z', 1800)");
+            const seasonId = await runDbInsert("INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Season 1', 'tvshow_season', ?, 1, '2009-01-25T00:00:00.000Z', 600)", [tvshowId]);
 
             const episodeDate = new Date('2008-04-15');
             const episode = await TvshowDB.createTvshowEpisode(seasonId, 1, 'Pilot', episodeDate, 45);
@@ -575,8 +580,8 @@ describe('TvshowDB', () => {
 
         test('createTvshowEpisode should work with default parameters', async () => {
             // Create parent tvshow and season
-            const tvshowId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Parent Show', 'tvshow', '1232841600000', 1800)");
-            const seasonId = await runDbInsert("INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Season 1', 'tvshow_season', ?, 1, '1232841600000', 600)", [tvshowId]);
+            const tvshowId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Parent Show', 'tvshow', '2009-01-25T00:00:00.000Z', 1800)");
+            const seasonId = await runDbInsert("INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Season 1', 'tvshow_season', ?, 1, '2009-01-25T00:00:00.000Z', 600)", [tvshowId]);
 
             const episode = await TvshowDB.createTvshowEpisode(seasonId, 2, 'Episode 2');
 
@@ -591,7 +596,7 @@ describe('TvshowDB', () => {
     describe('Update Operations', () => {
         test('updateTvshow should update tvshow properties', async () => {
             // Create tvshow
-            const tvshowId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Original Title', 'tvshow', '1232841600000', 1800)");
+            const tvshowId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Original Title', 'tvshow', '2009-01-25T00:00:00.000Z', 1800)");
 
             // Update tvshow
             const newReleaseDate = new Date('2024-01-01');
@@ -606,7 +611,7 @@ describe('TvshowDB', () => {
 
         test('updateTvshow should work with default parameters', async () => {
             // Create tvshow
-            const tvshowId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Original Title', 'tvshow', '1232841600000', 1800)");
+            const tvshowId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Original Title', 'tvshow', '2009-01-25T00:00:00.000Z', 1800)");
 
             // Update only title
             await TvshowDB.updateTvshow(tvshowId, 'New Title');
@@ -620,8 +625,8 @@ describe('TvshowDB', () => {
 
         test('updateTvshowSeason should update season properties', async () => {
             // Create parent tvshow and season
-            const tvshowId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Parent Show', 'tvshow', '1232841600000', 1800)");
-            const seasonId = await runDbInsert("INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Original Season', 'tvshow_season', ?, 1, '1232841600000', 600)", [tvshowId]);
+            const tvshowId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Parent Show', 'tvshow', '2009-01-25T00:00:00.000Z', 1800)");
+            const seasonId = await runDbInsert("INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Original Season', 'tvshow_season', ?, 1, '2009-01-25T00:00:00.000Z', 600)", [tvshowId]);
 
             const newReleaseDate = new Date('2024-02-01');
             
@@ -633,15 +638,15 @@ describe('TvshowDB', () => {
             expect(updatedArtifact).not.toBeNull();
             expect(updatedArtifact!.title).toBe('Updated Season');
             expect(updatedArtifact!.child_index).toBe(3);
-            expect(updatedArtifact!.releaseDate).toBe(newReleaseDate.getTime().toString());
+            expect(updatedArtifact!.releaseDate).toBe(newReleaseDate.getTime());
             expect(updatedArtifact!.duration).toBe(700);
         });
 
         test('updateTvshowEpisode should update episode properties', async () => {
             // Create parent tvshow, season, and episode
-            const tvshowId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Parent Show', 'tvshow', '1232841600000', 1800)");
-            const seasonId = await runDbInsert("INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Season 1', 'tvshow_season', ?, 1, '1232841600000', 600)", [tvshowId]);
-            const episodeId = await runDbInsert("INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Original Episode', 'tvshow_episode', ?, 1, '1232841600000', 45)", [seasonId]);
+            const tvshowId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Parent Show', 'tvshow', '2009-01-25T00:00:00.000Z', 1800)");
+            const seasonId = await runDbInsert("INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Season 1', 'tvshow_season', ?, 1, '2009-01-25T00:00:00.000Z', 600)", [tvshowId]);
+            const episodeId = await runDbInsert("INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Original Episode', 'tvshow_episode', ?, 1, '2009-01-25T00:00:00.000Z', 45)", [seasonId]);
 
             const newReleaseDate = new Date('2024-02-01');
             
@@ -653,7 +658,7 @@ describe('TvshowDB', () => {
             expect(updatedArtifact).not.toBeNull();
             expect(updatedArtifact!.title).toBe('Updated Episode');
             expect(updatedArtifact!.child_index).toBe(5);
-            expect(updatedArtifact!.releaseDate).toBe(newReleaseDate.getTime().toString());
+            expect(updatedArtifact!.releaseDate).toBe(newReleaseDate.getTime());
             expect(updatedArtifact!.duration).toBe(48);
         });
     });
@@ -661,10 +666,10 @@ describe('TvshowDB', () => {
     describe('Delete Operations', () => {
         test('deleteTvshow should delete tvshow and all related data', async () => {
             // Create tvshow with seasons and episodes
-            const tvshowId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Show to Delete', 'tvshow', '1232841600000', 1800)");
-            const seasonId = await runDbInsert("INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Season 1', 'tvshow_season', ?, 1, '1232841600000', 600)", [tvshowId]);
-            const episodeId1 = await runDbInsert("INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Episode 1', 'tvshow_episode', ?, 1, '1232841600000', 45)", [seasonId]);
-            const episodeId2 = await runDbInsert("INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Episode 2', 'tvshow_episode', ?, 2, '1233446400000', 45)", [seasonId]);
+            const tvshowId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Show to Delete', 'tvshow', '2009-01-25T00:00:00.000Z', 1800)");
+            const seasonId = await runDbInsert("INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Season 1', 'tvshow_season', ?, 1, '2009-01-25T00:00:00.000Z', 600)", [tvshowId]);
+            const episodeId1 = await runDbInsert("INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Episode 1', 'tvshow_episode', ?, 1, '2009-01-25T00:00:00.000Z', 45)", [seasonId]);
+            const episodeId2 = await runDbInsert("INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Episode 2', 'tvshow_episode', ?, 2, '2009-02-01T00:00:00.000Z', 45)", [seasonId]);
 
             // Add genres
             await runDbQueries([
@@ -708,9 +713,9 @@ describe('TvshowDB', () => {
 
         test('deleteTvshowEpisode should delete episode', async () => {
             // Create parent tvshow, season, and episode
-            const tvshowId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Parent Show', 'tvshow', '1232841600000', 1800)");
-            const seasonId = await runDbInsert("INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Season 1', 'tvshow_season', ?, 1, '1232841600000', 600)", [tvshowId]);
-            const episodeId = await runDbInsert("INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Episode to Delete', 'tvshow_episode', ?, 1, '1232841600000', 45)", [seasonId]);
+            const tvshowId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Parent Show', 'tvshow', '2009-01-25T00:00:00.000Z', 1800)");
+            const seasonId = await runDbInsert("INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Season 1', 'tvshow_season', ?, 1, '2009-01-25T00:00:00.000Z', 600)", [tvshowId]);
+            const episodeId = await runDbInsert("INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Episode to Delete', 'tvshow_episode', ?, 1, '2009-01-25T00:00:00.000Z', 45)", [seasonId]);
 
             // Add user data for episode
             await runDbQueries([
@@ -766,9 +771,8 @@ describe('TvshowDB', () => {
         });
 
         test('assignGenre should handle non-existent tvshow or genre', async () => {
-            // These operations may fail silently or throw - behavior depends on implementation
-            // Testing that they don't cause crashes
-            await expect(TvshowDB.assignGenre(99999, 1)).resolves.not.toThrow();
+            // FK constraints are enforced: inserting with a non-existent artifactId rejects
+            await expect(TvshowDB.assignGenre(99999, 1)).rejects.toThrow();
         });
 
         test('updateTvshow should handle non-existent tvshow', async () => {
@@ -788,17 +792,15 @@ describe('TvshowDB', () => {
         });
 
         test('createTvshowSeason should handle invalid parent ID', async () => {
-            // This might fail or succeed depending on database constraints
-            // Test that it doesn't crash the system
+            // FK constraint on parent_artifact_id rejects when parent does not exist
             await expect(TvshowDB.createTvshowSeason(99999, 1, 'Test Season'))
-                .resolves.not.toThrow();
+                .rejects.toThrow();
         });
 
         test('createTvshowEpisode should handle invalid parent ID', async () => {
-            // This might fail or succeed depending on database constraints
-            // Test that it doesn't crash the system
+            // FK constraint on parent_artifact_id rejects when parent does not exist
             await expect(TvshowDB.createTvshowEpisode(99999, 1, 'Test Episode'))
-                .resolves.not.toThrow();
+                .rejects.toThrow();
         });
     });
 

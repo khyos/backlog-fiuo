@@ -18,11 +18,11 @@ export async function POST({ request, locals }: RequestEvent) {
     }
     const { tmdbId, scId, mcId, rtId } = await request.json();
     if (!tmdbId) {
-        error(500, 'No TMDB ID provided');
+        return error(400, 'No TMDB ID provided');
     }
     const alreadyExists = await LinkDB.exists(LinkType.TMDB, tmdbId, ArtifactType.MOVIE);
     if (alreadyExists) {
-        error(500, 'Movie already exists in list');
+        return error(409, 'Movie already exists in list');
     }
     const tmdbMovie = await TMDB.getMovie(tmdbId);
     let releaseDate = await TMDB.getMovieReleaseDate(tmdbId, tmdbMovie.origin_country?.[0]);
@@ -54,7 +54,7 @@ export async function POST({ request, locals }: RequestEvent) {
             ratings.push(new Rating(RatingType.METACRITIC, mcRating));
         }
     }
-    
+
     if (rtId) {
         links.push(new Link(LinkType.ROTTEN_TOMATOES, rtId));
         const rtRatings = await RottenTomatoes.getMovieRatings(rtId);

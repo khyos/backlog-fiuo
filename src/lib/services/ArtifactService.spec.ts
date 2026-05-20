@@ -1,5 +1,5 @@
 import { describe, expect, test, vi, beforeEach, afterAll } from 'vitest';
-import { artifactFromJSON, getAsyncInfo, getArtifact, getPosterURL, updateStatus, updateScore, updateDate } from './ArtifactService';
+import { artifactFromJSON, getAsyncInfo, getArtifact, getPosterURL, updateStatus, updateScore, updateDate, addOwnership, updateOwnership, deleteOwnership, linkArtifactToSubscription, unlinkArtifactFromSubscription } from './ArtifactService';
 import { ArtifactType } from '$lib/model/Artifact';
 import { Game } from '$lib/model/game/Game';
 import { Movie } from '$lib/model/movie/Movie';
@@ -51,7 +51,7 @@ describe('ArtifactService', () => {
 
         test('should fetch game poster', async () => {
             global.fetch = vi.fn().mockResolvedValue({
-                text: () => Promise.resolve('https://example.com/game.jpg')
+                json: () => Promise.resolve({ url: 'https://example.com/game.jpg' })
             });
 
             const info = await getAsyncInfo(ArtifactType.GAME, 1);
@@ -338,7 +338,7 @@ describe('ArtifactService', () => {
             global.fetch = vi.fn().mockResolvedValue({});
 
             await updateDate(1, null, 'both');
-            
+
             expect(global.fetch).toHaveBeenCalledWith('/api/artifact/1/userDate', {
                 method: 'POST',
                 body: JSON.stringify({
@@ -346,6 +346,120 @@ describe('ArtifactService', () => {
                     startEnd: 'both'
                 })
             });
+        });
+    });
+
+    describe('addOwnership', () => {
+        test('should add ownership and return id', async () => {
+            global.fetch = vi.fn().mockResolvedValue({
+                ok: true,
+                json: () => Promise.resolve({ id: 42 })
+            });
+
+            const id = await addOwnership(1, 'Steam', 'Bought on sale');
+
+            expect(global.fetch).toHaveBeenCalledWith('/api/artifact/1/ownership', {
+                method: 'POST',
+                body: JSON.stringify({ platform: 'Steam', note: 'Bought on sale' })
+            });
+            expect(id).toBe(42);
+        });
+
+        test('should add ownership with null note', async () => {
+            global.fetch = vi.fn().mockResolvedValue({
+                ok: true,
+                json: () => Promise.resolve({ id: 7 })
+            });
+
+            const id = await addOwnership(1, 'Steam', null);
+
+            expect(global.fetch).toHaveBeenCalledWith('/api/artifact/1/ownership', {
+                method: 'POST',
+                body: JSON.stringify({ platform: 'Steam', note: null })
+            });
+            expect(id).toBe(7);
+        });
+
+        test('should throw error when response is not ok', async () => {
+            global.fetch = vi.fn().mockResolvedValue({ ok: false });
+
+            await expect(addOwnership(1, 'Steam', null)).rejects.toThrow('Failed to add ownership');
+        });
+    });
+
+    describe('updateOwnership', () => {
+        test('should update ownership', async () => {
+            global.fetch = vi.fn().mockResolvedValue({ ok: true });
+
+            await updateOwnership(1, 42, 'GOG', 'Gift');
+
+            expect(global.fetch).toHaveBeenCalledWith('/api/artifact/1/ownership', {
+                method: 'PATCH',
+                body: JSON.stringify({ id: 42, platform: 'GOG', note: 'Gift' })
+            });
+        });
+
+        test('should throw error when response is not ok', async () => {
+            global.fetch = vi.fn().mockResolvedValue({ ok: false });
+
+            await expect(updateOwnership(1, 42, 'GOG', null)).rejects.toThrow('Failed to update ownership');
+        });
+    });
+
+    describe('deleteOwnership', () => {
+        test('should delete ownership', async () => {
+            global.fetch = vi.fn().mockResolvedValue({ ok: true });
+
+            await deleteOwnership(1, 42);
+
+            expect(global.fetch).toHaveBeenCalledWith('/api/artifact/1/ownership', {
+                method: 'DELETE',
+                body: JSON.stringify({ id: 42 })
+            });
+        });
+
+        test('should throw error when response is not ok', async () => {
+            global.fetch = vi.fn().mockResolvedValue({ ok: false });
+
+            await expect(deleteOwnership(1, 42)).rejects.toThrow('Failed to delete ownership');
+        });
+    });
+
+    describe('linkArtifactToSubscription', () => {
+        test('should link artifact to subscription', async () => {
+            global.fetch = vi.fn().mockResolvedValue({ ok: true });
+
+            await linkArtifactToSubscription(1, 5);
+
+            expect(global.fetch).toHaveBeenCalledWith('/api/artifact/1/subscription', {
+                method: 'POST',
+                body: JSON.stringify({ serviceId: 5 })
+            });
+        });
+
+        test('should throw error when response is not ok', async () => {
+            global.fetch = vi.fn().mockResolvedValue({ ok: false });
+
+            await expect(linkArtifactToSubscription(1, 5)).rejects.toThrow('Failed to link subscription');
+        });
+    });
+
+    describe('unlinkArtifactFromSubscription', () => {
+        test('should unlink artifact from subscription', async () => {
+            global.fetch = vi.fn().mockResolvedValue({ ok: true });
+
+            await unlinkArtifactFromSubscription(1, 5);
+
+            expect(global.fetch).toHaveBeenCalledWith('/api/artifact/1/subscription', {
+                method: 'DELETE',
+                body: JSON.stringify({ serviceId: 5 })
+            });
+        });
+
+        test('should throw error when response is not ok', async () => {
+            global.fetch = vi.fn().mockResolvedValue({ ok: false });
+
+            await expect(unlinkArtifactFromSubscription(1, 5)).rejects.toThrow('Failed to unlink subscription');
         });
     });
 });

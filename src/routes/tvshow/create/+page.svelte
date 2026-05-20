@@ -93,7 +93,7 @@
         
         searchStatus = 'started';
         try {
-            const response = await fetch(`/api/tvshow/findTvshowInfo?query=${encodeURIComponent(searchTerm)}`);
+            const response = await fetch(`/api/tvshow/external?query=${encodeURIComponent(searchTerm)}`);
             if (!response.ok) {
                 throw new Error('Search failed');
             }
@@ -165,7 +165,7 @@
         });
 
         try {
-            const response = await fetch("/api/tvshow/create", {
+            const response = await fetch("/api/tvshow", {
                 method: "POST",
                 headers: {
                     'Content-Type': 'application/json'

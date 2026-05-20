@@ -26,7 +26,7 @@ export interface IArtifactDB {
     parent_artifact_id: number | null
     child_index: number | null
     duration: number
-    releaseDate: string
+    releaseDate: number
 }
 
 export interface IArtifact extends ISerializable {

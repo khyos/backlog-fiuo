@@ -7,7 +7,7 @@ import { ErrorUtil } from "$lib/util/ErrorUtil";
 export async function POST({ request }: RequestEvent) {
 	const { id, artifactType } = await request.json();
     if (id.length < 2) {
-        error(400, 'Tag name must be at least 2 characters');
+        return error(400, 'Tag name must be at least 2 characters');
     }
     try {
         const tag = await TagDB.createTag(id, artifactType, TagType.DEFAULT);

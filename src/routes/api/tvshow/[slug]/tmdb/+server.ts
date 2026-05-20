@@ -16,5 +16,5 @@ export async function GET({ params }: RequestEvent) {
             }
         }
 	}
-	error(404, 'Not found');
+	return error(404, 'Not found');
 }

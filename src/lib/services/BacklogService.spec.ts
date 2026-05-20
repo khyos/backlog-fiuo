@@ -23,6 +23,12 @@ describe('BacklogService', () => {
             expect(mockFetch).toHaveBeenCalledWith('/api/backlog/1');
             expect(result).toEqual(mockBacklog);
         });
+
+        it('should throw error when response is not ok', async () => {
+            mockFetch.mockResolvedValue({ ok: false });
+
+            await expect(fetchBacklog(1)).rejects.toThrow('Error while Fetching Backlog');
+        });
     });
 
     describe('fetchBacklogs', () => {
@@ -46,19 +52,16 @@ describe('BacklogService', () => {
 
     describe('addBacklogItem', () => {
         it('should add a backlog item', async () => {
-            const mockResponse = { success: true };
-            mockJson.mockResolvedValue(mockResponse);
-            mockFetch.mockResolvedValue({ ok: true, json: mockJson });
+            mockFetch.mockResolvedValue({ ok: true });
 
-            const result = await addBacklogItem(1, 100);
+            await addBacklogItem(1, 100);
 
-            expect(mockFetch).toHaveBeenCalledWith('/api/backlog/1/add', {
+            expect(mockFetch).toHaveBeenCalledWith('/api/backlog/1/items', {
                 method: 'POST',
                 body: JSON.stringify({
                     artifactId: 100
                 })
             });
-            expect(result).toEqual(mockResponse);
         });
 
         it('should throw error when response is not ok', async () => {
@@ -70,19 +73,16 @@ describe('BacklogService', () => {
 
     describe('deleteBacklogItem', () => {
         it('should delete a backlog item', async () => {
-            const mockResponse = { success: true };
-            mockJson.mockResolvedValue(mockResponse);
-            mockFetch.mockResolvedValue({ ok: true, json: mockJson });
+            mockFetch.mockResolvedValue({ ok: true });
 
-            const result = await deleteBacklogItem(1, 100);
+            await deleteBacklogItem(1, 100);
 
-            expect(mockFetch).toHaveBeenCalledWith('/api/backlog/1/delete', {
-                method: 'POST',
+            expect(mockFetch).toHaveBeenCalledWith('/api/backlog/1/items', {
+                method: 'DELETE',
                 body: JSON.stringify({
                     artifactId: 100
                 })
             });
-            expect(result).toEqual(mockResponse);
         });
 
         it('should throw error when response is not ok', async () => {

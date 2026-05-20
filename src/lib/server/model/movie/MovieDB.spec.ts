@@ -1,4 +1,4 @@
-import { runDbInsert, runDbQueries, runDbQueriesParallel } from '../../database';
+import { runDbInsert, runDbQueries } from '../../database';
 import { describe, expect, test, beforeAll, afterAll, beforeEach } from 'vitest';
 import { ArtifactType } from '$lib/model/Artifact';
 import { UserArtifactStatus } from '$lib/model/UserArtifact';
@@ -13,22 +13,24 @@ import { BacklogDB } from '../BacklogDB';
 import { RatingDB } from '../RatingDB';
 import { LinkDB } from '../LinkDB';
 import { TagDB } from '../TagDB';
+import { UserDB } from '../UserDB';
 
 describe('MovieDB', () => {
     // Shared cleanup function to eliminate duplication
     const cleanupTestData = async () => {
-        await runDbQueriesParallel([
+        await runDbQueries([
             { query: 'DELETE FROM movie_movie_genre' },
             { query: 'DELETE FROM user_artifact' },
-            { query: 'DELETE FROM backlog_items' },
             { query: 'DELETE FROM backlog_item_tag' },
+            { query: 'DELETE FROM backlog_items' },
             { query: 'DELETE FROM backlog' },
             { query: 'DELETE FROM rating' },
             { query: 'DELETE FROM link' },
             { query: 'DELETE FROM tag' },
             { query: 'DELETE FROM artifact' },
             { query: 'DELETE FROM movie_genre' },
-            { query: 'DELETE FROM sqlite_sequence WHERE name IN ("artifact", "movie_genre", "backlog", "rating", "link")' }
+            { query: 'DELETE FROM user' },
+            { query: 'DELETE FROM sqlite_sequence WHERE name IN ("artifact", "movie_genre", "backlog", "rating", "link", "user")' }
         ]);
     };
 
@@ -50,11 +52,14 @@ describe('MovieDB', () => {
         await RatingDB.createRatingTable();
         await LinkDB.createLinkTable();
         await TagDB.createTagTable();
+        await UserDB.createUserTable();
     });
 
     beforeEach(async () => {
         // Clean up data before each test using the shared cleanup function
         await cleanupTestData();
+        // Create test user (id=1) for user_artifact and backlog FK requirements
+        await runDbInsert("INSERT INTO user (id, username, password, role) VALUES (1, 'testuser', 'hash', 'user')");
     });
 
     afterAll(async () => {
@@ -89,7 +94,7 @@ describe('MovieDB', () => {
             await runDbQueries([
                 { query: "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('The Godfather', 'movie', '69120000000', 175)" },
                 { query: "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Pulp Fiction', 'movie', '777600000000', 154)" },
-                { query: "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('The Dark Knight', 'movie', '1216080000000', 152)" }
+                { query: "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('The Dark Knight', 'movie', '2008-07-15T00:00:00.000Z', 152)" }
             ]);
 
             const movies = await MovieDB.getMovies(0, 10);
@@ -247,8 +252,8 @@ describe('MovieDB', () => {
             const backlogId = await runDbInsert("INSERT INTO backlog (userId, title, artifactType, rankingType) VALUES (1, 'Movie Backlog', 'movie', 'elo')");
             
             // Create movies
-            const movieId1 = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Movie A', 'movie', '1609459200000', 120)");
-            const movieId2 = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Movie B', 'movie', '1577836800000', 135)");
+            const movieId1 = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Movie A', 'movie', '2021-01-01T00:00:00.000Z', 120)");
+            const movieId2 = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Movie B', 'movie', '2020-01-01T00:00:00.000Z', 135)");
 
             // Add items to backlog with different ELO scores
             await runDbQueries([
@@ -434,9 +439,8 @@ describe('MovieDB', () => {
         });
 
         test('assignGenre should handle non-existent movie or genre', async () => {
-            // These operations may fail silently or throw - behavior depends on implementation
-            // Testing that they don't cause crashes
-            await expect(MovieDB.assignGenre(99999, 1)).resolves.not.toThrow();
+            // FK constraints are enforced: inserting with a non-existent artifactId rejects
+            await expect(MovieDB.assignGenre(99999, 1)).rejects.toThrow();
         });
 
         test('updateMovie should handle non-existent movie', async () => {

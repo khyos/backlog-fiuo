@@ -1,4 +1,4 @@
-import { runDbInsert, runDbQueries, runDbQueriesParallel } from '../../database';
+import { runDbInsert, runDbQueries } from '../../database';
 import { describe, expect, test, beforeAll, afterAll, beforeEach } from 'vitest';
 import { ArtifactType } from '$lib/model/Artifact';
 import { UserArtifactStatus } from '$lib/model/UserArtifact';
@@ -14,22 +14,24 @@ import { BacklogDB } from '../BacklogDB';
 import { RatingDB } from '../RatingDB';
 import { LinkDB } from '../LinkDB';
 import { TagDB } from '../TagDB';
+import { UserDB } from '../UserDB';
 
 describe('AnimeDB', () => {
     // Shared cleanup function to eliminate duplication
     const cleanupTestData = async () => {
-        await runDbQueriesParallel([
+        await runDbQueries([
             { query: 'DELETE FROM anime_anime_genre' },
             { query: 'DELETE FROM user_artifact' },
-            { query: 'DELETE FROM backlog_items' },
             { query: 'DELETE FROM backlog_item_tag' },
+            { query: 'DELETE FROM backlog_items' },
             { query: 'DELETE FROM backlog' },
             { query: 'DELETE FROM rating' },
             { query: 'DELETE FROM link' },
             { query: 'DELETE FROM tag' },
             { query: 'DELETE FROM artifact' },
             { query: 'DELETE FROM anime_genre' },
-            { query: 'DELETE FROM sqlite_sequence WHERE name IN ("artifact", "anime_genre", "backlog", "rating", "link")' }
+            { query: 'DELETE FROM user' },
+            { query: 'DELETE FROM sqlite_sequence WHERE name IN ("artifact", "anime_genre", "backlog", "rating", "link", "user")' }
         ]);
     };
 
@@ -51,11 +53,14 @@ describe('AnimeDB', () => {
         await RatingDB.createRatingTable();
         await LinkDB.createLinkTable();
         await TagDB.createTagTable();
+        await UserDB.createUserTable();
     });
 
     beforeEach(async () => {
         // Clean up data before each test using the shared cleanup function
         await cleanupTestData();
+        // Create test user (id=1) for user_artifact and backlog FK requirements
+        await runDbInsert("INSERT INTO user (id, username, password, role) VALUES (1, 'testuser', 'hash', 'user')");
     });
 
     afterAll(async () => {
@@ -71,7 +76,7 @@ describe('AnimeDB', () => {
     describe('Basic Getters', () => {
         test('getById should return anime by ID without episodes', async () => {
             // Insert test anime
-            const animeId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Attack on Titan', 'anime', '1364688000000', 1440)");
+            const animeId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Attack on Titan', 'anime', '2013-03-31T00:00:00.000Z', 1440)");
 
             const anime = await AnimeDB.getById(animeId, false);
             expect(anime).not.toBeNull();
@@ -83,12 +88,12 @@ describe('AnimeDB', () => {
 
         test('getById should return anime by ID with episodes when requested', async () => {
             // Insert test anime
-            const animeId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Death Note', 'anime', '1160006400000', 1440)");
+            const animeId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Death Note', 'anime', '2006-10-05T00:00:00.000Z', 1440)");
             
             // Insert episodes
             await runDbQueries([
-                { query: "INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Rebirth', 'anime_episode', ?, 1, '1160006400000', 24)", params: [animeId] },
-                { query: "INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Confrontation', 'anime_episode', ?, 2, '1160593200000', 24)", params: [animeId] }
+                { query: "INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Rebirth', 'anime_episode', ?, 1, '2006-10-05T00:00:00.000Z', 24)", params: [animeId] },
+                { query: "INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Confrontation', 'anime_episode', ?, 2, '2006-10-11T19:00:00.000Z', 24)", params: [animeId] }
             ]);
 
             const anime = await AnimeDB.getById(animeId, true);
@@ -110,7 +115,7 @@ describe('AnimeDB', () => {
         test('getAnimes should return paginated animes', async () => {
             // Insert test animes
             await runDbQueries([
-                { query: "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Naruto', 'anime', '1065398400000', 4320)" },
+                { query: "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Naruto', 'anime', '2003-10-06T00:00:00.000Z', 4320)" },
                 { query: "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('One Piece', 'anime', '971136000000', 7200)" },
                 { query: "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Dragon Ball Z', 'anime', '577152000000', 3600)" }
             ]);
@@ -126,8 +131,8 @@ describe('AnimeDB', () => {
         test('getAnimes should support search functionality', async () => {
             // Insert test animes
             await runDbQueries([
-                { query: "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Naruto', 'anime', '1065398400000', 4320)" },
-                { query: "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Naruto Shippuden', 'anime', '1139779200000', 6480)" },
+                { query: "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Naruto', 'anime', '2003-10-06T00:00:00.000Z', 4320)" },
+                { query: "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Naruto Shippuden', 'anime', '2006-02-12T21:20:00.000Z', 6480)" },
                 { query: "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('One Piece', 'anime', '971136000000', 7200)" }
             ]);
 
@@ -139,7 +144,7 @@ describe('AnimeDB', () => {
         test('getAnimes should handle pagination correctly', async () => {
             // Insert multiple animes
             for (let i = 1; i <= 5; i++) {
-                await runDbInsert(`INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Anime ${i}', 'anime', '1065398400000', 1440)`);
+                await runDbInsert(`INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Anime ${i}', 'anime', '2003-10-06T00:00:00.000Z', 1440)`);
             }
 
             // Test first page
@@ -159,14 +164,14 @@ describe('AnimeDB', () => {
     describe('Children/Relationship Methods', () => {
         test('fetchEpisodes should populate episodes for anime objects', async () => {
             // Create animes
-            const animeId1 = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Anime 1', 'anime', '1065398400000', 1440)");
-            const animeId2 = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Anime 2', 'anime', '1065398400000', 1440)");
+            const animeId1 = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Anime 1', 'anime', '2003-10-06T00:00:00.000Z', 1440)");
+            const animeId2 = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Anime 2', 'anime', '2003-10-06T00:00:00.000Z', 1440)");
 
             // Create episodes for both animes
             await runDbQueries([
-                { query: "INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Episode 1', 'anime_episode', ?, 1, '1065398400000', 24)", params: [animeId1] },
-                { query: "INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Episode 2', 'anime_episode', ?, 2, '1065484800000', 24)", params: [animeId1] },
-                { query: "INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('First Episode', 'anime_episode', ?, 1, '1065398400000', 24)", params: [animeId2] }
+                { query: "INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Episode 1', 'anime_episode', ?, 1, '2003-10-06T00:00:00.000Z', 24)", params: [animeId1] },
+                { query: "INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Episode 2', 'anime_episode', ?, 2, '2003-10-07T00:00:00.000Z', 24)", params: [animeId1] },
+                { query: "INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('First Episode', 'anime_episode', ?, 1, '2003-10-06T00:00:00.000Z', 24)", params: [animeId2] }
             ]);
 
             // Create anime objects without episodes
@@ -190,7 +195,7 @@ describe('AnimeDB', () => {
 
         test('fetchEpisodes should handle animes with no episodes', async () => {
             // Create anime without episodes
-            const animeId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('No Episodes Anime', 'anime', '1065398400000', 1440)");
+            const animeId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('No Episodes Anime', 'anime', '2003-10-06T00:00:00.000Z', 1440)");
 
             const animes = [
                 new Anime(animeId, 'No Episodes Anime', ArtifactType.ANIME, new Date(1065398400000), 1440)
@@ -238,7 +243,7 @@ describe('AnimeDB', () => {
 
         test('assignGenre and getAssignedGenres should work together', async () => {
             // Insert anime and genres
-            const animeId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Test Anime', 'anime', '1065398400000', 1440)");
+            const animeId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Test Anime', 'anime', '2003-10-06T00:00:00.000Z', 1440)");
 
             await runDbQueries([
                 { query: "INSERT INTO anime_genre (id, title) VALUES (1, 'Action')" },
@@ -258,7 +263,7 @@ describe('AnimeDB', () => {
 
         test('unassignGenre should remove genre assignment', async () => {
             // Insert anime and genre
-            const animeId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Test Anime', 'anime', '1065398400000', 1440)");
+            const animeId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Test Anime', 'anime', '2003-10-06T00:00:00.000Z', 1440)");
             await runDbQueries([
                 { query: "INSERT INTO anime_genre (id, title) VALUES (1, 'Comedy')" }
             ]);
@@ -273,7 +278,7 @@ describe('AnimeDB', () => {
 
         test('updateAssignedGenres should update genre assignments', async () => {
             // Insert anime and genres
-            const animeId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Test Anime', 'anime', '1065398400000', 1440)");
+            const animeId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Test Anime', 'anime', '2003-10-06T00:00:00.000Z', 1440)");
 
             await runDbQueries([
                 { query: "INSERT INTO anime_genre (id, title) VALUES (1, 'Action')" },
@@ -299,7 +304,7 @@ describe('AnimeDB', () => {
 
         test('updateAssignedGenres should handle empty arrays', async () => {
             // Insert anime and genres
-            const animeId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Test Anime', 'anime', '1065398400000', 1440)");
+            const animeId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Test Anime', 'anime', '2003-10-06T00:00:00.000Z', 1440)");
 
             await runDbQueries([
                 { query: "INSERT INTO anime_genre (id, title) VALUES (1, 'Action')" },
@@ -321,9 +326,9 @@ describe('AnimeDB', () => {
     describe('User-related Methods', () => {
         test('getUserOngoingAnimes should return only ongoing animes', async () => {
             // Insert animes
-            const ongoingId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Ongoing Anime', 'anime', '1065398400000', 1440)");
-            const finishedId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Finished Anime', 'anime', '1065398400000', 1440)");
-            const onholdId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('On Hold Anime', 'anime', '1065398400000', 1440)");
+            const ongoingId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Ongoing Anime', 'anime', '2003-10-06T00:00:00.000Z', 1440)");
+            const finishedId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Finished Anime', 'anime', '2003-10-06T00:00:00.000Z', 1440)");
+            const onholdId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('On Hold Anime', 'anime', '2003-10-06T00:00:00.000Z', 1440)");
 
             // Insert user artifacts with different statuses
             await runDbQueries([
@@ -346,11 +351,11 @@ describe('AnimeDB', () => {
 
         test('getUserOngoingAnimes should fetch episodes for returned animes', async () => {
             // Insert anime with episodes
-            const animeId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Ongoing Anime', 'anime', '1065398400000', 1440)");
+            const animeId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Ongoing Anime', 'anime', '2003-10-06T00:00:00.000Z', 1440)");
             
             await runDbQueries([
-                { query: "INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Episode 1', 'anime_episode', ?, 1, '1065398400000', 24)", params: [animeId] },
-                { query: "INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Episode 2', 'anime_episode', ?, 2, '1065484800000', 24)", params: [animeId] }
+                { query: "INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Episode 1', 'anime_episode', ?, 1, '2003-10-06T00:00:00.000Z', 24)", params: [animeId] },
+                { query: "INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Episode 2', 'anime_episode', ?, 2, '2003-10-07T00:00:00.000Z', 24)", params: [animeId] }
             ]);
 
             // Set as ongoing
@@ -370,8 +375,8 @@ describe('AnimeDB', () => {
             const backlogId = await runDbInsert("INSERT INTO backlog (userId, title, artifactType, rankingType) VALUES (1, 'Anime Backlog', 'anime', 'elo')");
             
             // Create animes
-            const animeId1 = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Anime A', 'anime', '1609459200000', 1440)");
-            const animeId2 = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Anime B', 'anime', '1577836800000', 1440)");
+            const animeId1 = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Anime A', 'anime', '2021-01-01T00:00:00.000Z', 1440)");
+            const animeId2 = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Anime B', 'anime', '2020-01-01T00:00:00.000Z', 1440)");
 
             // Add items to backlog with different ELO scores
             await runDbQueries([
@@ -455,7 +460,7 @@ describe('AnimeDB', () => {
 
         test('createAnimeEpisode should create new episode', async () => {
             // Create parent anime
-            const animeId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Parent Anime', 'anime', '1065398400000', 1440)");
+            const animeId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Parent Anime', 'anime', '2003-10-06T00:00:00.000Z', 1440)");
 
             const episodeDate = new Date('2023-04-08');
             const episode = await AnimeDB.createAnimeEpisode(animeId, 1, 'First Episode', episodeDate, 24);
@@ -470,7 +475,7 @@ describe('AnimeDB', () => {
 
         test('createAnimeEpisode should work with default parameters', async () => {
             // Create parent anime
-            const animeId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Parent Anime', 'anime', '1065398400000', 1440)");
+            const animeId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Parent Anime', 'anime', '2003-10-06T00:00:00.000Z', 1440)");
 
             const episode = await AnimeDB.createAnimeEpisode(animeId, 2, 'Second Episode');
 
@@ -485,7 +490,7 @@ describe('AnimeDB', () => {
     describe('Update Operations', () => {
         test('updateAnime should update anime properties', async () => {
             // Create anime
-            const animeId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Original Title', 'anime', '1065398400000', 1440)");
+            const animeId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Original Title', 'anime', '2003-10-06T00:00:00.000Z', 1440)");
 
             // Update anime
             const newReleaseDate = new Date('2024-01-01');
@@ -500,7 +505,7 @@ describe('AnimeDB', () => {
 
         test('updateAnime should work with default parameters', async () => {
             // Create anime
-            const animeId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Original Title', 'anime', '1065398400000', 1440)");
+            const animeId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Original Title', 'anime', '2003-10-06T00:00:00.000Z', 1440)");
 
             // Update only title
             await AnimeDB.updateAnime(animeId, 'New Title');
@@ -514,8 +519,8 @@ describe('AnimeDB', () => {
 
         test('updateAnimeEpisode should update episode properties', async () => {
             // Create parent anime and episode
-            const animeId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Parent Anime', 'anime', '1065398400000', 1440)");
-            const episodeId = await runDbInsert("INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Original Episode', 'anime_episode', ?, 1, '1065398400000', 24)", [animeId]);
+            const animeId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Parent Anime', 'anime', '2003-10-06T00:00:00.000Z', 1440)");
+            const episodeId = await runDbInsert("INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Original Episode', 'anime_episode', ?, 1, '2003-10-06T00:00:00.000Z', 24)", [animeId]);
 
             const newReleaseDate = new Date('2024-02-01');
             
@@ -527,14 +532,14 @@ describe('AnimeDB', () => {
             expect(updatedArtifact).not.toBeNull();
             expect(updatedArtifact!.title).toBe('Updated Episode');
             expect(updatedArtifact!.child_index).toBe(3);
-            expect(updatedArtifact!.releaseDate).toBe(newReleaseDate.getTime().toString());
+            expect(updatedArtifact!.releaseDate).toBe(newReleaseDate.getTime());
             expect(updatedArtifact!.duration).toBe(25);
         });
 
         test('updateAnimeEpisode should work with default parameters', async () => {
             // Create parent anime and episode
-            const animeId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Parent Anime', 'anime', '1065398400000', 1440)");
-            const episodeId = await runDbInsert("INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Original Episode', 'anime_episode', ?, 1, '1065398400000', 24)", [animeId]);
+            const animeId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Parent Anime', 'anime', '2003-10-06T00:00:00.000Z', 1440)");
+            const episodeId = await runDbInsert("INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Original Episode', 'anime_episode', ?, 1, '2003-10-06T00:00:00.000Z', 24)", [animeId]);
 
             // Update with minimal parameters
             await AnimeDB.updateAnimeEpisode(episodeId, 5, 'New Episode Title');
@@ -543,7 +548,7 @@ describe('AnimeDB', () => {
             const updatedArtifact = await ArtifactDB.getArtifactById(episodeId);
             expect(updatedArtifact!.title).toBe('New Episode Title');
             expect(updatedArtifact!.child_index).toBe(5);
-            expect(updatedArtifact!.releaseDate).toBe(new Date(7258118400000).getTime().toString()); // Default date
+            expect(updatedArtifact!.releaseDate).toBe(new Date(7258118400000).getTime()); // Default date
             expect(updatedArtifact!.duration).toBe(0); // Default duration
         });
     });
@@ -551,9 +556,9 @@ describe('AnimeDB', () => {
     describe('Delete Operations', () => {
         test('deleteAnime should delete anime and all related data', async () => {
             // Create anime with episodes
-            const animeId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Anime to Delete', 'anime', '1065398400000', 1440)");
-            const episodeId1 = await runDbInsert("INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Episode 1', 'anime_episode', ?, 1, '1065398400000', 24)", [animeId]);
-            const episodeId2 = await runDbInsert("INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Episode 2', 'anime_episode', ?, 2, '1065484800000', 24)", [animeId]);
+            const animeId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Anime to Delete', 'anime', '2003-10-06T00:00:00.000Z', 1440)");
+            const episodeId1 = await runDbInsert("INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Episode 1', 'anime_episode', ?, 1, '2003-10-06T00:00:00.000Z', 24)", [animeId]);
+            const episodeId2 = await runDbInsert("INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Episode 2', 'anime_episode', ?, 2, '2003-10-07T00:00:00.000Z', 24)", [animeId]);
 
             // Add genres
             await runDbQueries([
@@ -596,8 +601,8 @@ describe('AnimeDB', () => {
 
         test('deleteAnimeEpisode should delete episode', async () => {
             // Create parent anime and episode
-            const animeId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Parent Anime', 'anime', '1065398400000', 1440)");
-            const episodeId = await runDbInsert("INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Episode to Delete', 'anime_episode', ?, 1, '1065398400000', 24)", [animeId]);
+            const animeId = await runDbInsert("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Parent Anime', 'anime', '2003-10-06T00:00:00.000Z', 1440)");
+            const episodeId = await runDbInsert("INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Episode to Delete', 'anime_episode', ?, 1, '2003-10-06T00:00:00.000Z', 24)", [animeId]);
 
             // Add user data for episode
             await runDbQueries([
@@ -652,9 +657,8 @@ describe('AnimeDB', () => {
         });
 
         test('assignGenre should handle non-existent anime or genre', async () => {
-            // These operations may fail silently or throw - behavior depends on implementation
-            // Testing that they don't cause crashes
-            await expect(AnimeDB.assignGenre(99999, 1)).resolves.not.toThrow();
+            // FK constraints are enforced: inserting with a non-existent artifactId rejects
+            await expect(AnimeDB.assignGenre(99999, 1)).rejects.toThrow();
         });
 
         test('updateAnime should handle non-existent anime', async () => {
@@ -674,10 +678,9 @@ describe('AnimeDB', () => {
         });
 
         test('createAnimeEpisode should handle invalid parent ID', async () => {
-            // This might fail or succeed depending on database constraints
-            // Test that it doesn't crash the system
+            // FK constraint on parent_artifact_id rejects when parent does not exist
             await expect(AnimeDB.createAnimeEpisode(99999, 1, 'Test Episode'))
-                .resolves.not.toThrow();
+                .rejects.toThrow();
         });
     });
 

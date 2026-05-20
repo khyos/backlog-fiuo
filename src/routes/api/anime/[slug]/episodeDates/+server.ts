@@ -14,31 +14,31 @@ interface EpisodeRow {
 export async function POST({ params, request, locals }: RequestEvent) {
     const user = User.deserialize(locals.user);
     if (user.id < 0) {
-        error(401, "Please sign in");
+        return error(401, "Please sign in");
     }
 
     const animeId = parseInt(params.slug);
     const { startDate, endDate } = await request.json();
 
     if (!startDate || !endDate) {
-        error(400, "startDate and endDate are required");
+        return error(400, "startDate and endDate are required");
     }
 
     const start = new Date(startDate);
     const end = new Date(endDate);
 
     if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-        error(400, "Invalid date format");
+        return error(400, "Invalid date format");
     }
 
     if (start > end) {
-        error(400, "startDate must be before or equal to endDate");
+        return error(400, "startDate must be before or equal to endDate");
     }
 
     // Verify the anime exists
     const anime = await AnimeDB.getById(animeId, false);
     if (!anime) {
-        error(404, "Anime not found");
+        return error(404, "Anime not found");
     }
 
     // Get all finished episodes of this anime that have no end date for this user
@@ -55,7 +55,7 @@ export async function POST({ params, request, locals }: RequestEvent) {
     );
 
     if (episodeRows.length === 0) {
-        return json({ updated: 0 });
+        return json({ success: true });
     }
 
     const count = episodeRows.length;
@@ -79,5 +79,5 @@ export async function POST({ params, request, locals }: RequestEvent) {
         await ArtifactDB.setUserDate(user.id, episode.id, dateStr, 'end');
     }
 
-    return json({ updated: count });
+    return json({ success: true });
 }

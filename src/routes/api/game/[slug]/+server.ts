@@ -9,7 +9,7 @@ export async function GET({ params }: RequestEvent) {
 	if (game) {
 	  	return json(game.toJSON());
 	}
-	error(404, 'Not found');
+	return error(404, 'Not found');
 }
 
 export async function DELETE({ params, locals }: RequestEvent) {
@@ -19,5 +19,5 @@ export async function DELETE({ params, locals }: RequestEvent) {
     }
 	const gameId = parseInt(params.slug);
     await GameDB.deleteGame(gameId);
-    return json({ deleted: gameId });
+    return json({ success: true });
 }

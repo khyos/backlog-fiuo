@@ -285,4 +285,28 @@ describe('LinkDB', () => {
             expect(links).toEqual({});
         });
     });
+
+    describe('getArtifactByLink', () => {
+        test('should return the artifact matching the given link type and URL', async () => {
+            const artifactId = await ArtifactDB.createArtifact(
+                'Test Game',
+                ArtifactType.GAME,
+                '',
+                new Date('2024-01-01'),
+                120
+            );
+            await LinkDB.addLink(artifactId, LinkType.STEAM, 'https://store.steampowered.com/app/123456');
+
+            const result = await LinkDB.getArtifactByLink(LinkType.STEAM, 'https://store.steampowered.com/app/123456');
+            expect(result).not.toBeNull();
+            expect(result!.id).toBe(artifactId);
+            expect(result!.title).toBe('Test Game');
+            expect(result!.artifactType).toBe(ArtifactType.GAME);
+        });
+
+        test('should return null for a non-existing link', async () => {
+            const result = await LinkDB.getArtifactByLink(LinkType.STEAM, 'https://store.steampowered.com/app/nonexistent');
+            expect(result).toBeNull();
+        });
+    });
 });

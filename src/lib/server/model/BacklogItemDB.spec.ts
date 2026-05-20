@@ -1,20 +1,24 @@
 import { describe, expect, test, beforeAll, afterAll, beforeEach } from 'vitest';
-import { runDbQueriesParallel } from '../database';
+import { runDbQueries } from '../database';
 import { BacklogItemDB } from './BacklogItemDB';
 import { BacklogDB } from './BacklogDB';
 import { TagDB } from './TagDB';
+import { ArtifactDB } from './ArtifactDB';
+import { UserDB } from './UserDB';
 import { Tag, TagType } from '$lib/model/Tag';
 import { ArtifactType } from '$lib/model/Artifact';
 import { BacklogRankingType, BacklogType } from '$lib/model/Backlog';
 
 describe('BacklogItemDB', () => {
     const cleanupTestData = async () => {
-        await runDbQueriesParallel([
+        await runDbQueries([
             { query: 'DELETE FROM backlog_item_tag' },
             { query: 'DELETE FROM backlog_items' },
             { query: 'DELETE FROM backlog' },
             { query: 'DELETE FROM tag' },
-            { query: 'DELETE FROM sqlite_sequence WHERE name IN ("backlog", "backlog_items")' }
+            { query: 'DELETE FROM artifact' },
+            { query: 'DELETE FROM user' },
+            { query: 'DELETE FROM sqlite_sequence WHERE name IN ("backlog", "backlog_items", "artifact", "user")' }
         ]);
     };
 
@@ -24,10 +28,25 @@ describe('BacklogItemDB', () => {
         await BacklogDB.createBacklogItemsTable();
         await BacklogDB.createBacklogItemTagTable();
         await TagDB.createTagTable();
+        await ArtifactDB.createArtifactTable();
+        await UserDB.createUserTable();
     });
 
     beforeEach(async () => {
         await cleanupTestData();
+
+        // Create test users (id=1, id=2) required by backlog FK
+        await runDbQueries([
+            { query: "INSERT INTO user (id, username, password, role) VALUES (1, 'testuser', 'hash', 'user')" },
+            { query: "INSERT INTO user (id, username, password, role) VALUES (2, 'testuser2', 'hash', 'user')" }
+        ]);
+
+        // Create stub artifacts for backlog item tests (fake IDs used across tests)
+        await runDbQueries([
+            { query: "INSERT INTO artifact (id, title, type, releaseDate, duration) VALUES (100, 'Test Artifact 1', 'game', '2020-01-01', 60)" },
+            { query: "INSERT INTO artifact (id, title, type, releaseDate, duration) VALUES (200, 'Test Artifact 2', 'game', '2020-01-01', 60)" },
+            { query: "INSERT INTO artifact (id, title, type, releaseDate, duration) VALUES (300, 'Test Artifact 3', 'game', '2020-01-01', 60)" }
+        ]);
         
         // Set up test data - create tags that can be referenced by string ID
         await TagDB.createTag('1', ArtifactType.GAME, TagType.DEFAULT);
@@ -147,9 +166,9 @@ describe('BacklogItemDB', () => {
         });
 
         test('should handle adding tag to non-existent backlog item gracefully', async () => {
-            // This should not throw but may create an orphaned tag relationship
+            // FK constraint on backlog_item_tag requires the backlog item to exist first
             await expect(BacklogItemDB.addTag(backlogId, 999, '1'))
-                .resolves.not.toThrow();
+                .rejects.toThrow();
         });
 
         test('should handle adding non-existent tag gracefully', async () => {
@@ -304,8 +323,9 @@ describe('BacklogItemDB', () => {
         });
 
         test('should handle moving tags to non-existent backlog', async () => {
+            // FK constraint prevents moving tags to a backlog that has no matching backlog_items entry
             await expect(BacklogItemDB.moveItemTagsToOtherBacklog(fromBacklogId, 999, 100))
-                .resolves.not.toThrow();
+                .rejects.toThrow();
         });
 
         test('should preserve tag relationships when moving between different users backlogs', async () => {
