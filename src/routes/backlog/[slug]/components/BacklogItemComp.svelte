@@ -51,6 +51,11 @@
     };
 
     const getPriceTagColor = (price: Price) => {
+        const isOwned = backlogItem.artifact.userInfo?.ownerships?.length ?? 0 > 0;
+        const isInSubscription = backlogItem.artifact.userInfo?.availableSubscriptions?.length ?? 0 > 0;
+        if (isOwned || isInSubscription) {
+            return "gray";
+        }
         if (!price.historyLow) {
             return "primary";
         }
