@@ -1,15 +1,17 @@
 import { Artifact, ArtifactType, type IArtifact } from "../Artifact";
 import type { Serializable } from "../Serializable";
+import { type IMovieReleaseDate } from "./MovieReleaseDate";
 
 export const SERIALIZE_TYPE = 'Movie';
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface IMovie extends IArtifact {
+    releaseDates?: IMovieReleaseDate[]
 }
 
 export class Movie extends Artifact implements Serializable<IMovie> {
-    constructor(id: number, title: string, type: ArtifactType, releaseDate: Date, duration: number) {
-        super(id, title, type, releaseDate, duration);
+    releaseDates: IMovieReleaseDate[] = []
+    constructor(id: number, title: string, type: ArtifactType, releaseDate: Date, duration: number, status?: string | null) {
+        super(id, title, type, releaseDate, duration, status);
         this.type = ArtifactType.MOVIE;
     }
 
@@ -33,18 +35,20 @@ export class Movie extends Artifact implements Serializable<IMovie> {
     toJSON() {
         return {
             ...super.toJSON(),
-             __type: SERIALIZE_TYPE
+            __type: SERIALIZE_TYPE,
+            releaseDates: this.releaseDates
         }
     }
 
     static fromJSON(data: IMovie) : Movie {
         const artifactData = super.fromJSON(data);
-        const movie = new Movie(artifactData.id, artifactData.title, artifactData.type, artifactData.releaseDate, artifactData.duration);
+        const movie = new Movie(artifactData.id, artifactData.title, artifactData.type, artifactData.releaseDate, artifactData.duration, artifactData.status);
         movie.links = artifactData.links;
         movie.genres = artifactData.genres;
         movie.ratings = artifactData.ratings;
         movie.tags = artifactData.tags;
         movie.userInfo = artifactData.userInfo;
+        movie.releaseDates = data.releaseDates ?? [];
         return movie;
     }
 }

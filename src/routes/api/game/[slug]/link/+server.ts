@@ -1,5 +1,5 @@
 import { HLTB } from "$lib/hltb/HLTB";
-import { IGDB } from "$lib/igdb/IGDB";
+import { IGDB, IGDB_STATUS, IGDB_RELEASE_DATE_STATUS } from "$lib/igdb/IGDB";
 import { ITAD } from "$lib/itad/ITAD";
 import { MetaCritic } from "$lib/metacritic/MetaCritic";
 import { LinkType } from "$lib/model/Link";
@@ -101,9 +101,20 @@ export async function PUT({ params, request, locals }: RequestEvent) {
                 try {
                     const igdbGame = await IGDB.getGame(url);
                     const date = igdbGame.first_release_date ? new Date(igdbGame.first_release_date * 1000) : undefined;
-                    await GameDB.updateGame(gameId, igdbGame.name, date);
+                    const status = igdbGame.status !== undefined ? IGDB_STATUS[igdbGame.status] : undefined;
+                    await GameDB.updateGame(gameId, igdbGame.name, date, status);
                     await GameDB.updateAssignedGenres(gameId, igdbGame.genres);
                     await GameDB.updatePlatforms(gameId, igdbGame.platforms);
+                    if (igdbGame.release_dates?.length) {
+                        const releaseDates = igdbGame.release_dates
+                            .filter(rd => rd.date !== undefined)
+                            .map(rd => ({
+                                platformId: rd.platform,
+                                releaseDate: rd.date ?? 0,
+                                status: rd.status !== undefined ? IGDB_RELEASE_DATE_STATUS[rd.status] : undefined
+                            }));
+                        await GameDB.updateReleaseDates(gameId, releaseDates);
+                    }
                 } catch {
                     return error(500, "Failed to Update IGDB");
                 }
@@ -142,6 +153,7 @@ export async function PUT({ params, request, locals }: RequestEvent) {
                     return error(500, "Failed to Update METACRITIC");
                 }
             } else if (type === LinkType.STEAM) {
+                /*
                 try {
                     const steamRating = await Steam.getGameRating(url);
                     if (steamRating) {
@@ -150,6 +162,7 @@ export async function PUT({ params, request, locals }: RequestEvent) {
                 } catch {
                     return error(500, "Failed to Update STEAM");
                 }
+                */
             } else if (type === LinkType.ITAD) {
                 try {
                     const [subscriptions, allServices] = await Promise.all([

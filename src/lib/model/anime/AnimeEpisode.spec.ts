@@ -85,7 +85,8 @@ describe('AnimeEpisode', () => {
             ratings: [rating.toJSON()],
             meanRating: null,
             tags: [tag.toJSON()],
-            userInfo: userInfo.toJSON()
+            userInfo: userInfo.toJSON(),
+            status: null
         });
     });
 

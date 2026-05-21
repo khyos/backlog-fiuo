@@ -12,8 +12,8 @@ export interface ITvshow extends IArtifact {
 export class Tvshow extends Artifact implements Serializable<ITvshow> {
     override children: TvshowSeason[] = [];
 
-    constructor(id: number, title: string, type: ArtifactType, releaseDate: Date, duration: number) {
-        super(id, title, type, releaseDate, duration);
+    constructor(id: number, title: string, type: ArtifactType, releaseDate: Date, duration: number, status?: string | null) {
+        super(id, title, type, releaseDate, duration, status);
         this.type = ArtifactType.TVSHOW;
     }
 

@@ -2,18 +2,21 @@ import { Artifact, ArtifactType, type IArtifact } from "../Artifact";
 import { RatingType } from "../Rating";
 import type { Serializable } from "../Serializable";
 import { Platform, type IPlatform } from "./Platform";
+import { type IGameReleaseDate } from "./GameReleaseDate";
 
 export const SERIALIZE_TYPE = 'Game';
 
 export interface IGame extends IArtifact {
     platforms?: IPlatform[]
+    releaseDates?: IGameReleaseDate[]
 }
 
 export class Game extends Artifact implements Serializable<IGame> {
     platforms: Platform[] = []
+    releaseDates: IGameReleaseDate[] = []
 
-    constructor(id: number, title: string, type: ArtifactType, releaseDate: Date, duration: number) {
-        super(id, title, type, releaseDate, duration);
+    constructor(id: number, title: string, type: ArtifactType, releaseDate: Date, duration: number, status?: string | null) {
+        super(id, title, type, releaseDate, duration, status);
         this.type = ArtifactType.GAME;
     }
 
@@ -78,13 +81,14 @@ export class Game extends Artifact implements Serializable<IGame> {
         return {
             ...super.toJSON(),
             __type: SERIALIZE_TYPE,
-            platforms: this.platforms.map(platform => platform.toJSON())
+            platforms: this.platforms.map(platform => platform.toJSON()),
+            releaseDates: this.releaseDates
         }
     }
 
     static fromJSON(data: IGame) : Game {
         const artifactData = super.fromJSON(data);
-        const game = new Game(artifactData.id, artifactData.title, artifactData.type, artifactData.releaseDate, artifactData.duration);
+        const game = new Game(artifactData.id, artifactData.title, artifactData.type, artifactData.releaseDate, artifactData.duration, artifactData.status);
         game.links = artifactData.links;
         game.genres = artifactData.genres;
         game.ratings = artifactData.ratings;
@@ -93,6 +97,7 @@ export class Game extends Artifact implements Serializable<IGame> {
         game.platforms = data.platforms ? data.platforms.map((platformData) => {
             return Platform.fromJSON(platformData);
         }) : [];
+        game.releaseDates = data.releaseDates ?? [];
         return game;
     }
 }

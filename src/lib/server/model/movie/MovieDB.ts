@@ -5,10 +5,12 @@ import { Genre } from "$lib/model/Genre";
 import { Link } from "$lib/model/Link";
 import { Rating } from "$lib/model/Rating";
 import { Movie } from "$lib/model/movie/Movie";
+import { type IMovieReleaseDate, type IMovieReleaseDateDB } from "$lib/model/movie/MovieReleaseDate";
 import { ArtifactDB } from "../ArtifactDB";
 import { BacklogItemDB } from "../BacklogItemDB";
 import { LinkDB } from "../LinkDB";
 import { RatingDB } from "../RatingDB";
+import { runDbQuery, getDbRows } from "$lib/server/database";
 
 export class MovieDB {
     // ========================================
@@ -20,7 +22,9 @@ export class MovieDB {
 
         const releaseDate = new Date(row.releaseDate);
         const movie = new Movie(row.id, row.title, row.type, releaseDate, row.duration);
-        
+        movie.status = row.status ?? null;
+
+        movie.releaseDates = await MovieDB.getReleaseDates(id);
         movie.genres = await MovieDB.getAssignedGenres(id);
         movie.ratings = await RatingDB.getRatings(id);
         movie.links = await LinkDB.getLinks(id);
@@ -39,7 +43,9 @@ export class MovieDB {
 
     static deserialize(artifactJSON: IArtifactDB): Movie {
         const releaseDate = new Date(artifactJSON.releaseDate);
-        return new Movie(artifactJSON.id, artifactJSON.title, artifactJSON.type, releaseDate, artifactJSON.duration);
+        const movie = new Movie(artifactJSON.id, artifactJSON.title, artifactJSON.type, releaseDate, artifactJSON.duration);
+        movie.status = artifactJSON.status ?? null;
+        return movie;
     }
 
     // ========================================
@@ -123,8 +129,35 @@ export class MovieDB {
     // ========================================
     // Update Operations
     // ========================================
-    static async updateMovie(id: number, title: string, releaseDate: Date = new Date(7258118400000), duration: number = 0): Promise<void> {
-        return await ArtifactDB.updateArtifact(id, title, releaseDate, duration);
+    static async updateMovie(id: number, title: string, releaseDate: Date = new Date(7258118400000), duration: number = 0, status?: string): Promise<void> {
+        if (status !== undefined) {
+            await runDbQuery(`UPDATE artifact SET title = ?, releaseDate = ?, duration = ?, status = ? WHERE id = ?`,
+                [title, releaseDate.getTime().toString(), duration, status, id]);
+        } else {
+            return await ArtifactDB.updateArtifact(id, title, releaseDate, duration);
+        }
+    }
+
+    static async getReleaseDates(movieId: number): Promise<IMovieReleaseDate[]> {
+        const rows = await getDbRows<IMovieReleaseDateDB>(
+            `SELECT * FROM movie_release_date WHERE artifactId = ? ORDER BY releaseDate ASC`,
+            [movieId]
+        );
+        return rows.map(row => ({
+            country: row.country,
+            releaseDate: row.releaseDate,
+            type: row.type ?? undefined
+        }));
+    }
+
+    static async updateReleaseDates(movieId: number, releaseDates: IMovieReleaseDate[]): Promise<void> {
+        await runDbQuery(`DELETE FROM movie_release_date WHERE artifactId = ?`, [movieId]);
+        for (const rd of releaseDates) {
+            await runDbQuery(
+                `INSERT INTO movie_release_date (artifactId, country, releaseDate, type) VALUES (?, ?, ?, ?)`,
+                [movieId, rd.country, rd.releaseDate, rd.type ?? null]
+            );
+        }
     }
 
     // ========================================
@@ -146,5 +179,16 @@ export class MovieDB {
 
     static async createMovieMovieGenreTable() {
         await ArtifactDB.createGenreMapTable('movie_movie_genre');
+    }
+
+    static async createMovieReleaseDateTable() {
+        await runDbQuery(`CREATE TABLE IF NOT EXISTS movie_release_date (
+            id         INTEGER PRIMARY KEY AUTOINCREMENT,
+            artifactId INTEGER NOT NULL,
+            country    TEXT NOT NULL,
+            releaseDate INTEGER NOT NULL,
+            type       TEXT,
+            FOREIGN KEY (artifactId) REFERENCES artifact(id)
+        )`);
     }
 }

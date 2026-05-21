@@ -9,17 +9,15 @@ export interface IAnime extends IArtifact {
     children: IAnimeEpisode[]
     studio?: string
     source?: string
-    status?: string
 }
 
 export class Anime extends Artifact implements Serializable<IAnime> {
     override children: AnimeEpisode[] = [];
     studio?: string;
     source?: string;
-    status?: string;
 
-    constructor(id: number, title: string, type: ArtifactType, releaseDate: Date, duration: number) {
-        super(id, title, type, releaseDate, duration);
+    constructor(id: number, title: string, type: ArtifactType, releaseDate: Date, duration: number, status?: string | null) {
+        super(id, title, type, releaseDate, duration, status);
         this.type = ArtifactType.ANIME;
     }
 
@@ -79,7 +77,7 @@ export class Anime extends Artifact implements Serializable<IAnime> {
 
     static fromJSON(data: IAnime): Anime {
         const artifactData = super.fromJSON(data);
-        const anime = new Anime(artifactData.id, artifactData.title, artifactData.type, artifactData.releaseDate, artifactData.duration);
+        const anime = new Anime(artifactData.id, artifactData.title, artifactData.type, artifactData.releaseDate, artifactData.duration, artifactData.status);
         anime.children = data.children.map((child) => {
             const episode = AnimeEpisode.fromJSON(child);
             episode.parent = anime;
@@ -92,7 +90,7 @@ export class Anime extends Artifact implements Serializable<IAnime> {
         anime.userInfo = artifactData.userInfo;
         anime.studio = data.studio;
         anime.source = data.source;
-        anime.status = data.status;
+        anime.status = data.status ?? null;
         return anime;
     }
 }

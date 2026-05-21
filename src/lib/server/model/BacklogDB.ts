@@ -27,6 +27,7 @@ export interface IBacklogItemDB {
     elo: number;
     rank: number;
     releaseDate: string;
+    status: string | null;
     title: string;
     type: ArtifactType;
 }

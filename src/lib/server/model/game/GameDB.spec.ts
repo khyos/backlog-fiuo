@@ -22,6 +22,7 @@ describe('GameDB', () => {
     const cleanupTestData = async () => {
         await runDbQueries([
             { query: 'DELETE FROM game_game_genre' },
+            { query: 'DELETE FROM game_release_date' },
             { query: 'DELETE FROM game_platform' },
             { query: 'DELETE FROM user_artifact' },
             { query: 'DELETE FROM backlog_item_tag' },
@@ -47,6 +48,7 @@ describe('GameDB', () => {
         await GameDB.createGameGenreTable();
         await GameDB.createGameGameGenreTable();
         await GameDB.createGamePlatformTable();
+        await GameDB.createGameReleaseDateTable();
         await PlatformDB.createPlatformTable();
         
         // Create backlog-related tables for testing

@@ -140,7 +140,8 @@ describe('Tvshow', () => {
             ratings: [rating.toJSON()],
             meanRating: 85,
             tags: [tag.toJSON()],
-            userInfo: userInfo.toJSON()
+            userInfo: userInfo.toJSON(),
+            status: null
         });
     });
 

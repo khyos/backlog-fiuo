@@ -10,6 +10,13 @@ export type IGDBSearchGameResult = {
     date?: string
 }
 
+export type IGDBReleaseDate = {
+    id: number
+    date?: number
+    platform?: number
+    status?: number
+}
+
 export type IGDBGame = {
     alternative_names: number[]
     cover: number
@@ -18,10 +25,35 @@ export type IGDBGame = {
     id: number
     name: string
     platforms: number[]
+    release_dates?: IGDBReleaseDate[]
+    status?: number
     storyline: string
     summary: string
     url: string
 }
+
+// IGDB games.status enum
+export const IGDB_STATUS: Record<number, string> = {
+    0: 'released',
+    2: 'alpha',
+    3: 'beta',
+    4: 'early_access',
+    5: 'offline',
+    6: 'cancelled',
+    7: 'rumored',
+    8: 'delisted'
+};
+
+// IGDB release_date_statuses IDs
+export const IGDB_RELEASE_DATE_STATUS: Record<number, string> = {
+    1: 'alpha',
+    2: 'beta',
+    3: 'early_access',
+    4: 'offline',
+    5: 'cancelled',
+    6: 'rumored',
+    7: 'delisted'
+};
 
 export class IGDB {
     static async authenticateIGDB(): Promise<{ access_token: string }> {
@@ -49,7 +81,7 @@ export class IGDB {
         const response = await fetch("https://api.igdb.com/v4/games", {
             method: 'POST',
             headers: IGDB.getHeaders(access_token),
-            body: `fields alternative_names,category,cover,first_release_date,genres,name,platforms,status,storyline,summary,url; where id = ${gameId};`
+            body: `fields alternative_names,category,cover,first_release_date,genres,name,platforms,release_dates.date,release_dates.platform,release_dates.status,status,storyline,summary,url; where id = ${gameId};`
         });
         return (await response.json())[0];
     }
