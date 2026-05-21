@@ -31,7 +31,7 @@ describe('Anime', () => {
         expect(anime.userInfo).toBeNull();
         expect(anime.studio).toBeUndefined();
         expect(anime.source).toBeUndefined();
-        expect(anime.status).toBeUndefined();
+        expect(anime.status).toBeNull();
     });
 
     test('should compute mean rating correctly', () => {

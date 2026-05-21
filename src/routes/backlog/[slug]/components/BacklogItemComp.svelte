@@ -4,6 +4,7 @@
     import { draggable, dropzone } from "./dnd";
     import { BacklogRankingType } from "$lib/model/Backlog";
     import type { Price } from "$lib/types/itad/Price";
+    import { Game } from "$lib/model/game/Game";
     import { startOrderByFight } from "$lib/stores/OrderByFightStore";
     import type { BacklogItem } from "$lib/model/BacklogItem";
     import { showMoveToBacklog, showMoveToRank } from "../stores/PageStore";
@@ -30,6 +31,13 @@
         return '';
     })();
     $: hasNoStatus = showWishlistAction && !backlogItem.artifact.userInfo?.status;
+    $: earlyAccessFinalReleaseDate = (() => {
+        if (backlogItem.artifact.status !== 'early_access') return null;
+        const releaseDates = (backlogItem.artifact as Game).releaseDates;
+        if (!releaseDates?.length) return null;
+        const finalRd = releaseDates.find(rd => !rd.status);
+        return finalRd ? new Date(finalRd.releaseDate) : null;
+    })();
     
     // Events
     export let onDeleteBacklogItem: (e: MouseEvent) => void;
@@ -44,7 +52,8 @@
 
     $: compactBadgeCount = backlogItem.tags.length
         + (backlogItem.artifact.userInfo?.ownerships?.length ?? 0)
-        + (backlogItem.artifact.userInfo?.availableSubscriptions?.length ?? 0);
+        + (backlogItem.artifact.userInfo?.availableSubscriptions?.length ?? 0)
+        + (backlogItem.artifact.status === 'early_access' ? 1 : 0);
 
     const showTags = () => {
         showFullTags = true;
@@ -106,6 +115,9 @@
                         {sub.name}
                     </Badge>
                 {/each}
+                {#if backlogItem.artifact.status === 'early_access'}
+                    <Badge color="yellow" class="ml-1">Early Access{#if earlyAccessFinalReleaseDate} → {TimeUtil.formatDate(earlyAccessFinalReleaseDate)}{/if}</Badge>
+                {/if}
             </div>
         </div>
         <div id="compactTags" class="{showFullTags ? 'hidden' : 'block md:hidden'}">

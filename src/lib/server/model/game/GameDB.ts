@@ -6,6 +6,7 @@ import { Link } from "$lib/model/Link";
 import { Rating } from "$lib/model/Rating";
 import { Game } from "$lib/model/game/Game";
 import { Platform, type IPlatformDB } from "$lib/model/game/Platform";
+import { type IGameReleaseDate, type IGameReleaseDateDB } from "$lib/model/game/GameReleaseDate";
 import { runDbQuery, getDbRows } from "$lib/server/database";
 import { ArtifactDB } from "../ArtifactDB";
 import { BacklogItemDB } from "../BacklogItemDB";
@@ -21,9 +22,10 @@ export class GameDB {
         if (!row) return null;
 
         const releaseDate = new Date(row.releaseDate);
-        const game = new Game(row.id, row.title, row.type, releaseDate, row.duration);
+        const game = new Game(row.id, row.title, row.type, releaseDate, row.duration, row.status);
         
         game.platforms = await GameDB.getPlatforms(id);
+        game.releaseDates = await GameDB.getReleaseDates(id);
         game.genres = await GameDB.getAssignedGenres(id);
         game.ratings = await RatingDB.getRatings(id);
         game.links = await LinkDB.getLinks(id);
@@ -42,7 +44,8 @@ export class GameDB {
 
     static deserialize(artifactJSON: IArtifactDB): Game {
         const releaseDate = new Date(artifactJSON.releaseDate);
-        return new Game(artifactJSON.id, artifactJSON.title, artifactJSON.type, releaseDate, artifactJSON.duration);
+        const game = new Game(artifactJSON.id, artifactJSON.title, artifactJSON.type, releaseDate, artifactJSON.duration, artifactJSON.status);
+        return game;
     }
 
     // ========================================
@@ -116,9 +119,13 @@ export class GameDB {
         const backlogItems: BacklogItem[] = await Promise.all(dbBacklockItems.map(async row => {
             const releaseDate = new Date(row.releaseDate);
             const game = new Game(row.artifactId, row.title, row.type, releaseDate, row.duration);
-            game.genres = await GameDB.getAssignedGenres(row.artifactId);
-            game.platforms = await GameDB.getPlatforms(row.artifactId);
-            game.ratings = await RatingDB.getRatings(row.artifactId);
+            game.status = row.status ?? null;
+            [game.genres, game.platforms, game.ratings, game.releaseDates] = await Promise.all([
+                GameDB.getAssignedGenres(row.artifactId),
+                GameDB.getPlatforms(row.artifactId),
+                RatingDB.getRatings(row.artifactId),
+                GameDB.getReleaseDates(row.artifactId)
+            ]);
             const tags = await BacklogItemDB.getTags(row.backlogId, ArtifactType.GAME, row.artifactId);
             return new BacklogItem(row.rank, row.elo, row.dateAdded, game, tags);
         }));
@@ -164,15 +171,37 @@ export class GameDB {
     // ========================================
     // Update Operations
     // ========================================
-    static async updateGame(gameId: number, title: string, releaseDate: Date = new Date(7258118400000)): Promise<void> {
+    static async updateGame(gameId: number, title: string, releaseDate: Date = new Date(7258118400000), status?: string): Promise<void> {
         await runDbQuery(
-            `UPDATE artifact SET title = ?, releaseDate = ? WHERE id = ?`,
-            [title, releaseDate.getTime(), gameId]
+            `UPDATE artifact SET title = ?, releaseDate = ?, status = ? WHERE id = ?`,
+            [title, releaseDate.getTime(), status ?? null, gameId]
         );
     }
 
     static async updateDuration(gameId: number, duration: number): Promise<void> {
         await runDbQuery(`UPDATE artifact SET duration = ? WHERE id = ?`, [duration, gameId]);
+    }
+
+    static async getReleaseDates(gameId: number): Promise<IGameReleaseDate[]> {
+        const rows = await getDbRows<IGameReleaseDateDB>(
+            `SELECT * FROM game_release_date WHERE artifactId = ? ORDER BY releaseDate ASC`,
+            [gameId]
+        );
+        return rows.map(row => ({
+            platformId: row.platformId ?? undefined,
+            releaseDate: row.releaseDate,
+            status: row.status ?? undefined
+        }));
+    }
+
+    static async updateReleaseDates(gameId: number, releaseDates: IGameReleaseDate[]): Promise<void> {
+        await runDbQuery(`DELETE FROM game_release_date WHERE artifactId = ?`, [gameId]);
+        for (const rd of releaseDates) {
+            await runDbQuery(
+                `INSERT INTO game_release_date (artifactId, platformId, releaseDate, status) VALUES (?, ?, ?, ?)`,
+                [gameId, rd.platformId ?? null, rd.releaseDate * 1000, rd.status ?? null]
+            );
+        }
     }
 
     static async updatePlatforms(gameId: number, platformIds: number[]): Promise<void> {
@@ -226,5 +255,18 @@ export class GameDB {
 
     static async createGameGameGenreTable() {
         await ArtifactDB.createGenreMapTable('game_game_genre');
+    }
+
+    static async createGameReleaseDateTable() {
+        await runDbQuery(`CREATE TABLE IF NOT EXISTS game_release_date (
+            id         INTEGER PRIMARY KEY AUTOINCREMENT,
+            artifactId INTEGER NOT NULL,
+            platformId INTEGER,
+            region     TEXT,
+            releaseDate INTEGER NOT NULL,
+            status     TEXT,
+            FOREIGN KEY (artifactId) REFERENCES artifact(id),
+            FOREIGN KEY (platformId) REFERENCES platform(id)
+        )`);
     }
 }

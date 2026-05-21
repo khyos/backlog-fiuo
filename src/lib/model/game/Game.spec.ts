@@ -149,7 +149,9 @@ describe('Game', () => {
             meanRating: 85,
             tags: [tag.toJSON()],
             userInfo: userInfo.toJSON(),
-            platforms: [platform.toJSON()]
+            platforms: [platform.toJSON()],
+            status: null,
+            releaseDates: []
         });
     });
 

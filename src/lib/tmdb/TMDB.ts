@@ -4,6 +4,7 @@ import { TvshowDB } from "$lib/server/model/tvshow/TvshowDB";
 import type { SearchResult } from "$lib/types/SearchResult";
 import { ErrorUtil } from "$lib/util/ErrorUtil";
 import { TextUtil } from "$lib/util/TextUtil";
+import { type IMovieReleaseDate, TMDB_RELEASE_TYPE } from "$lib/model/movie/MovieReleaseDate";
 
 type TMBDMovie = {
     id: number,
@@ -13,6 +14,7 @@ type TMBDMovie = {
     origin_country?: string[],
     original_title?: string,
     runtime: number,
+    status?: string,
     genres: {
         id: number
     }[]
@@ -197,6 +199,29 @@ export class TMDB {
             releaseDate = defaultDates.getMostRelevant();
         }
         return releaseDate ? new Date(releaseDate) : undefined;
+    }
+
+    static async getAllMovieReleaseDates(movieId: string): Promise<IMovieReleaseDate[]> {
+        const response = await fetch(`https://api.themoviedb.org/3/movie/${movieId}/release_dates`, {
+            method: 'GET',
+            headers: TMDB.getHeaders()
+        });
+        const releaseDatesByCountries = (await response.json()).results;
+        const result: IMovieReleaseDate[] = [];
+
+        for (const entry of releaseDatesByCountries) {
+            const country: string = entry.iso_3166_1;
+            for (const rd of entry.release_dates) {
+                if (rd.release_date) {
+                    result.push({
+                        country,
+                        releaseDate: rd.release_date,
+                        type: rd.type !== undefined ? TMDB_RELEASE_TYPE[rd.type] : undefined
+                    });
+                }
+            }
+        }
+        return result;
     }
 
     static async getMovieTitle(movieId: string, tmdbMovie: TMBDMovie): Promise<string> {

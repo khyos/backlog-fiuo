@@ -27,6 +27,7 @@ export interface IArtifactDB {
     child_index: number | null
     duration: number
     releaseDate: number
+    status?: string | null
 }
 
 export interface IArtifact extends ISerializable {
@@ -43,6 +44,7 @@ export interface IArtifact extends ISerializable {
     meanRating: number | null
     tags: ITag[]
     userInfo: IUserArtifact | null
+    status?: string | null
 }
 
 export type ArtifactAsyncInfo = {
@@ -64,6 +66,7 @@ export abstract class Artifact implements Serializable<IArtifact> {
     ratings: Rating[] = []
     tags: Tag[] = []
     userInfo: UserArtifact | null
+    status: string | null = null
 
     protected _meanRating: number | null | undefined
     protected _lastAndNextOngoing: {
@@ -71,7 +74,7 @@ export abstract class Artifact implements Serializable<IArtifact> {
         next: Artifact | null
     } | undefined
 
-    constructor(id: number, title: string, type: ArtifactType, releaseDate: Date, duration: number) {
+    constructor(id: number, title: string, type: ArtifactType, releaseDate: Date, duration: number, status?: string | null) {
         this.id = id;
         this.title = title;
         this.type = type;
@@ -80,6 +83,7 @@ export abstract class Artifact implements Serializable<IArtifact> {
         this.releaseDate = releaseDate;
         this.duration = duration;
         this.userInfo = null;
+        this.status = status ?? null;
     }
 
     abstract computeMeanRating(): number | null;
@@ -208,7 +212,8 @@ export abstract class Artifact implements Serializable<IArtifact> {
             ratings: this.ratings.map(rating => rating.toJSON()),
             meanRating: this.meanRating,
             tags: this.tags.map(tag => tag.toJSON()),
-            userInfo: this.userInfo?.toJSON() ?? null
+            userInfo: this.userInfo?.toJSON() ?? null,
+            status: this.status
         }
     }
 
@@ -233,7 +238,8 @@ export abstract class Artifact implements Serializable<IArtifact> {
             tags: data.tags.map((tagData) => {
                 return Tag.fromJSON(tagData);
             }),
-            userInfo: data.userInfo ? UserArtifact.fromJSON(data.userInfo) : null
+            userInfo: data.userInfo ? UserArtifact.fromJSON(data.userInfo) : null,
+            status: data.status
         }
     }
 }

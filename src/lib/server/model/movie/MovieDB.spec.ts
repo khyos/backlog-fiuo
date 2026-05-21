@@ -20,6 +20,7 @@ describe('MovieDB', () => {
     const cleanupTestData = async () => {
         await runDbQueries([
             { query: 'DELETE FROM movie_movie_genre' },
+            { query: 'DELETE FROM movie_release_date' },
             { query: 'DELETE FROM user_artifact' },
             { query: 'DELETE FROM backlog_item_tag' },
             { query: 'DELETE FROM backlog_items' },
@@ -42,6 +43,7 @@ describe('MovieDB', () => {
         // Create movie-specific tables
         await MovieDB.createMovieGenreTable();
         await MovieDB.createMovieMovieGenreTable();
+        await MovieDB.createMovieReleaseDateTable();
         
         // Create backlog-related tables for testing
         await BacklogDB.createBacklogTable();

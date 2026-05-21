@@ -126,6 +126,7 @@ export class ArtifactDB {
                 type: row.type,
                 duration: row.duration,
                 releaseDate: new Date(row.releaseDate).toString(),
+                status: row.status,
                 links: [],
                 genres: [],
                 ratings: [],
@@ -165,6 +166,7 @@ export class ArtifactDB {
                 type: row.type,
                 duration: row.duration,
                 releaseDate: new Date(row.releaseDate).toString(),
+                status: row.status,
                 links: [],
                 genres: [],
                 ratings: [],
@@ -529,6 +531,7 @@ export class ArtifactDB {
             child_index INTEGER,
             duration INTEGER,
             releaseDate INTEGER,
+            status TEXT DEFAULT NULL,
             FOREIGN KEY (parent_artifact_id) REFERENCES artifact(id)
         )`);
     }

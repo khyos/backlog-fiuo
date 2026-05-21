@@ -92,7 +92,7 @@ export async function PUT({ params, request, locals }: RequestEvent) {
                     const tmdbMovie = await TMDB.getMovie(url);
                     let releaseDate = await TMDB.getMovieReleaseDate(url, tmdbMovie.origin_country?.[0]);
                     if (!releaseDate) {
-                        releaseDate = tmdbMovie.release_date &&tmdbMovie.release_date !== '' ? new Date(tmdbMovie.release_date) : undefined;
+                        releaseDate = tmdbMovie.release_date && tmdbMovie.release_date !== '' ? new Date(tmdbMovie.release_date) : undefined;
                     }
                     let title = await TMDB.getMovieTitle(url, tmdbMovie);
                     if (!title) {
@@ -100,11 +100,13 @@ export async function PUT({ params, request, locals }: RequestEvent) {
                     }
 
                     const duration = tmdbMovie.runtime * 60;
-                    await MovieDB.updateMovie(movieId, title, releaseDate, duration);
-                    const [providersByArtifact, allServices] = await Promise.all([
+                    await MovieDB.updateMovie(movieId, title, releaseDate, duration, tmdbMovie.status);
+                    const [releaseDates, providersByArtifact, allServices] = await Promise.all([
+                        TMDB.getAllMovieReleaseDates(url),
                         TMDB.getWatchProviders('movie', [{ artifactId: movieId, tmdbId: url }]),
                         SubscriptionServiceDB.getAllServices()
                     ]);
+                    await MovieDB.updateReleaseDates(movieId, releaseDates);
                     const providerNames = providersByArtifact[movieId] ?? [];
                     await SubscriptionServiceDB.syncArtifactSubscriptions(movieId, providerNames, allServices);
                 } catch {
