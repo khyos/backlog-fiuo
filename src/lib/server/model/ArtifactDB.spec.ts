@@ -1,4 +1,5 @@
-import { db, runDbInsert, runDbQueries } from '../database';
+import type sqlite3 from 'sqlite3';
+import { getDb, runDbInsert, runDbQueries } from '../database';
 import { describe, expect, test, beforeAll, afterAll, beforeEach } from 'vitest';
 import { ArtifactType, Artifact, type IArtifactDB } from '$lib/model/Artifact';
 import { UserArtifactStatus } from '$lib/model/UserArtifact';
@@ -15,6 +16,8 @@ import { LinkDB } from './LinkDB';
 import { SubscriptionServiceDB } from './SubscriptionServiceDB';
 import { UserArtifactOwnershipDB } from './UserArtifactOwnershipDB';
 import { UserDB } from './UserDB';
+
+const db = await getDb();
 
 describe('ArtifactDB', () => {
     // Shared cleanup function to eliminate duplication
@@ -161,7 +164,7 @@ describe('ArtifactDB', () => {
                 db.serialize(() => {
                     db.run("INSERT INTO movie_genre (id, title) VALUES (1, 'Action')");
                     db.run("INSERT INTO movie_genre (id, title) VALUES (2, 'Drama')");
-                    db.run("INSERT INTO movie_genre (id, title) VALUES (3, 'Sci-Fi')", (err) => {
+                    db.run("INSERT INTO movie_genre (id, title) VALUES (3, 'Sci-Fi')", (err: Error | null) => {
                         if (err) console.error(err);
                         resolve();
                     });
@@ -197,7 +200,7 @@ describe('ArtifactDB', () => {
             // Insert artifact and genres
             const artifactId = await new Promise<number>((resolve) => {
                 db.run("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('The Matrix', 'movie', '1999-03-31', 136)", 
-                    function() {
+                    function(this: sqlite3.RunResult) {
                         resolve(this.lastID);
                     });
             });
@@ -225,7 +228,7 @@ describe('ArtifactDB', () => {
             // Insert artifact and genre
             const artifactId = await new Promise<number>((resolve) => {
                 db.run("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('The Matrix', 'movie', '1999-03-31', 136)", 
-                    function() {
+                    function(this: sqlite3.RunResult) {
                         resolve(this.lastID);
                     });
             });
@@ -246,7 +249,7 @@ describe('ArtifactDB', () => {
             // Insert artifact and initial genres
             const artifactId = await new Promise<number>((resolve) => {
                 db.run("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('The Matrix', 'movie', '1999-03-31', 136)", 
-                    function() {
+                    function(this: sqlite3.RunResult) {
                         resolve(this.lastID);
                     });
             });
@@ -284,7 +287,7 @@ describe('ArtifactDB', () => {
             // Insert artifact and genres
             const artifactId = await new Promise<number>((resolve) => {
                 db.run("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Test Movie', 'movie', '2023-01-01', 120)", 
-                    function() {
+                    function(this: sqlite3.RunResult) {
                         resolve(this.lastID);
                     });
             });
@@ -315,7 +318,7 @@ describe('ArtifactDB', () => {
             // Insert artifact and genres
             const artifactId = await new Promise<number>((resolve) => {
                 db.run("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Test Movie', 'movie', '2023-01-01', 120)", 
-                    function() {
+                    function(this: sqlite3.RunResult) {
                         resolve(this.lastID);
                     });
             });
@@ -351,7 +354,7 @@ describe('ArtifactDB', () => {
             // Insert artifact
             const artifactId = await new Promise<number>((resolve) => {
                 db.run("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('The Witcher 3', 'game', '2015-05-19', 5000)", 
-                    function() {
+                    function(this: sqlite3.RunResult) {
                         resolve(this.lastID);
                     });
             });
@@ -379,14 +382,14 @@ describe('ArtifactDB', () => {
             // Insert artifacts
             const artifactId1 = await new Promise<number>((resolve) => {
                 db.run("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Game 1', 'game', '2020-01-01', 1000)", 
-                    function() {
+                    function(this: sqlite3.RunResult) {
                         resolve(this.lastID);
                     });
             });
 
             const artifactId2 = await new Promise<number>((resolve) => {
                 db.run("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Game 2', 'game', '2021-01-01', 2000)", 
-                    function() {
+                    function(this: sqlite3.RunResult) {
                         resolve(this.lastID);
                     });
             });
@@ -395,7 +398,7 @@ describe('ArtifactDB', () => {
             await new Promise<void>((resolve) => {
                 db.serialize(() => {
                     db.run("INSERT INTO user_artifact (userId, artifactId, status, score) VALUES (1, ?, 'ongoing', 8)", [artifactId1]);
-                    db.run("INSERT INTO user_artifact (userId, artifactId, status, score) VALUES (1, ?, 'finished', 9)", [artifactId2], (err) => {
+                    db.run("INSERT INTO user_artifact (userId, artifactId, status, score) VALUES (1, ?, 'finished', 9)", [artifactId2], (err: Error | null) => {
                         if (err) console.error(err);
                         resolve();
                     });
@@ -412,21 +415,21 @@ describe('ArtifactDB', () => {
             // Insert artifacts
             const ongoingId = await new Promise<number>((resolve) => {
                 db.run("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Ongoing Game', 'game', '2020-01-01', 1000)", 
-                    function() {
+                    function(this: sqlite3.RunResult) {
                         resolve(this.lastID);
                     });
             });
 
             const finishedId = await new Promise<number>((resolve) => {
                 db.run("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Finished Game', 'game', '2021-01-01', 2000)", 
-                    function() {
+                    function(this: sqlite3.RunResult) {
                         resolve(this.lastID);
                     });
             });
 
             const onholdId = await new Promise<number>((resolve) => {
                 db.run("INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('On Hold Game', 'game', '2022-01-01', 3000)", 
-                    function() {
+                    function(this: sqlite3.RunResult) {
                         resolve(this.lastID);
                     });
             });
@@ -856,7 +859,7 @@ describe('ArtifactDB', () => {
             // Create child artifact
             const childId = await new Promise<number>((resolve) => {
                 db.run("INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Episode 1', 'tvshow_episode', ?, 1, '2023-01-01', 45)", 
-                    [parentId], function() {
+                    [parentId], function(this: sqlite3.RunResult) {
                         resolve(this.lastID);
                     });
             });
@@ -880,7 +883,7 @@ describe('ArtifactDB', () => {
             // Create child artifact
             const childId = await new Promise<number>((resolve) => {
                 db.run("INSERT INTO artifact (title, type, child_index, releaseDate, duration) VALUES ('Original Episode', 'tvshow_episode', 1, '2020-01-01', 30)", 
-                    function() {
+                    function(this: sqlite3.RunResult) {
                         resolve(this.lastID);
                     });
             });
@@ -1001,18 +1004,18 @@ describe('ArtifactDB', () => {
             const artifactId = await ArtifactDB.createArtifact('Test Movie', ArtifactType.MOVIE);
 
             // Set start date
-            await ArtifactDB.setUserDate(1, artifactId, '2023-01-01', 'start');
+            await ArtifactDB.setUserDate(1, artifactId, new Date('2023-01-01').getTime(), 'start');
             let userInfo = await ArtifactDB.getUserInfo(1, artifactId);
             expect(userInfo!.startDate?.toISOString()).toBe(new Date('2023-01-01').toISOString());
             expect(userInfo!.endDate).toBeNull();
 
             // Set end date
-            await ArtifactDB.setUserDate(1, artifactId, '2023-01-15', 'end');
+            await ArtifactDB.setUserDate(1, artifactId, new Date('2023-01-15').getTime(), 'end');
             userInfo = await ArtifactDB.getUserInfo(1, artifactId);
             expect(userInfo!.endDate?.toISOString()).toBe(new Date('2023-01-15').toISOString());
 
             // Set both dates
-            await ArtifactDB.setUserDate(1, artifactId, '2023-02-01', 'both');
+            await ArtifactDB.setUserDate(1, artifactId, new Date('2023-02-01').getTime(), 'both');
             userInfo = await ArtifactDB.getUserInfo(1, artifactId);
             expect(userInfo!.startDate?.toISOString()).toBe(new Date('2023-02-01').toISOString());
             expect(userInfo!.endDate?.toISOString()).toBe(new Date('2023-02-01').toISOString());
@@ -1027,7 +1030,7 @@ describe('ArtifactDB', () => {
             expect(userInfo).toBeNull();
 
             // Set start date for new user artifact
-            await ArtifactDB.setUserDate(1, artifactId, '2023-03-01', 'start');
+            await ArtifactDB.setUserDate(1, artifactId, new Date('2023-03-01').getTime(), 'start');
             userInfo = await ArtifactDB.getUserInfo(1, artifactId);
             expect(userInfo).not.toBeNull();
             expect(userInfo!.startDate?.toISOString()).toBe(new Date('2023-03-01').toISOString());
@@ -1039,7 +1042,7 @@ describe('ArtifactDB', () => {
         test('setUserDate should handle null dates', async () => {
             // Create artifact and initial user info
             const artifactId = await ArtifactDB.createArtifact('Test Movie', ArtifactType.MOVIE);
-            await ArtifactDB.setUserDate(1, artifactId, '2023-01-01', 'both');
+            await ArtifactDB.setUserDate(1, artifactId, new Date('2023-01-01').getTime(), 'both');
 
             // Verify initial dates are set
             let userInfo = await ArtifactDB.getUserInfo(1, artifactId);
@@ -1062,21 +1065,21 @@ describe('ArtifactDB', () => {
         test('setUserDate should handle all date setting combinations for new user artifacts', async () => {
             // Test creating user_artifact with 'start' only
             const startOnlyId = await ArtifactDB.createArtifact('Start Only Movie', ArtifactType.MOVIE);
-            await ArtifactDB.setUserDate(1, startOnlyId, '2023-01-01', 'start');
+            await ArtifactDB.setUserDate(1, startOnlyId, new Date('2023-01-01').getTime(), 'start');
             let userInfo = await ArtifactDB.getUserInfo(1, startOnlyId);
             expect(userInfo!.startDate?.toISOString()).toBe(new Date('2023-01-01').toISOString());
             expect(userInfo!.endDate).toBeNull();
 
             // Test creating user_artifact with 'end' only
             const endOnlyId = await ArtifactDB.createArtifact('End Only Movie', ArtifactType.MOVIE);
-            await ArtifactDB.setUserDate(1, endOnlyId, '2023-01-15', 'end');
+            await ArtifactDB.setUserDate(1, endOnlyId, new Date('2023-01-15').getTime(), 'end');
             userInfo = await ArtifactDB.getUserInfo(1, endOnlyId);
             expect(userInfo!.startDate).toBeNull();
             expect(userInfo!.endDate?.toISOString()).toBe(new Date('2023-01-15').toISOString());
 
             // Test creating user_artifact with 'both'
             const bothId = await ArtifactDB.createArtifact('Both Dates Movie', ArtifactType.MOVIE);
-            await ArtifactDB.setUserDate(1, bothId, '2023-02-01', 'both');
+            await ArtifactDB.setUserDate(1, bothId, new Date('2023-02-01').getTime(), 'both');
             userInfo = await ArtifactDB.getUserInfo(1, bothId);
             expect(userInfo!.startDate?.toISOString()).toBe(new Date('2023-02-01').toISOString());
             expect(userInfo!.endDate?.toISOString()).toBe(new Date('2023-02-01').toISOString());
@@ -1096,8 +1099,8 @@ describe('ArtifactDB', () => {
             expect(userInfo!.endDate).toBeNull();
 
             // Set dates
-            await ArtifactDB.setUserDate(1, artifactId, '2023-01-01', 'start');
-            await ArtifactDB.setUserDate(1, artifactId, '2023-01-31', 'end');
+            await ArtifactDB.setUserDate(1, artifactId, new Date('2023-01-01').getTime(), 'start');
+            await ArtifactDB.setUserDate(1, artifactId, new Date('2023-01-31').getTime(), 'end');
 
             // Verify dates are set and other data is preserved
             userInfo = await ArtifactDB.getUserInfo(1, artifactId);
@@ -1114,7 +1117,7 @@ describe('ArtifactDB', () => {
             const parentId = await ArtifactDB.createArtifact('TV Show', ArtifactType.TVSHOW);
             const childId = await new Promise<number>((resolve) => {
                 db.run("INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES ('Episode 1', 'tvshow_episode', ?, 1, '2023-01-01', 45)", 
-                    [parentId], function() {
+                    [parentId], function(this: sqlite3.RunResult) {
                         resolve(this.lastID);
                     });
             });
@@ -1228,28 +1231,28 @@ describe('ArtifactDB', () => {
             interface CountRow { count: number; }
             
             const ratingsRemaining = await new Promise<number>((resolve) => {
-                db.get("SELECT COUNT(*) as count FROM rating WHERE artifactId = ?", [parentId], (err, row: CountRow) => {
+                db.get("SELECT COUNT(*) as count FROM rating WHERE artifactId = ?", [parentId], (err: Error | null, row: CountRow | null) => {
                     resolve(row?.count || 0);
                 });
             });
             expect(ratingsRemaining).toBe(0);
 
             const linksRemaining = await new Promise<number>((resolve) => {
-                db.get("SELECT COUNT(*) as count FROM link WHERE artifactId = ?", [parentId], (err, row: CountRow) => {
+                db.get("SELECT COUNT(*) as count FROM link WHERE artifactId = ?", [parentId], (err: Error | null, row: CountRow | null) => {
                     resolve(row?.count || 0);
                 });
             });
             expect(linksRemaining).toBe(0);
 
             const backlogItemsRemaining = await new Promise<number>((resolve) => {
-                db.get("SELECT COUNT(*) as count FROM backlog_items WHERE artifactId = ?", [parentId], (err, row: CountRow) => {
+                db.get("SELECT COUNT(*) as count FROM backlog_items WHERE artifactId = ?", [parentId], (err: Error | null, row: CountRow | null) => {
                     resolve(row?.count || 0);
                 });
             });
             expect(backlogItemsRemaining).toBe(0);
 
             const backlogTagsRemaining = await new Promise<number>((resolve) => {
-                db.get("SELECT COUNT(*) as count FROM backlog_item_tag WHERE artifactId = ?", [parentId], (err, row: CountRow) => {
+                db.get("SELECT COUNT(*) as count FROM backlog_item_tag WHERE artifactId = ?", [parentId], (err: Error | null, row: CountRow | null) => {
                     resolve(row?.count || 0);
                 });
             });

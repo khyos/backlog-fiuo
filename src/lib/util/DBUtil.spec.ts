@@ -5,6 +5,7 @@ import { ArtifactDB } from '$lib/server/model/ArtifactDB';
 import { BacklogDB } from '$lib/server/model/BacklogDB';
 import { LinkDB } from '$lib/server/model/LinkDB';
 import { RatingDB } from '$lib/server/model/RatingDB';
+import { SubscriptionServiceDB } from '$lib/server/model/SubscriptionServiceDB';
 import { TagDB } from '$lib/server/model/TagDB';
 import { UserDB } from '$lib/server/model/UserDB';
 import { AnimeDB } from '$lib/server/model/anime/AnimeDB';
@@ -22,6 +23,7 @@ vi.mock('$lib/server/model/ArtifactDB');
 vi.mock('$lib/server/model/BacklogDB');
 vi.mock('$lib/server/model/LinkDB');
 vi.mock('$lib/server/model/RatingDB');
+vi.mock('$lib/server/model/SubscriptionServiceDB');
 vi.mock('$lib/server/model/TagDB');
 vi.mock('$lib/server/model/UserDB');
 vi.mock('$lib/server/model/UserRatingDB');
@@ -37,7 +39,66 @@ vi.mock('$lib/tmdb/TMDB');
 describe('DBUtil', () => {
     describe('initDb', () => {
         beforeEach(() => {
-            vi.clearAllMocks();
+            vi.resetAllMocks();
+        });
+
+        it('should create database and initialize all tables', async () => {
+            await DBUtil.initDb();
+
+            // Verify database creation
+            expect(createDatabase).toHaveBeenCalled();
+
+            // Verify table creation calls
+            expect(ArtifactDB.createArtifactTable).toHaveBeenCalled();
+            expect(ArtifactDB.createUserArtifactTable).toHaveBeenCalled();
+            expect(AnimeDB.createAnimeGenreTable).toHaveBeenCalled();
+            expect(AnimeDB.createAnimeAnimeGenreTable).toHaveBeenCalled();
+            expect(BacklogDB.createBacklogTable).toHaveBeenCalled();
+            expect(BacklogDB.createBacklogItemsTable).toHaveBeenCalled();
+            expect(BacklogDB.createBacklogItemTagTable).toHaveBeenCalled();
+            expect(GameDB.createGamePlatformTable).toHaveBeenCalled();
+            expect(GameDB.createGameGenreTable).toHaveBeenCalled();
+            expect(GameDB.createGameGameGenreTable).toHaveBeenCalled();
+            expect(LinkDB.createLinkTable).toHaveBeenCalled();
+            expect(MovieDB.createMovieGenreTable).toHaveBeenCalled();
+            expect(MovieDB.createMovieMovieGenreTable).toHaveBeenCalled();
+            expect(PlatformDB.createPlatformTable).toHaveBeenCalled();
+            expect(RatingDB.createRatingTable).toHaveBeenCalled();
+            expect(SubscriptionServiceDB.createSubscriptionServiceTable).toHaveBeenCalled();
+            expect(SubscriptionServiceDB.createSubscriptionServiceTypeTable).toHaveBeenCalled();
+            expect(SubscriptionServiceDB.createArtifactSubscriptionTable).toHaveBeenCalled();
+            expect(SubscriptionServiceDB.createUserSubscriptionTable).toHaveBeenCalled();
+            expect(SubscriptionServiceDB.seedPredefinedServices).toHaveBeenCalled();
+            expect(SubscriptionServiceDB.migrateAddUniqueConstraint).toHaveBeenCalled();
+            expect(SubscriptionServiceDB.migrateToMultiType).toHaveBeenCalled();
+            expect(TagDB.createTagTable).toHaveBeenCalled();
+            expect(TvshowDB.createTvshowGenreTable).toHaveBeenCalled();
+            expect(TvshowDB.createTvshowTvshowGenreTable).toHaveBeenCalled();
+            expect(UserDB.createUserTable).toHaveBeenCalled();
+
+            // Verify external API initializations
+            expect(IGDB.initGenres).toHaveBeenCalled();
+            expect(IGDB.initPlatforms).toHaveBeenCalled();
+            expect(MAL.initGenres).toHaveBeenCalled();
+            expect(TMDB.initMovieGenres).toHaveBeenCalled();
+            expect(TMDB.initTvshowGenres).toHaveBeenCalled();
+        });
+
+        it('should handle errors during initialization', async () => {
+            const error = new Error('Database creation failed');
+            vi.mocked(createDatabase).mockImplementation(() => {
+                throw error;
+            });
+
+            await expect(DBUtil.initDb()).rejects.toThrow('Database creation failed');
+        });
+    });
+});
+
+describe('DBUtil', () => {
+    describe('initDb', () => {
+        beforeEach(() => {
+            vi.resetAllMocks();
         });
 
         it('should create database and initialize all tables', async () => {

@@ -368,7 +368,7 @@ export class ArtifactDB {
         */
     }
 
-    static async setUserDate(userId: number, artifactId: number, date: string | null, startEnd: 'start' | 'end' | 'both'): Promise<void> {
+    static async setUserDate(userId: number, artifactId: number, date: number | null, startEnd: 'start' | 'end' | 'both'): Promise<void> {
         const dateMs = date ? new Date(date).getTime() : null;
         const userInfo = await ArtifactDB.getUserInfo(userId, artifactId);
         let query: string;

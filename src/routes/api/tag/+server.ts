@@ -1,10 +1,15 @@
 import { TagType } from "$lib/model/Tag";
 import { TagDB } from "$lib/server/model/TagDB";
+import { User } from "$lib/model/User";
 import { error, json } from "@sveltejs/kit";
 import type { RequestEvent } from "./$types";
 import { ErrorUtil } from "$lib/util/ErrorUtil";
 
-export async function POST({ request }: RequestEvent) {
+export async function POST({ request, locals }: RequestEvent) {
+    const user = User.deserialize(locals.user);
+    if (user.id < 0) {
+        return error(401, 'Unauthorized');
+    }
 	const { id, artifactType } = await request.json();
     if (id.length < 2) {
         return error(400, 'Tag name must be at least 2 characters');

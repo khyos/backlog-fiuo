@@ -6,24 +6,23 @@ export const SERIALIZE_TYPE = 'SubscriptionService';
 export interface ISubscriptionServiceDB {
     id: number
     name: string
-    artifactType: ArtifactType | null
 }
 
 export interface ISubscriptionService extends ISerializable {
     id: number
     name: string
-    artifactType: ArtifactType | null
+    artifactTypes: ArtifactType[]
 }
 
 export class SubscriptionService implements Serializable<ISubscriptionService> {
     id: number
     name: string
-    artifactType: ArtifactType | null
+    artifactTypes: ArtifactType[]
 
-    constructor(id: number, name: string, artifactType: ArtifactType | null) {
+    constructor(id: number, name: string, artifactTypes: ArtifactType[]) {
         this.id = id;
         this.name = name;
-        this.artifactType = artifactType;
+        this.artifactTypes = artifactTypes;
     }
 
     toJSON(): ISubscriptionService {
@@ -31,7 +30,7 @@ export class SubscriptionService implements Serializable<ISubscriptionService> {
             __type: SERIALIZE_TYPE,
             id: this.id,
             name: this.name,
-            artifactType: this.artifactType
+            artifactTypes: this.artifactTypes
         };
     }
 
@@ -39,6 +38,6 @@ export class SubscriptionService implements Serializable<ISubscriptionService> {
         if (json.__type !== SERIALIZE_TYPE) {
             throw new Error('Invalid Type');
         }
-        return new SubscriptionService(json.id, json.name, json.artifactType);
+        return new SubscriptionService(json.id, json.name, json.artifactTypes);
     }
 }

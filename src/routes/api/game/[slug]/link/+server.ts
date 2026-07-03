@@ -55,22 +55,22 @@ const setLinkInfo = async (gameId: number, type: LinkType, url: string): Promise
     } else if (type === LinkType.SENSCRITIQUE) {
         const scRating = await SensCritique.getGameRating(url);
         if (scRating) {
-            RatingDB.addRating(gameId, RatingType.SENSCRITIQUE, scRating);
+            await RatingDB.addRating(gameId, RatingType.SENSCRITIQUE, scRating);
         }
     } else if (type === LinkType.OPENCRITIC) {
         const ocGame = await OpenCritic.getGame(url);
         if (ocGame && ocGame.medianScore >= 0) {
-            RatingDB.addRating(gameId, RatingType.OPENCRITIC, Math.round(ocGame.medianScore));
+            await RatingDB.addRating(gameId, RatingType.OPENCRITIC, Math.round(ocGame.medianScore));
         }
     } else if (type === LinkType.METACRITIC) {
         const mcRating = await MetaCritic.getGameRating(url);
         if (mcRating) {
-            RatingDB.addRating(gameId, RatingType.METACRITIC, mcRating);
+            await RatingDB.addRating(gameId, RatingType.METACRITIC, mcRating);
         }
     } else if (type === LinkType.STEAM) {
         const steamRating = await Steam.getGameRating(url);
         if (steamRating) {
-            RatingDB.addRating(gameId, RatingType.STEAM, steamRating);
+            await RatingDB.addRating(gameId, RatingType.STEAM, steamRating);
         }
     } else if (type === LinkType.ITAD) {
         finalUrl = await ITAD.getIdFromSlug(url);

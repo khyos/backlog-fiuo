@@ -2,11 +2,16 @@ import { ITAD } from "$lib/itad/ITAD";
 import { LinkType } from "$lib/model/Link";
 import { LinkDB } from "$lib/server/model/LinkDB";
 import { SubscriptionServiceDB } from "$lib/server/model/SubscriptionServiceDB";
-import { json } from "@sveltejs/kit";
+import { User } from "$lib/model/User";
+import { error, json } from "@sveltejs/kit";
 import type { RequestEvent } from "./$types";
 import type { Price } from "$lib/types/itad/Price";
 
-export async function POST({ request }: RequestEvent) {
+export async function POST({ request, locals }: RequestEvent) {
+    const user = User.deserialize(locals.user);
+    if (user.id < 0) {
+        return error(401, 'Unauthorized');
+    }
     const { artifactIds } = await request.json();
     const idsMapping = await LinkDB.getLinksMultiple(LinkType.ITAD, artifactIds);
     const itadIds = Object.values(idsMapping);

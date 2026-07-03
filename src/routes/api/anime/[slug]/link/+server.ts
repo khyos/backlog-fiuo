@@ -19,7 +19,7 @@ export async function POST({ params, request, locals }: RequestEvent) {
 	
     const finalUrl = await setLinkInfo(animeId, type, url);
     if (finalUrl) {
-        LinkDB.addLink(animeId, type, url);
+        LinkDB.addLink(animeId, type, finalUrl);
         return json({ success: true });
     }
     return error(404, "Not Valid URL");

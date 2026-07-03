@@ -75,8 +75,7 @@ export async function POST({ params, request, locals }: RequestEvent) {
             episodeDate = new Date(startTime + ratio * (endTime - startTime));
         }
 
-        const dateStr = episodeDate.toISOString().split('T')[0];
-        await ArtifactDB.setUserDate(user.id, episode.id, dateStr, 'end');
+        await ArtifactDB.setUserDate(user.id, episode.id, episodeDate.getTime(), 'end');
     }
 
     return json({ success: true });

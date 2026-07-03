@@ -12,7 +12,12 @@ export async function getDbPath(): Promise<string> {
     return DB_PATH;
 }
 
-export const db = await connectDatabase();
+let dbInstance: sqlite3.Database | null = null;
+
+export async function getDb(): Promise<sqlite3.Database> {
+    if (!dbInstance) dbInstance = await connectDatabase();
+    return dbInstance;
+}
 
 export async function connectDatabase() {
     const dbPath = await getDbPath();
@@ -28,7 +33,12 @@ export async function connectDatabase() {
             console.log(`Connected to the database at ${dbPath}`)
         }
     });
-    db.run('PRAGMA foreign_keys = ON');
+    await new Promise<void>((resolve, reject) => {
+        db.run('PRAGMA foreign_keys = ON', (err) => {
+            if (err) reject(err);
+            else resolve();
+        });
+    });
     return db;
 }
 
@@ -47,20 +57,24 @@ export async function createDatabase() {
 
 export function execQuery(query: string) {
     try {
-        const stmt = db.prepare(query);
-        if (stmt) {
-            stmt.run();
-            stmt.finalize();
-        }
+        (async () => {
+            const _db = await getDb();
+            const stmt = _db.prepare(query);
+            if (stmt) {
+                stmt.run();
+                stmt.finalize();
+            }
+        })();
     } catch (error) {
         console.error(error);
     }
 }
 
 // Helper function for single insert that returns the lastID
-export const runDbInsert = (query: string, params?: (queryParam)[]): Promise<number> => {
+export const runDbInsert = async (query: string, params?: (queryParam)[]): Promise<number> => {
+    const _db = await getDb();
     return new Promise<number>((resolve, reject) => {
-        db.run(query, params || [], function(err) {
+        _db.run(query, params || [], function(err) {
             if (err) reject(err);
             else resolve(this.lastID);
         });
@@ -68,9 +82,10 @@ export const runDbInsert = (query: string, params?: (queryParam)[]): Promise<num
 };
 
 // Promisified database operations
-export const runDbQuery = (query: string, params?: (queryParam)[]): Promise<void> => {
+export const runDbQuery = async (query: string, params?: (queryParam)[]): Promise<void> => {
+    const _db = await getDb();
     return new Promise<void>((resolve, reject) => {
-        db.run(query, params || [], (err) => {
+        _db.run(query, params || [], (err) => {
             if (err) reject(err);
             else resolve();
         });
@@ -87,18 +102,20 @@ export const runDbQueriesParallel = async (operations: Array<{ query: string; pa
     await Promise.all(operations.map(op => runDbQuery(op.query, op.params)));
 }
 
-export const getDbRow = <T>(query: string, params?: (queryParam)[]): Promise<T | null> => {
+export const getDbRow = async <T>(query: string, params?: (queryParam)[]): Promise<T | null> => {
+    const _db = await getDb();
     return new Promise<T | null>((resolve, reject) => {
-        db.get(query, params || [], (err, row) => {
+        _db.get(query, params || [], (err, row) => {
             if (err) reject(err);
             else resolve((row as T) || null);
         });
     });
 };
 
-export const getDbRows = <T>(query: string, params?: (queryParam)[]): Promise<T[]> => {
+export const getDbRows = async <T>(query: string, params?: (queryParam)[]): Promise<T[]> => {
+    const _db = await getDb();
     return new Promise<T[]>((resolve, reject) => {
-        db.all(query, params || [], (err, rows) => {
+        _db.all(query, params || [], (err, rows) => {
             if (err) reject(err);
             else resolve((rows as T[]) || []);
         });

@@ -3,30 +3,145 @@ import { SubscriptionService, type ISubscriptionServiceDB } from "$lib/model/Sub
 import { getDbRows, runDbInsert, runDbQuery } from "$lib/server/database";
 
 // Predefined subscription services seeded on DB initialization
-const PREDEFINED_SERVICES: { name: string; artifactType: ArtifactType | null }[] = [
-    // Streaming (movies, TV shows, anime)
-    { name: 'Netflix', artifactType: null },
-    { name: 'Disney+', artifactType: null },
-    { name: 'Amazon Prime Video', artifactType: null },
-    { name: 'Apple TV+', artifactType: null },
-    { name: 'Max', artifactType: null },
-    { name: 'Hulu', artifactType: null },
-    { name: 'Crunchyroll', artifactType: ArtifactType.ANIME },
+const PREDEFINED_SERVICES: { name: string; artifactTypes: ArtifactType[] }[] = [
+    // Streaming (movies, TV shows)
+    { name: 'Netflix', artifactTypes: [ArtifactType.MOVIE, ArtifactType.TVSHOW] },
+    { name: 'Disney+', artifactTypes: [ArtifactType.MOVIE, ArtifactType.TVSHOW] },
+    { name: 'Amazon Prime Video', artifactTypes: [ArtifactType.MOVIE, ArtifactType.TVSHOW] },
+    { name: 'Apple TV+', artifactTypes: [ArtifactType.MOVIE, ArtifactType.TVSHOW] },
+    { name: 'Max', artifactTypes: [ArtifactType.MOVIE, ArtifactType.TVSHOW] },
+    { name: 'Hulu', artifactTypes: [ArtifactType.MOVIE, ArtifactType.TVSHOW] },
+    { name: 'Crunchyroll', artifactTypes: [ArtifactType.ANIME] },
     // Gaming
-    { name: 'Game Pass', artifactType: ArtifactType.GAME },
-    { name: 'PlayStation Plus Extra', artifactType: ArtifactType.GAME },
-    { name: 'EA Play', artifactType: ArtifactType.GAME },
-    { name: 'Apple Arcade', artifactType: ArtifactType.GAME },
-    { name: 'Nintendo Switch Online', artifactType: ArtifactType.GAME },
+    { name: 'Game Pass', artifactTypes: [ArtifactType.GAME] },
+    { name: 'PlayStation Plus Extra', artifactTypes: [ArtifactType.GAME] },
+    { name: 'EA Play', artifactTypes: [ArtifactType.GAME] },
+    { name: 'Apple Arcade', artifactTypes: [ArtifactType.GAME] },
+    { name: 'Nintendo Switch Online', artifactTypes: [ArtifactType.GAME] },
 ];
 
 export class SubscriptionServiceDB {
     static async createSubscriptionServiceTable(): Promise<void> {
         await runDbQuery(`CREATE TABLE IF NOT EXISTS subscription_service (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            artifactType TEXT
+            name TEXT NOT NULL UNIQUE
         )`);
+    }
+
+    static async createSubscriptionServiceTypeTable(): Promise<void> {
+        await runDbQuery(`CREATE TABLE IF NOT EXISTS subscription_service_type (
+            serviceId INTEGER NOT NULL,
+            artifactType TEXT NOT NULL,
+            PRIMARY KEY (serviceId, artifactType),
+            FOREIGN KEY (serviceId) REFERENCES subscription_service(id) ON DELETE CASCADE
+        )`);
+        await runDbQuery(
+            `CREATE INDEX IF NOT EXISTS idx_sst_artifactType ON subscription_service_type(artifactType)`
+        );
+    }
+
+    static async migrateAddUniqueConstraint(): Promise<void> {
+        // If the artifactType column no longer exists on subscription_service,
+        // this migration is irrelevant (fresh DB or already migrated via migrateToMultiType).
+        const columns = await getDbRows<{ name: string }>(
+            `PRAGMA table_info(subscription_service)`
+        );
+        const hasArtifactTypeColumn = columns.some(c => c.name === 'artifactType');
+        if (!hasArtifactTypeColumn) return;
+
+        // Skip the expensive dedup scan if the unique index already exists.
+        const existing = await getDbRows<{ name: string }>(
+            `SELECT name FROM sqlite_master WHERE type = 'index' AND name = 'uq_subscription_service_name_type'`
+        );
+        if (existing.length > 0) return;
+
+        const duplicates = await getDbRows<{ keepId: number; dropId: number }>(
+            `SELECT b.id AS keepId, a.id AS dropId
+             FROM subscription_service a
+             JOIN subscription_service b
+               ON b.name = a.name
+              AND COALESCE(b.artifactType, '') = COALESCE(a.artifactType, '')
+              AND b.id < a.id`
+        );
+
+        await runDbQuery('BEGIN');
+        try {
+            for (const { keepId, dropId } of duplicates) {
+                await runDbQuery(`UPDATE OR IGNORE artifact_subscription SET serviceId = ? WHERE serviceId = ?`, [keepId, dropId]);
+                await runDbQuery(`DELETE FROM artifact_subscription WHERE serviceId = ?`, [dropId]);
+                await runDbQuery(`UPDATE OR IGNORE user_subscription SET serviceId = ? WHERE serviceId = ?`, [keepId, dropId]);
+                await runDbQuery(`DELETE FROM user_subscription WHERE serviceId = ?`, [dropId]);
+                await runDbQuery(`DELETE FROM subscription_service WHERE id = ?`, [dropId]);
+            }
+            await runDbQuery('COMMIT');
+        } catch (loopErr) {
+            await runDbQuery('ROLLBACK');
+            throw loopErr;
+        }
+
+        await runDbQuery(
+            `CREATE UNIQUE INDEX IF NOT EXISTS uq_subscription_service_name_type
+             ON subscription_service (name, COALESCE(artifactType, ''))`
+        );
+    }
+
+    static async migrateToMultiType(): Promise<void> {
+        const columns = await getDbRows<{ name: string }>(`PRAGMA table_info(subscription_service)`);
+        const hasArtifactTypeColumn = columns.some(c => c.name === 'artifactType');
+        if (!hasArtifactTypeColumn) return; // fresh DB or already migrated
+
+        // Some DBs may have name-based duplicates (e.g. both ('Netflix', null) and ('Netflix', 'movie'))
+        // from a prior broken seed. Deduplicate by name first, keeping the lowest id and remapping FKs.
+        const nameDuplicates = await getDbRows<{ keepId: number; dropId: number }>(
+            `SELECT b.id AS keepId, a.id AS dropId
+             FROM subscription_service a
+             JOIN subscription_service b ON b.name = a.name AND b.id < a.id`
+        );
+
+        const services = await getDbRows<{ id: number; artifactType: string | null }>(
+            `SELECT id, artifactType FROM subscription_service`
+        );
+        const dropIds = new Set(nameDuplicates.map(d => d.dropId));
+
+        // FK enforcement must be OFF for DROP TABLE when other tables reference subscription_service.
+        // PRAGMA foreign_keys cannot be changed inside a transaction, so it wraps the transaction.
+        await runDbQuery('PRAGMA foreign_keys = OFF');
+        await runDbQuery('BEGIN');
+        try {
+            for (const { keepId, dropId } of nameDuplicates) {
+                await runDbQuery(`UPDATE OR IGNORE artifact_subscription SET serviceId = ? WHERE serviceId = ?`, [keepId, dropId]);
+                await runDbQuery(`DELETE FROM artifact_subscription WHERE serviceId = ?`, [dropId]);
+                await runDbQuery(`UPDATE OR IGNORE user_subscription SET serviceId = ? WHERE serviceId = ?`, [keepId, dropId]);
+                await runDbQuery(`DELETE FROM user_subscription WHERE serviceId = ?`, [dropId]);
+                await runDbQuery(`DELETE FROM subscription_service WHERE id = ?`, [dropId]);
+            }
+
+            for (const row of services.filter(r => !dropIds.has(r.id))) {
+                const types: ArtifactType[] =
+                    row.artifactType === ArtifactType.MOVIE  ? [ArtifactType.MOVIE] :
+                    row.artifactType === ArtifactType.TVSHOW ? [ArtifactType.TVSHOW] :
+                    row.artifactType === ArtifactType.GAME   ? [ArtifactType.GAME] :
+                    row.artifactType === ArtifactType.ANIME  ? [ArtifactType.ANIME] :
+                    [ArtifactType.MOVIE, ArtifactType.TVSHOW]; // null → movie+tvshow
+                for (const t of types) {
+                    await runDbQuery(
+                        `INSERT OR IGNORE INTO subscription_service_type (serviceId, artifactType) VALUES (?, ?)`,
+                        [row.id, t]
+                    );
+                }
+            }
+
+            await runDbQuery(`CREATE TABLE subscription_service_new (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE)`);
+            await runDbQuery(`INSERT INTO subscription_service_new SELECT id, name FROM subscription_service`);
+            await runDbQuery(`DROP TABLE subscription_service`);
+            await runDbQuery(`ALTER TABLE subscription_service_new RENAME TO subscription_service`);
+            await runDbQuery('COMMIT');
+        } catch (err) {
+            await runDbQuery('ROLLBACK');
+            throw err;
+        } finally {
+            await runDbQuery('PRAGMA foreign_keys = ON');
+        }
     }
 
     static async createArtifactSubscriptionTable(): Promise<void> {
@@ -52,17 +167,48 @@ export class SubscriptionServiceDB {
     static async seedPredefinedServices(): Promise<void> {
         for (const service of PREDEFINED_SERVICES) {
             await runDbQuery(
-                `INSERT OR IGNORE INTO subscription_service (name, artifactType) VALUES (?, ?)`,
-                [service.name, service.artifactType ?? null]
+                `INSERT OR IGNORE INTO subscription_service (name) VALUES (?)`,
+                [service.name]
             );
+            const rows = await getDbRows<{ id: number }>(
+                `SELECT id FROM subscription_service WHERE name = ?`,
+                [service.name]
+            );
+            const id = rows[0].id;
+            for (const type of service.artifactTypes) {
+                await runDbQuery(
+                    `INSERT OR IGNORE INTO subscription_service_type (serviceId, artifactType) VALUES (?, ?)`,
+                    [id, type]
+                );
+            }
         }
+    }
+
+    private static async fetchServiceTypes(serviceIds: number[]): Promise<Map<number, ArtifactType[]>> {
+        if (serviceIds.length === 0) return new Map();
+        const questionMarks = serviceIds.map(() => '?').join(',');
+        const rows = await getDbRows<{ serviceId: number; artifactType: string }>(
+            `SELECT serviceId, artifactType FROM subscription_service_type WHERE serviceId IN (${questionMarks})`,
+            serviceIds
+        );
+        const validTypes = new Set<string>(Object.values(ArtifactType));
+        const result = new Map<number, ArtifactType[]>();
+        for (const row of rows) {
+            if (!result.has(row.serviceId)) result.set(row.serviceId, []);
+            if (validTypes.has(row.artifactType)) {
+                result.get(row.serviceId)!.push(row.artifactType as ArtifactType);
+            }
+        }
+        return result;
     }
 
     static async getAllServices(artifactType?: ArtifactType): Promise<SubscriptionService[]> {
         let rows: ISubscriptionServiceDB[];
         if (artifactType) {
             rows = await getDbRows<ISubscriptionServiceDB>(
-                `SELECT * FROM subscription_service WHERE artifactType IS NULL OR artifactType = ? ORDER BY name`,
+                `SELECT ss.* FROM subscription_service ss WHERE EXISTS (
+                    SELECT 1 FROM subscription_service_type WHERE serviceId = ss.id AND artifactType = ?
+                ) ORDER BY ss.name`,
                 [artifactType]
             );
         } else {
@@ -70,14 +216,23 @@ export class SubscriptionServiceDB {
                 `SELECT * FROM subscription_service ORDER BY name`
             );
         }
-        return rows.map(r => new SubscriptionService(r.id, r.name, r.artifactType));
+        const ids = rows.map(r => r.id);
+        const typesMap = await SubscriptionServiceDB.fetchServiceTypes(ids);
+        return rows.map(r => new SubscriptionService(r.id, r.name, typesMap.get(r.id) ?? []));
     }
 
-    static async addService(name: string, artifactType: ArtifactType | null): Promise<number> {
-        return await runDbInsert(
-            `INSERT INTO subscription_service (name, artifactType) VALUES (?, ?)`,
-            [name, artifactType ?? null]
+    static async addService(name: string, artifactTypes: ArtifactType[]): Promise<number> {
+        const id = await runDbInsert(
+            `INSERT INTO subscription_service (name) VALUES (?)`,
+            [name]
         );
+        for (const type of artifactTypes) {
+            await runDbQuery(
+                `INSERT OR IGNORE INTO subscription_service_type (serviceId, artifactType) VALUES (?, ?)`,
+                [id, type]
+            );
+        }
+        return id;
     }
 
     static async deleteService(serviceId: number): Promise<void> {
@@ -94,7 +249,9 @@ export class SubscriptionServiceDB {
              ORDER BY subscription_service.name`,
             [artifactId]
         );
-        return rows.map(r => new SubscriptionService(r.id, r.name, r.artifactType));
+        const ids = rows.map(r => r.id);
+        const typesMap = await SubscriptionServiceDB.fetchServiceTypes(ids);
+        return rows.map(r => new SubscriptionService(r.id, r.name, typesMap.get(r.id) ?? []));
     }
 
     static async linkArtifactToService(artifactId: number, serviceId: number): Promise<void> {
@@ -138,7 +295,9 @@ export class SubscriptionServiceDB {
              ORDER BY subscription_service.name`,
             [userId]
         );
-        return rows.map(r => new SubscriptionService(r.id, r.name, r.artifactType));
+        const ids = rows.map(r => r.id);
+        const typesMap = await SubscriptionServiceDB.fetchServiceTypes(ids);
+        return rows.map(r => new SubscriptionService(r.id, r.name, typesMap.get(r.id) ?? []));
     }
 
     static async addUserSubscription(userId: number, serviceId: number): Promise<void> {
@@ -168,7 +327,9 @@ export class SubscriptionServiceDB {
              ORDER BY subscription_service.name`,
             [artifactId, userId]
         );
-        return rows.map(r => new SubscriptionService(r.id, r.name, r.artifactType));
+        const ids = rows.map(r => r.id);
+        const typesMap = await SubscriptionServiceDB.fetchServiceTypes(ids);
+        return rows.map(r => new SubscriptionService(r.id, r.name, typesMap.get(r.id) ?? []));
     }
 
     static async getAvailableSubscriptionsForUserBatch(userId: number, artifactIds: number[]): Promise<Map<number, SubscriptionService[]>> {
@@ -182,10 +343,12 @@ export class SubscriptionServiceDB {
              ORDER BY artifact_subscription.artifactId, subscription_service.name`,
             [...artifactIds, userId]
         );
+        const serviceIds = [...new Set(rows.map(r => r.id))];
+        const typesMap = await SubscriptionServiceDB.fetchServiceTypes(serviceIds);
         const result = new Map<number, SubscriptionService[]>();
         for (const r of rows) {
             if (!result.has(r.artifactId)) result.set(r.artifactId, []);
-            result.get(r.artifactId)!.push(new SubscriptionService(r.id, r.name, r.artifactType));
+            result.get(r.artifactId)!.push(new SubscriptionService(r.id, r.name, typesMap.get(r.id) ?? []));
         }
         return result;
     }

@@ -10,7 +10,15 @@ export async function POST({ params, request, locals }: RequestEvent) {
     }
     const artifactId = parseInt(params.slug);
     const { date, startEnd } = await request.json();
-    await ArtifactDB.setUserDate(user.id, artifactId, date, startEnd);
+
+    const finalDate = date ? new Date(date).getTime() : null;
+    if (finalDate !== null && isNaN(finalDate)) {
+        return error(400, 'Invalid date');
+    }
+    if (startEnd !== 'start' && startEnd !== 'end') {
+        return error(400, 'Invalid startEnd value, expected "start" or "end"');
+    }
+    await ArtifactDB.setUserDate(user.id, artifactId, finalDate, startEnd);
 
     return json({ success: true });
 }
