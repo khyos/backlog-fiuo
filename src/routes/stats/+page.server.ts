@@ -24,8 +24,8 @@ export type StatEntry = {
 	duration: number;
 	status: UserArtifactStatus | null;
 	score: number | null;
-	endDate: string | null;
-	startDate: string | null;
+	endDate: number | null;
+	startDate: number | null;
 	episodeCount: number | null;
 };
 

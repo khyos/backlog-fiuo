@@ -140,8 +140,8 @@ export class ArtifactDB {
                     artifactId: row.id,
                     status: row.status,
                     score: row.score,
-                    startDate: row.startDate,
-                    endDate: row.endDate,
+                    startDate: row.startDate ? new Date(row.startDate).toISOString() : null,
+                    endDate: row.endDate ? new Date(row.endDate).toISOString() : null,
                     ownerships: [],
                     availableSubscriptions: []
                 }
@@ -180,8 +180,8 @@ export class ArtifactDB {
                     artifactId: row.id,
                     status: row.status,
                     score: row.score,
-                    startDate: row.startDate,
-                    endDate: row.endDate,
+                    startDate: row.startDate ? new Date(row.startDate).toISOString() : null,
+                    endDate: row.endDate ? new Date(row.endDate).toISOString() : null,
                     ownerships: [],
                     availableSubscriptions: []
                 }

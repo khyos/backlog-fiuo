@@ -8,8 +8,8 @@ import type { PageServerLoad } from './$types';
 export type AnimeWithMissingEpisodeDates = {
 	animeId: number;
 	title: string;
-	animeStartDate: string | null;
-	animeEndDate: string | null;
+	animeStartDate: number | null;
+	animeEndDate: number | null;
 	episodesMissingDates: number;
 };
 

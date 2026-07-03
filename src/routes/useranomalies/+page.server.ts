@@ -18,8 +18,8 @@ export type AnomalyEntry = {
 	type: ArtifactType | null;
 	status: UserArtifactStatus | null;
 	score: number | null;
-	startDate: string | null;
-	endDate: string | null;
+	startDate: number | null;
+	endDate: number | null;
 };
 
 export type AnomalyGroup = {
