@@ -23,7 +23,7 @@ export async function POST({ params, request, locals }: RequestEvent) {
 	
     const finalUrl = await setLinkInfo(tvshowId, type, url);
     if (finalUrl) {
-        LinkDB.addLink(tvshowId, type, url);
+        LinkDB.addLink(tvshowId, type, finalUrl);
         return json({ success: true });
     }
     return error(404, "Not Valid URL");

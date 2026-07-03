@@ -3,6 +3,7 @@
     import { CheckCircleSolid, CreditCardSolid } from "flowbite-svelte-icons";
     import type { PageData } from "./$types";
     import type { ISubscriptionService } from "$lib/model/SubscriptionService";
+    import { ArtifactType } from "$lib/model/Artifact";
     import { SvelteSet } from "svelte/reactivity";
 
     export let data: PageData;
@@ -24,14 +25,13 @@
         } else {
             subscribedIds.add(service.id);
         }
-        subscribedIds = subscribedIds;
     }
 
-    // Group services by artifactType (null = "All")
+    // Group services by artifactTypes
     const groups: { label: string; services: ISubscriptionService[] }[] = [
-        { label: 'Streaming (All)', services: data.allServices.filter(s => s.artifactType === null) },
-        { label: 'Games', services: data.allServices.filter(s => s.artifactType === 'game') },
-        { label: 'Anime', services: data.allServices.filter(s => s.artifactType === 'anime') },
+        { label: 'Movies & TV', services: data.allServices.filter(s => s.artifactTypes.includes(ArtifactType.MOVIE) || s.artifactTypes.includes(ArtifactType.TVSHOW)) },
+        { label: 'Games',       services: data.allServices.filter(s => s.artifactTypes.includes(ArtifactType.GAME)) },
+        { label: 'Anime',       services: data.allServices.filter(s => s.artifactTypes.includes(ArtifactType.ANIME)) },
     ].filter(g => g.services.length > 0);
 </script>
 
