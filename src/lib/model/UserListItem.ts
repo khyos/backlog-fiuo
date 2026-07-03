@@ -18,8 +18,8 @@ export interface IUserListItemDB {
     releaseDate: string
     status: UserArtifactStatus
     score: number
-    startDate: string
-    endDate: string
+    startDate: number | null
+    endDate: number | null
 }
 
 export interface IUserListItem extends ISerializable {

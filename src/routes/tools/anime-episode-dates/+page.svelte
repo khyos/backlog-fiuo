@@ -13,11 +13,14 @@
         error: string | null;
     };
 
-    function toInputDate(dateStr: string | null): string {
-        if (!dateStr) return '';
-        const d = new Date(dateStr);
+    function toInputDate(dateMs: number | null): string {
+        if (!dateMs) return '';
+        const d = new Date(dateMs);
         if (isNaN(d.getTime())) return '';
-        return d.toISOString().split('T')[0];
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
     }
 
     let rows: AnimeRow[] = data.animes.map(a => ({

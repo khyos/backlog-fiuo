@@ -31,7 +31,7 @@
     let updatingId: number | null = null;
     let deletingId: number | null = null;
 
-    function fmtDate(d: string | null): string {
+    function fmtDate(d: number | null): string {
         if (!d) return '—';
         const parsed = new Date(d);
         return isNaN(parsed.getTime()) ? '—' : parsed.toLocaleDateString();

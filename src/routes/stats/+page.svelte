@@ -69,8 +69,7 @@
     function countInPeriod(entries: StatEntry[], type: ArtifactType, start: number, end: number) {
         return entries.filter(e => {
             if (e.type !== type || !e.endDate) return false;
-            const ts = Date.parse(e.endDate);
-            return ts >= start && ts <= end;
+            return e.endDate >= start && e.endDate <= end;
         }).length;
     }
 
@@ -80,8 +79,7 @@
 
             const finishedInPeriod = typeEntries.filter(e => {
                 if (e.status !== UserArtifactStatus.FINISHED || !e.endDate) return false;
-                const ts = Date.parse(e.endDate);
-                return ts >= start && ts <= end;
+                return e.endDate >= start && e.endDate <= end;
             });
 
             const totalDuration = finishedInPeriod.reduce((acc, e) => acc + (e.duration ?? 0), 0);
@@ -135,8 +133,7 @@
                     showLabel: sp.displayLabel ?? false,
                     value: finishedTypeEntries.filter(e => {
                         if (!isShort(e)) return false;
-                        const ts = Date.parse(e.endDate!);
-                        return ts >= sp.start && ts <= sp.end;
+                        return e.endDate! >= sp.start && e.endDate! <= sp.end;
                     }).length
                 }))
             };
@@ -148,8 +145,7 @@
                     showLabel: sp.displayLabel ?? false,
                     value: finishedTypeEntries.filter(e => {
                         if (isShort(e)) return false;
-                        const ts = Date.parse(e.endDate!);
-                        return ts >= sp.start && ts <= sp.end;
+                        return e.endDate! >= sp.start && e.endDate! <= sp.end;
                     }).length
                 }))
             };
@@ -162,7 +158,7 @@
     $: earliestDate = data.entries
         .filter(e => e.startDate)
         .reduce((min, e) => {
-            const ts = Date.parse(e.startDate!);
+            const ts = e.startDate!;
             return ts < min ? ts : min;
         }, Date.now());
 
