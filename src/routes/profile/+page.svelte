@@ -4,14 +4,13 @@
     import type { PageData } from "./$types";
     import type { ISubscriptionService } from "$lib/model/SubscriptionService";
     import { ArtifactType } from "$lib/model/Artifact";
-    import { SvelteSet } from "svelte/reactivity";
 
     export let data: PageData;
 
-    let subscribedIds = new SvelteSet<number>(data.userSubscriptionIds);
+    let subscribedIds: number[] = data.userSubscriptionIds;
 
     async function toggle(service: ISubscriptionService) {
-        const isSubscribed = subscribedIds.has(service.id);
+        const isSubscribed = subscribedIds.includes(service.id);
         const method = isSubscribed ? 'DELETE' : 'POST';
 
         await fetch('/api/user/subscription', {
@@ -21,9 +20,9 @@
         });
 
         if (isSubscribed) {
-            subscribedIds.delete(service.id);
+            subscribedIds = subscribedIds.filter((id) => id !== service.id);
         } else {
-            subscribedIds.add(service.id);
+            subscribedIds = [...subscribedIds, service.id];
         }
     }
 
@@ -57,12 +56,12 @@
                     {#each group.services as service (service.id)}
                         <button
                             class="flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium transition-colors
-                                {subscribedIds.has(service.id)
+                                {subscribedIds.includes(service.id)
                                     ? 'bg-green-100 border-green-400 text-green-800 dark:bg-green-900/30 dark:border-green-600 dark:text-green-300'
                                     : 'bg-gray-100 border-gray-300 text-gray-700 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300 hover:border-gray-400'}"
                             onclick={() => toggle(service)}
                         >
-                            {#if subscribedIds.has(service.id)}
+                            {#if subscribedIds.includes(service.id)}
                                 <CheckCircleSolid class="w-4 h-4 text-green-500" />
                             {/if}
                             {service.name}
