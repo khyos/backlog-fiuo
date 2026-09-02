@@ -48,6 +48,7 @@ export type BacklogFilters = {
         included: string[]
         excluded: string[]
     }
+    ownedOrAvailable: boolean
 }
 
 export function createBacklogFilters(artifactType: ArtifactType, rankingType: BacklogRankingType): BacklogFilters {
@@ -96,7 +97,8 @@ export function createBacklogFilters(artifactType: ArtifactType, rankingType: Ba
         tags: {
             included: [],
             excluded: []
-        }
+        },
+        ownedOrAvailable: false
     }
     if (artifactType === ArtifactType.ANIME) {
         filters.duration.max = ANIME_MAX_DURATION;
@@ -231,6 +233,13 @@ export function filterBacklogItems(items: BacklogItem[], artifactType: ArtifactT
         items = items.filter((item) => {
             const meanRating = item.artifact.meanRating;
             return meanRating === null || meanRating >= filters.rating.min;
+        });
+    }
+    if (filters.ownedOrAvailable) {
+        items = items.filter((item) => {
+            const userInfo = item.artifact.userInfo;
+            return userInfo !== null &&
+                (userInfo.ownerships.length > 0 || userInfo.availableSubscriptions.length > 0);
         });
     }
     return items;

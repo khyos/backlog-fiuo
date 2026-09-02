@@ -48,9 +48,9 @@
     <div class="flex justify-between items-start mb-4">
         <div class="flex-1">
             <Badge color={artifact.type === ArtifactType.GAME ? 'indigo' : 'purple'} class="mb-2">{artifact.type}</Badge>
-            <!--{#if artifact.status === 'early_access'}
+            {#if artifact.type === ArtifactType.GAME && artifact.status === 'early_access'}
                 <Badge color="yellow" class="mb-2 ml-1">Early Access</Badge>
-            {/if}-->
+            {/if}
             <Heading tag="h2" class="text-4xl font-extrabold mb-1">{artifact.title}</Heading>
 
             {#if artifact.releaseDate}

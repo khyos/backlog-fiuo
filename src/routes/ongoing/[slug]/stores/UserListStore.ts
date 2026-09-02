@@ -36,7 +36,7 @@ export const updateStatus = async (artifactId: number) => {
     await updateDate(artifactId, new Date(), 'both');
 
     targetedArtifact.updateUserStatus(UserArtifactStatus.FINISHED);
-    targetedArtifact.rootParent.computeLastAndNextOngoing();
+    targetedArtifact.rootParent.resetLastAndNextOngoing();
 
     userListStore.update(s => ({
         ...s,
