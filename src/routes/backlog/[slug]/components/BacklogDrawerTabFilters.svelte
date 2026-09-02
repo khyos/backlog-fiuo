@@ -1,10 +1,11 @@
 <script lang="ts">
-    import { 
-        Button, 
-        Label, 
-        MultiSelect, 
-        Range, 
-        Select, 
+    import {
+        Button,
+        Checkbox,
+        Label,
+        MultiSelect,
+        Range,
+        Select,
         TabItem
     } from "flowbite-svelte";
     import DoubleRange from "$lib/ui/DoubleRange.svelte";
@@ -94,4 +95,9 @@
             bind:value={$backlogStore.backlogFilters.platforms.included}
         />
     {/if}
+    <div class="flex items-center mt-2">
+        <Checkbox bind:checked={$backlogStore.backlogFilters.ownedOrAvailable}>
+            Owned or Subscription
+        </Checkbox>
+    </div>
 </TabItem>

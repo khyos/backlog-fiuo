@@ -9,6 +9,8 @@
     export let artifact: Artifact;
 
     $: userListStoreInst = $userListStore;
+    let lastAndNext = artifact.lastAndNextOngoing;
+    $: { void $userListStore; lastAndNext = artifact.lastAndNextOngoing; }
 </script>
 
 <TableBodyRow class="text-gray-950 border-gray-300">
@@ -24,15 +26,15 @@
         </div>
     </TableBodyCell>
     <TableBodyCell>
-        {artifact.lastAndNextOngoing.last?.numbering}
+        {lastAndNext.last?.numbering}
         <br />
-        <span class="font-normal truncate block max-w-xs" title={artifact.lastAndNextOngoing.last?.title}>{artifact.lastAndNextOngoing.last?.title}</span>
+        <span class="font-normal truncate block max-w-xs" title={lastAndNext.last?.title}>{lastAndNext.last?.title}</span>
     </TableBodyCell>
     <TableBodyCell>
         <div style="display: inline-flex">
-            {#if artifact.lastAndNextOngoing.next}
-                {artifact.lastAndNextOngoing.next?.numbering} - {TimeUtil.formatDate(artifact.lastAndNextOngoing.next?.releaseDate)}
-                {#if artifact.lastAndNextOngoing.next?.releaseDate && new Date() < artifact.lastAndNextOngoing.next?.releaseDate}
+            {#if lastAndNext.next}
+                {lastAndNext.next?.numbering} - {TimeUtil.formatDate(lastAndNext.next?.releaseDate)}
+                {#if lastAndNext.next?.releaseDate && new Date() < lastAndNext.next?.releaseDate}
                 <ClockArrowOutline size="xs" color="navy" class="ml-1" style='transform: scale(-1, 1); margin-top:auto; margin-bottom:auto'/>
                 {/if}
             {:else}
@@ -40,11 +42,11 @@
             {/if}
         </div>
         <br />
-        <span class="font-normal truncate block max-w-xs" title={artifact.lastAndNextOngoing.next?.title}>{artifact.lastAndNextOngoing.next?.title}</span>
+        <span class="font-normal truncate block max-w-xs" title={lastAndNext.next?.title}>{lastAndNext.next?.title}</span>
     </TableBodyCell>
     <TableBodyCell>
-        {#if artifact.lastAndNextOngoing.next}
-            <Button size="xs" onclick={() => updateStatus(artifact.lastAndNextOngoing.next!.id)}>Seen</Button>
+        {#if lastAndNext.next}
+            <Button size="xs" onclick={() => updateStatus(lastAndNext.next!.id)}>Seen</Button>
         {/if}
     </TableBodyCell>
 </TableBodyRow>

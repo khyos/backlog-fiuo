@@ -110,6 +110,10 @@ export abstract class Artifact implements Serializable<IArtifact> {
         return this._lastAndNextOngoing;
     }
 
+    resetLastAndNextOngoing() {
+        this._lastAndNextOngoing = undefined;
+    }
+
     get numbering(): string | null {
         return null;
     }
