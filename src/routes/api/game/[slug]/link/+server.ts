@@ -153,7 +153,6 @@ export async function PUT({ params, request, locals }: RequestEvent) {
                     return error(500, "Failed to Update METACRITIC");
                 }
             } else if (type === LinkType.STEAM) {
-                /*
                 try {
                     const steamRating = await Steam.getGameRating(url);
                     if (steamRating) {
@@ -162,7 +161,6 @@ export async function PUT({ params, request, locals }: RequestEvent) {
                 } catch {
                     return error(500, "Failed to Update STEAM");
                 }
-                */
             } else if (type === LinkType.ITAD) {
                 try {
                     const [subscriptions, allServices] = await Promise.all([
