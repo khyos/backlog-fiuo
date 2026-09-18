@@ -61,33 +61,38 @@ function normalizeDate(raw: string | null | undefined): string | null {
  * <my_start_date>, <my_finish_date>.
  */
 function parseMALXML(xmlContent: string): { username: string; entries: ParsedEntry[] } {
-	let doc: Document;
+	let dom: JSDOM;
 	try {
-		const dom = new JSDOM(xmlContent, { contentType: 'text/xml' });
-		doc = dom.window.document;
+		dom = new JSDOM(xmlContent, { contentType: 'text/xml' });
 	} catch {
 		throw new Error('Failed to parse XML file');
 	}
 
-	const username = doc.querySelector('myinfo > user_name')?.textContent?.trim() ?? '';
+	try {
+		const doc = dom.window.document;
 
-	const animeElements = doc.querySelectorAll('anime');
-	if (animeElements.length === 0) {
-		throw new Error('No anime entries found in the XML. Make sure you uploaded an anime list export.');
+		const username = doc.querySelector('myinfo > user_name')?.textContent?.trim() ?? '';
+
+		const animeElements = doc.querySelectorAll('anime');
+		if (animeElements.length === 0) {
+			throw new Error('No anime entries found in the XML. Make sure you uploaded an anime list export.');
+		}
+
+		const entries: ParsedEntry[] = Array.from(animeElements).map((el) => {
+			const malId = el.querySelector('series_animedb_id')?.textContent?.trim() ?? '';
+			const title = el.querySelector('series_title')?.textContent?.trim() ?? '';
+			const rawScore = parseInt(el.querySelector('my_score')?.textContent?.trim() ?? '0', 10);
+			const malScore = rawScore > 0 ? rawScore : null;
+			const malStatus = el.querySelector('my_status')?.textContent?.trim() ?? '';
+			const finishDate = normalizeDate(el.querySelector('my_finish_date')?.textContent?.trim());
+			const startDate = normalizeDate(el.querySelector('my_start_date')?.textContent?.trim());
+			return { malId, title, malScore, malStatus, finishDate, startDate };
+		});
+
+		return { username, entries };
+	} finally {
+		dom.window.close();
 	}
-
-	const entries: ParsedEntry[] = Array.from(animeElements).map((el) => {
-		const malId = el.querySelector('series_animedb_id')?.textContent?.trim() ?? '';
-		const title = el.querySelector('series_title')?.textContent?.trim() ?? '';
-		const rawScore = parseInt(el.querySelector('my_score')?.textContent?.trim() ?? '0', 10);
-		const malScore = rawScore > 0 ? rawScore : null;
-		const malStatus = el.querySelector('my_status')?.textContent?.trim() ?? '';
-		const finishDate = normalizeDate(el.querySelector('my_finish_date')?.textContent?.trim());
-		const startDate = normalizeDate(el.querySelector('my_start_date')?.textContent?.trim());
-		return { malId, title, malScore, malStatus, finishDate, startDate };
-	});
-
-	return { username, entries };
 }
 
 /**

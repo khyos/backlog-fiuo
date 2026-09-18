@@ -25,7 +25,7 @@ export const handle: Handle = async function handle({ event, resolve }) {
 		const token = authCookie.split(" ")[1];
 
 		try {
-			const jwtUser = jwt.verify(token, JWT_ACCESS_SECRET);
+			const jwtUser = jwt.verify(token, JWT_ACCESS_SECRET, { algorithms: ['HS256'] });
 			if (typeof jwtUser === "string") {
 				throw new Error("Something went wrong");
 			}

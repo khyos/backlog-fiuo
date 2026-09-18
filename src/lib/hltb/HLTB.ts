@@ -29,8 +29,9 @@ export class HLTB {
      * Extracts duration text from HowLongToBeat HTML content
      */
     static extractDurationFromHtml(htmlContent: string): string | null {
+        let dom;
         try {
-            const dom = new JSDOM(htmlContent);
+            dom = new JSDOM(htmlContent);
             const timeTable = dom.window.document.querySelector('[class*="GameTimeTable-module"][class*="game_main_table"]');
             const durationRows = timeTable?.children[1].children;
 
@@ -47,16 +48,16 @@ export class HLTB {
             }
 
             const durationText = mainAndExtras || main;
-            
-            // Clean up the DOM
-            if (dom?.window) {
-                dom.window.close();
-            }
-            
+
             return durationText || null;
         } catch (e) {
             console.error('Error extracting duration from HTML:', e);
             return null;
+        } finally {
+            // Clean up the DOM even if parsing throws
+            if (dom?.window) {
+                dom.window.close();
+            }
         }
     }
 
@@ -72,32 +73,35 @@ export class HLTB {
     }
 
     static async searchGame(query: string) {
-        const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] });
-        const page = await browser.newPage();
+        let browser;
+        try {
+            browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+            const page = await browser.newPage();
 
-        await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+            await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
 
-        await page.goto(`https://howlongtobeat.com/?q=${query}`);
+            await page.goto(`https://howlongtobeat.com/?q=${query}`);
 
-        await page.waitForSelector('#search-results-header>.loading_bar', { hidden: true, timeout: 10000 });
+            await page.waitForSelector('#search-results-header>.loading_bar', { hidden: true, timeout: 10000 });
 
-        const results = await page.evaluate(() => {
-            const results = [];
-            const links = document.querySelectorAll('#search-results-header>ul>li h2>a');
-            for (const link of links) {
-                if (link instanceof HTMLAnchorElement) {
-                    results.push({
-                        id: link.href.split('/').pop(),
-                        name: link.innerText,
-                        link: link.href
-                    });
+            const results = await page.evaluate(() => {
+                const results = [];
+                const links = document.querySelectorAll('#search-results-header>ul>li h2>a');
+                for (const link of links) {
+                    if (link instanceof HTMLAnchorElement) {
+                        results.push({
+                            id: link.href.split('/').pop(),
+                            name: link.innerText,
+                            link: link.href
+                        });
+                    }
                 }
-            }
+                return results;
+            });
+
             return results;
-        });
-
-        await browser.close();
-
-        return results;
+        } finally {
+            await browser?.close();
+        }
     }
 }

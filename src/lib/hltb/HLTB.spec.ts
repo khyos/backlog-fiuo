@@ -282,28 +282,28 @@ describe('HLTB', () => {
             expect(mockBrowser.close).not.toHaveBeenCalled();
         });
 
-        it('should throw error when page navigation fails and not close browser', async () => {
+        it('should throw error when page navigation fails and still close browser', async () => {
             mockPage.goto.mockRejectedValue(new Error('Navigation failed'));
 
             await expect(HLTB.searchGame('mario')).rejects.toThrow('Navigation failed');
-            // Browser close is not called because the error happens before browser.close()
-            expect(mockBrowser.close).not.toHaveBeenCalled();
+            // Browser is closed in the finally block even when navigation throws
+            expect(mockBrowser.close).toHaveBeenCalled();
         });
 
-        it('should throw error when waitForSelector times out and not close browser', async () => {
+        it('should throw error when waitForSelector times out and still close browser', async () => {
             mockPage.waitForSelector.mockRejectedValue(new Error('Timeout waiting for selector'));
 
             await expect(HLTB.searchGame('mario')).rejects.toThrow('Timeout waiting for selector');
-            // Browser close is not called because the error happens before browser.close()
-            expect(mockBrowser.close).not.toHaveBeenCalled();
+            // Browser is closed in the finally block even when the selector times out
+            expect(mockBrowser.close).toHaveBeenCalled();
         });
 
-        it('should throw error when page evaluation fails and not close browser', async () => {
+        it('should throw error when page evaluation fails and still close browser', async () => {
             mockPage.evaluate.mockRejectedValue(new Error('Page evaluation failed'));
 
             await expect(HLTB.searchGame('mario')).rejects.toThrow('Page evaluation failed');
-            // Browser close is not called because the error happens before browser.close()
-            expect(mockBrowser.close).not.toHaveBeenCalled();
+            // Browser is closed in the finally block even when evaluation throws
+            expect(mockBrowser.close).toHaveBeenCalled();
         });
 
         it('should extract game ID from URL correctly', async () => {
