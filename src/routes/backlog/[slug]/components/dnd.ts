@@ -106,4 +106,13 @@ export function dropzone(node: HTMLElement, options: DropzoneOptions) {
     node.addEventListener('dragleave', handleDragLeave);
     node.addEventListener('dragover', handleDragOver);
     node.addEventListener('drop', handleDrop);
+
+    return {
+        destroy() {
+            node.removeEventListener('dragenter', handleDragEnter);
+            node.removeEventListener('dragleave', handleDragLeave);
+            node.removeEventListener('dragover', handleDragOver);
+            node.removeEventListener('drop', handleDrop);
+        }
+    };
 }

@@ -27,7 +27,7 @@ export class UserDB {
             throw new Error("Invalid credentials");
         }
 
-        return jwt.sign({ id: row.username }, JWT_ACCESS_SECRET);
+        return jwt.sign({ id: row.username }, JWT_ACCESS_SECRET, { expiresIn: '30d' });
     }
 
     static async signUp(username: string, password: string): Promise<void> {

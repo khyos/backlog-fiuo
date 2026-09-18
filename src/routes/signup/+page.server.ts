@@ -3,6 +3,21 @@ import type { PageServerLoad, Actions } from './$types';
 import { UserDB } from '$lib/server/model/UserDB';
 import { ErrorUtil } from '$lib/util/ErrorUtil';
 
+const USERNAME_MIN = 3;
+const USERNAME_MAX = 50;
+const PASSWORD_MIN = 8;
+const PASSWORD_MAX = 128;
+
+function validateCredentials(username: string, password: string): string | null {
+	if (username.length < USERNAME_MIN || username.length > USERNAME_MAX) {
+		return `Username must be between ${USERNAME_MIN} and ${USERNAME_MAX} characters`;
+	}
+	if (password.length < PASSWORD_MIN || password.length > PASSWORD_MAX) {
+		return `Password must be between ${PASSWORD_MIN} and ${PASSWORD_MAX} characters`;
+	}
+	return null;
+}
+
 export const load: PageServerLoad = (event) => {
 	const user = event.locals.user;
 
@@ -21,10 +36,18 @@ export const actions: Actions = {
 			});
 		}
 
-		const { username, password } = formData;
+		const username = (formData.username as string).trim();
+		const password = formData.password as string;
+
+		const validationError = validateCredentials(username, password);
+		if (validationError) {
+			return fail(400, {
+				error: validationError
+			});
+		}
 
         try {
-            await UserDB.signUp(username as string, password as string);
+            await UserDB.signUp(username, password);
         } catch (e) {
             return fail(401, {
                 error: ErrorUtil.getErrorMessage(e)
@@ -33,7 +56,7 @@ export const actions: Actions = {
 
 		let token: string;
         try {
-            token = await UserDB.signIn(username as string, password as string);
+            token = await UserDB.signIn(username, password);
         } catch (e) {
             return fail(401, {
                 error: ErrorUtil.getErrorMessage(e)

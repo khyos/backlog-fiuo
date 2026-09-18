@@ -29,8 +29,21 @@
     import { Platform } from "$lib/model/game/Platform";
     import { get } from "svelte/store";
     import { addTag, createTag, fetchTags } from "../../[slug]/actions/TagActions";
+    import { onMount } from "svelte";
 
     export let data: PageData;
+
+    let isStuck = false;
+    let sentinel: HTMLElement;
+
+    onMount(() => {
+        const observer = new IntersectionObserver(
+            ([entry]) => { isStuck = !entry.isIntersecting; },
+            { threshold: [1] }
+        );
+        observer.observe(sentinel);
+        return () => observer.disconnect();
+    });
 
     initializeStore(data.backlog, data.suggestedArtifacts);
 
@@ -100,8 +113,10 @@
     }
 </script>
 
+<div bind:this={sentinel} class="h-px -mb-px"></div>
 <Listgroup>
-    <div class="flex p-1">
+    <div class="flex p-1 sticky top-0 z-10 transition-[background-color,box-shadow] duration-150
+        {isStuck ? 'bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm' : ''}">
         <h3
             class="p-1 text-xl font-medium text-gray-900 dark:text-white"
             style="flex-grow: 1; padding-left: 1rem"
