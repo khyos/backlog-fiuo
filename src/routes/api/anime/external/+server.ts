@@ -3,7 +3,15 @@ import { User, UserRights } from "$lib/model/User";
 import { SensCritique } from "$lib/senscritique/SensCritique";
 import { error, json } from "@sveltejs/kit";
 import type { RequestEvent } from "./$types";
-import { ErrorUtil } from "$lib/util/ErrorUtil";
+
+async function searchExternal<T>(search: () => Promise<T[] | null | undefined>): Promise<T[]> {
+    try {
+        return (await search()) ?? [];
+    } catch (e) {
+        console.error('External search failed:', e);
+        return [];
+    }
+}
 
 export async function GET({ url, locals }: RequestEvent) {
     const user = User.deserialize(locals.user);
@@ -12,23 +20,10 @@ export async function GET({ url, locals }: RequestEvent) {
     }
     const query : string = url.searchParams.get('query') ?? '';
 
-    let malResults;
-    try {
-        malResults = await MAL.searchAnime(query);
-    } catch (error) {
-        malResults = {
-            error: ErrorUtil.getErrorMessage(error)
-        }
-    }
-
-    let scResults;
-    try {
-        scResults = await SensCritique.searchTvshow(query);
-    } catch (error) {
-        scResults = {
-            error: ErrorUtil.getErrorMessage(error)
-        }
-    }
+    const [malResults, scResults] = await Promise.all([
+        searchExternal(() => MAL.searchAnime(query)),
+        searchExternal(() => SensCritique.searchTvshow(query))
+    ]);
 
     const results = {
         mal: malResults,

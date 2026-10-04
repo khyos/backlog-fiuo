@@ -5,7 +5,15 @@ import { SensCritique } from "$lib/senscritique/SensCritique";
 import { TMDB } from "$lib/tmdb/TMDB";
 import { error, json } from "@sveltejs/kit";
 import type { RequestEvent } from "./$types";
-import { ErrorUtil } from "$lib/util/ErrorUtil";
+
+async function searchExternal<T>(search: () => Promise<T[] | null | undefined>): Promise<T[]> {
+    try {
+        return (await search()) ?? [];
+    } catch (e) {
+        console.error('External search failed:', e);
+        return [];
+    }
+}
 
 export async function GET({ url, locals }: RequestEvent) {
     const user = User.deserialize(locals.user);
@@ -14,38 +22,12 @@ export async function GET({ url, locals }: RequestEvent) {
     }
     const query : string = url.searchParams.get('query') ?? '';
 
-    let tmdbResults;
-    try {
-        tmdbResults = await TMDB.searchTvshow(query);
-    } catch (e) {
-        tmdbResults = {
-            error: ErrorUtil.getErrorMessage(e)
-        }
-    }
-    let scResults;
-    try {
-        scResults = await SensCritique.searchTvshow(query);
-    } catch (e) {
-        scResults = {
-            error: ErrorUtil.getErrorMessage(e)
-        }
-    }
-    let mcResults;
-    try {
-        mcResults = await MetaCritic.searchTvshow(query);
-    } catch (e) {
-        mcResults = {
-            error: ErrorUtil.getErrorMessage(e)
-        }
-    }
-    let rtResults;
-    try {
-        rtResults = await RottenTomatoes.searchTvshow(query);
-    } catch (e) {
-        rtResults = {
-            error: ErrorUtil.getErrorMessage(e)
-        }
-    }
+    const [tmdbResults, scResults, mcResults, rtResults] = await Promise.all([
+        searchExternal(() => TMDB.searchTvshow(query)),
+        searchExternal(() => SensCritique.searchTvshow(query)),
+        searchExternal(() => MetaCritic.searchTvshow(query)),
+        searchExternal(() => RottenTomatoes.searchTvshow(query))
+    ]);
 
     const results = {
         tmdb: tmdbResults,
