@@ -42,7 +42,7 @@ export class HLTB {
                 const label = row.children[0].textContent?.toLowerCase();
                 if (label === 'main story') {
                     main = row.children[2].textContent?.trim();
-                } else if (label === 'main + extras') {
+                } else if (label === 'main + sides') {
                     mainAndExtras = row.children[2].textContent?.trim();
                 }
             }

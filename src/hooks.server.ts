@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken";
 import { error } from "@sveltejs/kit";
 import { checkRateLimit } from "$lib/util/RateLimitUtil";
 import { startSubscriptionSyncJob } from "$lib/server/jobs/SubscriptionSyncJob";
+import "$lib/server/ServerLog";
 
 startSubscriptionSyncJob();
 
