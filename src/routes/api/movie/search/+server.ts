@@ -1,4 +1,4 @@
-import { MovieDB } from "$lib/server/model/movie/MovieDB";
+import { MovieDB } from "#lib/server/model/movie/MovieDB";
 import { json } from "@sveltejs/kit";
 import type { RequestEvent } from "./$types";
 

@@ -8,13 +8,13 @@
         Select,
         TabItem
     } from "flowbite-svelte";
-    import DoubleRange from "$lib/ui/DoubleRange.svelte";
-    import { ArtifactType } from "$lib/model/Artifact";
-    import type { Genre } from "$lib/model/Genre";
-    import type { Platform } from "$lib/model/game/Platform";
-    import type { Tag } from "$lib/model/Tag";
+    import DoubleRange from "#lib/ui/DoubleRange.svelte";
+    import { ArtifactType } from "#lib/model/Artifact";
+    import type { Genre } from "#lib/model/Genre";
+    import type { Platform } from "#lib/model/game/Platform";
+    import type { Tag } from "#lib/model/Tag";
     import { backlogStore } from "../stores/BacklogStore";
-    import { BacklogOrder, BacklogOrderLabel } from "$lib/model/Backlog";
+    import { BacklogOrder, BacklogOrderLabel } from "#lib/model/Backlog";
     import { get } from "svelte/store";
     
     export let selectedTab: string = "filters";

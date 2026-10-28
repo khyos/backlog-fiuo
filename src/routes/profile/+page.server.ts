@@ -1,5 +1,5 @@
-import { User } from '$lib/model/User';
-import { SubscriptionServiceDB } from '$lib/server/model/SubscriptionServiceDB';
+import { User } from '#lib/model/User';
+import { SubscriptionServiceDB } from '#lib/server/model/SubscriptionServiceDB';
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 

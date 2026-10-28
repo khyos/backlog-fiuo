@@ -10,9 +10,9 @@
     import BacklogDrawerTabFilters from "./BacklogDrawerTabFilters.svelte";
     import BacklogDrawerTabOrder from "./BacklogDrawerTabOrder.svelte";
     import { pageStore } from "../stores/PageStore";
-    import type { Genre } from "$lib/model/Genre";
-    import type { Platform } from "$lib/model/game/Platform";
-    import type { Tag } from "$lib/model/Tag";
+    import type { Genre } from "#lib/model/Genre";
+    import type { Platform } from "#lib/model/game/Platform";
+    import type { Tag } from "#lib/model/Tag";
     
     export let transitionDrawerParams: drawerTransitionParamTypes = {
         x: 320,

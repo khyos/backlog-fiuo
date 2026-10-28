@@ -1,12 +1,12 @@
-import { ArtifactType } from '$lib/model/Artifact.js';
-import { GameDB } from '$lib/server/model/game/GameDB';
-import { MovieDB } from '$lib/server/model/movie/MovieDB';
+import { ArtifactType } from '#lib/model/Artifact.js';
+import { GameDB } from '#lib/server/model/game/GameDB';
+import { MovieDB } from '#lib/server/model/movie/MovieDB';
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { User } from '$lib/model/User';
-import { TvshowDB } from '$lib/server/model/tvshow/TvshowDB';
-import { AnimeDB } from '$lib/server/model/anime/AnimeDB';
-import { ArtifactDB } from '$lib/server/model/ArtifactDB';
+import { User } from '#lib/model/User';
+import { TvshowDB } from '#lib/server/model/tvshow/TvshowDB';
+import { AnimeDB } from '#lib/server/model/anime/AnimeDB';
+import { ArtifactDB } from '#lib/server/model/ArtifactDB';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const artifactTypeSlug = params.slug;

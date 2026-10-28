@@ -1,7 +1,7 @@
 <script lang="ts">
     import { TableBodyCell, TableBodyRow } from "flowbite-svelte";
     import { userListStore } from "../stores/UserListStore";
-    import { ArtifactType, type Artifact } from "$lib/model/Artifact";
+    import { ArtifactType, type Artifact } from "#lib/model/Artifact";
 
     export let artifact: Artifact;
 

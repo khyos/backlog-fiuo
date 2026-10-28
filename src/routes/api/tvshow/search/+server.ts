@@ -1,5 +1,5 @@
 import { json } from "@sveltejs/kit";
-import { TvshowDB } from "$lib/server/model/tvshow/TvshowDB";
+import { TvshowDB } from "#lib/server/model/tvshow/TvshowDB";
 import type { RequestEvent } from "./$types";
 
 export async function GET({ url }: RequestEvent) {

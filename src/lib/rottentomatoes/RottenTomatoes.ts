@@ -1,4 +1,4 @@
-import type { SearchResult } from '$lib/types/SearchResult';
+import type { SearchResult } from '#lib/types/SearchResult';
 import got from 'got';
 import { JSDOM } from 'jsdom';
 

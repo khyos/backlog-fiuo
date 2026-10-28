@@ -1,5 +1,5 @@
-import { User, UserRights } from "$lib/model/User";
-import { MovieDB } from "$lib/server/model/movie/MovieDB";
+import { User, UserRights } from "#lib/model/User";
+import { MovieDB } from "#lib/server/model/movie/MovieDB";
 import { error, json } from "@sveltejs/kit";
 import type { RequestEvent } from "./$types";
 

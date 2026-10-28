@@ -1,8 +1,8 @@
 <script lang="ts">
-    import { Game } from "$lib/model/game/Game";
-    import ArtifactItem from "$lib/components/ArtifactItem.svelte";
+    import { Game } from "#lib/model/game/Game";
+    import ArtifactItem from "#lib/components/ArtifactItem.svelte";
     import type { PageData } from "./$types";
-    import { initializeStore } from "$lib/stores/ArtifactItemStore";
+    import { initializeStore } from "#lib/stores/ArtifactItemStore";
 
     export let data: PageData;
     let game = Game.fromJSON(data.game);

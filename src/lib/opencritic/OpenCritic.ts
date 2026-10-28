@@ -1,5 +1,5 @@
-import { OPEN_CRITIC_RAPID_API_KEY } from "$env/static/private";
-import type { SearchResult } from "$lib/types/SearchResult";
+import { OPEN_CRITIC_RAPID_API_KEY } from "$app/env/private";
+import type { SearchResult } from "#lib/types/SearchResult";
 
 export type OpenCriticGame = {
     id: string,

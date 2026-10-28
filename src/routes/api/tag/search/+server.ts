@@ -1,7 +1,7 @@
-import { TagDB } from "$lib/server/model/TagDB";
+import { TagDB } from "#lib/server/model/TagDB";
 import { error, json } from "@sveltejs/kit";
 import type { RequestEvent } from "./$types";
-import { ArtifactType } from "$lib/model/Artifact";
+import { ArtifactType } from "#lib/model/Artifact";
 
 export async function GET({ url }: RequestEvent) {
     const artifactType = url.searchParams.get('artifactType') as ArtifactType | null;

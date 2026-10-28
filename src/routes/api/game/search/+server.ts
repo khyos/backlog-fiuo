@@ -1,4 +1,4 @@
-import { GameDB } from "$lib/server/model/game/GameDB";
+import { GameDB } from "#lib/server/model/game/GameDB";
 import { json } from "@sveltejs/kit";
 import type { RequestEvent } from "./$types";
 

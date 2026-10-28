@@ -1,6 +1,6 @@
 import { runDbInsert, runDbQueriesParallel, getDbRows, getDbRow } from '../../database';
 import { describe, expect, test, beforeAll, afterAll, beforeEach } from 'vitest';
-import { Platform, type IPlatformDB } from '$lib/model/game/Platform';
+import { Platform, type IPlatformDB } from '#lib/model/game/Platform';
 import { PlatformDB } from './PlatformDB';
 import { GameDB } from './GameDB';
 import { ArtifactDB } from '../ArtifactDB';

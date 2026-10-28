@@ -19,7 +19,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // ─── Module mocks (must come before any SvelteKit imports) ─────────────────
 
-vi.mock('$lib/services/ArtifactService', () => ({
+vi.mock('#lib/services/ArtifactService', () => ({
     getAsyncInfo: vi.fn().mockResolvedValue({ description: null, poster: null }),
     getArtifact: vi.fn(),
     updateStatus: vi.fn().mockResolvedValue(undefined),
@@ -32,34 +32,34 @@ vi.mock('$lib/services/ArtifactService', () => ({
     unlinkArtifactFromSubscription: vi.fn().mockResolvedValue(undefined),
 }));
 
-vi.mock('$lib/services/LinkService', () => ({
+vi.mock('#lib/services/LinkService', () => ({
     openLink: vi.fn(),
 }));
 
 // ─── Imports ───────────────────────────────────────────────────────────────
 
 import { render } from 'svelte/server';
-import { ArtifactType } from '$lib/model/Artifact';
-import { Game } from '$lib/model/game/Game';
-import { Platform } from '$lib/model/game/Platform';
-import { Movie } from '$lib/model/movie/Movie';
-import { Anime } from '$lib/model/anime/Anime';
-import { AnimeEpisode } from '$lib/model/anime/AnimeEpisode';
-import { Tvshow } from '$lib/model/tvshow/Tvshow';
-import { TvshowSeason } from '$lib/model/tvshow/TvshowSeason';
-import { TvshowEpisode } from '$lib/model/tvshow/TvshowEpisode';
-import { Genre } from '$lib/model/Genre';
-import { Rating, RatingType } from '$lib/model/Rating';
-import { UserArtifact, UserArtifactStatus } from '$lib/model/UserArtifact';
-import { SubscriptionService } from '$lib/model/SubscriptionService';
-import { initializeStore } from '$lib/stores/ArtifactItemStore';
+import { ArtifactType } from '#lib/model/Artifact';
+import { Game } from '#lib/model/game/Game';
+import { Platform } from '#lib/model/game/Platform';
+import { Movie } from '#lib/model/movie/Movie';
+import { Anime } from '#lib/model/anime/Anime';
+import { AnimeEpisode } from '#lib/model/anime/AnimeEpisode';
+import { Tvshow } from '#lib/model/tvshow/Tvshow';
+import { TvshowSeason } from '#lib/model/tvshow/TvshowSeason';
+import { TvshowEpisode } from '#lib/model/tvshow/TvshowEpisode';
+import { Genre } from '#lib/model/Genre';
+import { Rating, RatingType } from '#lib/model/Rating';
+import { UserArtifact, UserArtifactStatus } from '#lib/model/UserArtifact';
+import { SubscriptionService } from '#lib/model/SubscriptionService';
+import { initializeStore } from '#lib/stores/ArtifactItemStore';
 
 import ArtifactChildrenTree from './ArtifactChildrenTree.svelte';
 import ArtifactLinkManager from './ArtifactLinkManager.svelte';
 import ArtifactOwnershipManager from './ArtifactOwnershipManager.svelte';
 import ArtifactSubscriptionManager from './ArtifactSubscriptionManager.svelte';
 import ArtifactUserInfoPanel from './ArtifactUserInfoPanel.svelte';
-import { Link, LinkType } from '$lib/model/Link';
+import { Link, LinkType } from '#lib/model/Link';
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 

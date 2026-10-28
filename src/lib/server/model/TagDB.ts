@@ -1,5 +1,5 @@
-import type { ArtifactType } from "$lib/model/Artifact";
-import { Tag, TagType, type ITagDB } from "$lib/model/Tag";
+import type { ArtifactType } from "#lib/model/Artifact";
+import { Tag, TagType, type ITagDB } from "#lib/model/Tag";
 import { getDbRows, runDbQuery } from "../database";
 
 export class TagDB {

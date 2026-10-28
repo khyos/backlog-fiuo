@@ -1,8 +1,8 @@
-import { UserList, type IUserList } from '$lib/model/UserList';
-import { fetchUserList } from '$lib/services/UserListService';
+import { UserList, type IUserList } from '#lib/model/UserList';
+import { fetchUserList } from '#lib/services/UserListService';
 import { derived, get, writable } from 'svelte/store';
 import { createUserListFilters, filterUserListItems, type UserListFilters } from '../UserListFilters';
-import { ArtifactType } from '$lib/model/Artifact';
+import { ArtifactType } from '#lib/model/Artifact';
 
 export type UserListStore = {
     userList: UserList,

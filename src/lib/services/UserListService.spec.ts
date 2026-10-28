@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { fetchUserList, addUserListItem } from './UserListService';
-import { ArtifactType } from '$lib/model/Artifact';
-import { UserList } from '$lib/model/UserList';
-import type { UserArtifactStatus } from '$lib/model/UserArtifact';
+import { ArtifactType } from '#lib/model/Artifact';
+import { UserList } from '#lib/model/UserList';
+import type { UserArtifactStatus } from '#lib/model/UserArtifact';
 
 describe('UserListService', () => {
     const mockFetch = vi.fn();

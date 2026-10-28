@@ -8,11 +8,11 @@
         P,
         Checkbox
     } from "flowbite-svelte";
-    import { BacklogRankingType } from "$lib/model/Backlog";
-    import { getRandomItemA, getRandomItemB, orderByFightStore, startOrderByFight, updateItemA, updateSimilarElo } from "$lib/stores/OrderByFightStore";
+    import { BacklogRankingType } from "#lib/model/Backlog";
+    import { getRandomItemA, getRandomItemB, orderByFightStore, startOrderByFight, updateItemA, updateSimilarElo } from "#lib/stores/OrderByFightStore";
     import { get } from "svelte/store";
     import { AwardOutline, CheckCircleOutline, RefreshOutline, ThumbsDownOutline, ThumbsUpOutline } from "flowbite-svelte-icons";
-    import type { BacklogItem } from "$lib/model/BacklogItem";
+    import type { BacklogItem } from "#lib/model/BacklogItem";
     import { backlogStore, refreshBacklog } from "../stores/BacklogStore";
 
     export let selectedTab: string = "filters";

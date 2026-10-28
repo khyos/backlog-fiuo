@@ -1,6 +1,6 @@
-import { type Artifact } from "$lib/model/Artifact";
-import { UserArtifactStatus } from "$lib/model/UserArtifact";
-import type { IUserArtifactOwnership } from "$lib/model/UserArtifactOwnership";
+import { type Artifact } from "#lib/model/Artifact";
+import { UserArtifactStatus } from "#lib/model/UserArtifact";
+import type { IUserArtifactOwnership } from "#lib/model/UserArtifactOwnership";
 import {
     getArtifact,
     updateStatus as updateStatusAPI,
@@ -11,7 +11,7 @@ import {
     deleteOwnership as deleteOwnershipAPI,
     linkArtifactToSubscription as linkSubscriptionAPI,
     unlinkArtifactFromSubscription as unlinkSubscriptionAPI
-} from "$lib/services/ArtifactService";
+} from "#lib/services/ArtifactService";
 import { get, writable } from "svelte/store";
 
 export type ArtifactItemStore = {

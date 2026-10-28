@@ -75,6 +75,7 @@
     <NavUl class="z-50">
         <NavLi href="/" class="mr-4">Home</NavLi>
         <NavLi href="/backlog" class="mr-4">Backlogs</NavLi>
+        <NavLi href="/tierlist" class="mr-4">Tier Lists</NavLi>
         <NavLi class="cursor-pointer mr-4">Games<ChevronDownOutline class="w-5 h-5 ms-2 text-primary-800 dark:text-white inline"/></NavLi>
         <Dropdown simple class="w-30">
             {#each gameMenu as item (item.name)}

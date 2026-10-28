@@ -18,7 +18,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // ArtifactService.getAsyncInfo is called in onMount; in SSR it never fires,
 // but mocking it keeps the import graph clean.
-vi.mock('$lib/services/ArtifactService', () => ({
+vi.mock('#lib/services/ArtifactService', () => ({
     getAsyncInfo: vi.fn().mockResolvedValue({ description: null, poster: null }),
     getArtifact: vi.fn(),
     updateStatus: vi.fn().mockResolvedValue(undefined),
@@ -32,7 +32,7 @@ vi.mock('$lib/services/ArtifactService', () => ({
 }));
 
 // LinkService.openLink is used inside ArtifactLinkManager
-vi.mock('$lib/services/LinkService', () => ({
+vi.mock('#lib/services/LinkService', () => ({
     openLink: vi.fn(),
 }));
 
@@ -41,11 +41,11 @@ vi.mock('$lib/services/LinkService', () => ({
 // ---------------------------------------------------------------------------
 
 import { render } from 'svelte/server';
-import { ArtifactType } from '$lib/model/Artifact';
-import { Game } from '$lib/model/game/Game';
-import { Genre } from '$lib/model/Genre';
-import { Rating, RatingType } from '$lib/model/Rating';
-import { initializeStore } from '$lib/stores/ArtifactItemStore';
+import { ArtifactType } from '#lib/model/Artifact';
+import { Game } from '#lib/model/game/Game';
+import { Genre } from '#lib/model/Genre';
+import { Rating, RatingType } from '#lib/model/Rating';
+import { initializeStore } from '#lib/stores/ArtifactItemStore';
 import ArtifactItem from './ArtifactItem.svelte';
 
 // ---------------------------------------------------------------------------

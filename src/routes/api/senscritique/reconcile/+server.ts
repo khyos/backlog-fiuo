@@ -1,8 +1,8 @@
-import { exportUserCollection, UNIVERSE_ALIASES, type ExportItem } from '$lib/senscritique/SensCritiqueExport';
-import { User, UserRights } from '$lib/model/User';
-import { ArtifactDB } from '$lib/server/model/ArtifactDB';
-import { LinkDB } from '$lib/server/model/LinkDB';
-import { LinkType } from '$lib/model/Link';
+import { exportUserCollection, UNIVERSE_ALIASES, type ExportItem } from '#lib/senscritique/SensCritiqueExport';
+import { User, UserRights } from '#lib/model/User';
+import { ArtifactDB } from '#lib/server/model/ArtifactDB';
+import { LinkDB } from '#lib/server/model/LinkDB';
+import { LinkType } from '#lib/model/Link';
 import { error, json } from '@sveltejs/kit';
 import type { RequestEvent } from './$types';
 

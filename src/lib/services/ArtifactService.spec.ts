@@ -1,14 +1,14 @@
 import { describe, expect, test, vi, beforeEach, afterAll } from 'vitest';
 import { artifactFromJSON, getAsyncInfo, getArtifact, getPosterURL, updateStatus, updateScore, updateDate, addOwnership, updateOwnership, deleteOwnership, linkArtifactToSubscription, unlinkArtifactFromSubscription } from './ArtifactService';
-import { ArtifactType } from '$lib/model/Artifact';
-import { Game } from '$lib/model/game/Game';
-import { Movie } from '$lib/model/movie/Movie';
-import { Tvshow } from '$lib/model/tvshow/Tvshow';
-import { TvshowSeason } from '$lib/model/tvshow/TvshowSeason';
-import { TvshowEpisode } from '$lib/model/tvshow/TvshowEpisode';
-import { Anime } from '$lib/model/anime/Anime';
-import { AnimeEpisode } from '$lib/model/anime/AnimeEpisode';
-import { UserArtifactStatus } from '$lib/model/UserArtifact';
+import { ArtifactType } from '#lib/model/Artifact';
+import { Game } from '#lib/model/game/Game';
+import { Movie } from '#lib/model/movie/Movie';
+import { Tvshow } from '#lib/model/tvshow/Tvshow';
+import { TvshowSeason } from '#lib/model/tvshow/TvshowSeason';
+import { TvshowEpisode } from '#lib/model/tvshow/TvshowEpisode';
+import { Anime } from '#lib/model/anime/Anime';
+import { AnimeEpisode } from '#lib/model/anime/AnimeEpisode';
+import { UserArtifactStatus } from '#lib/model/UserArtifact';
 
 // Mock global fetch
 const globalFetch = global.fetch;

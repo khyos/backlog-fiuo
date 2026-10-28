@@ -1,9 +1,9 @@
-import { TagType } from "$lib/model/Tag";
-import { TagDB } from "$lib/server/model/TagDB";
-import { User } from "$lib/model/User";
+import { TagType } from "#lib/model/Tag";
+import { TagDB } from "#lib/server/model/TagDB";
+import { User } from "#lib/model/User";
 import { error, json } from "@sveltejs/kit";
 import type { RequestEvent } from "./$types";
-import { ErrorUtil } from "$lib/util/ErrorUtil";
+import { ErrorUtil } from "#lib/util/ErrorUtil";
 
 export async function POST({ request, locals }: RequestEvent) {
     const user = User.deserialize(locals.user);

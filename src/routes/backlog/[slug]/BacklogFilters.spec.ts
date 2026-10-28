@@ -1,13 +1,13 @@
 import { describe, it, expect } from 'vitest';
-import { ArtifactType } from '$lib/model/Artifact';
-import { BacklogItem } from '$lib/model/BacklogItem';
-import { Game } from '$lib/model/game/Game';
-import { Movie } from '$lib/model/movie/Movie';
-import { Anime } from '$lib/model/anime/Anime';
-import { Tvshow } from '$lib/model/tvshow/Tvshow';
-import { Platform } from '$lib/model/game/Platform';
-import { UserArtifact, UserArtifactStatus } from '$lib/model/UserArtifact';
-import { BacklogOrder, BacklogRankingType } from '$lib/model/Backlog';
+import { ArtifactType } from '#lib/model/Artifact';
+import { BacklogItem } from '#lib/model/BacklogItem';
+import { Game } from '#lib/model/game/Game';
+import { Movie } from '#lib/model/movie/Movie';
+import { Anime } from '#lib/model/anime/Anime';
+import { Tvshow } from '#lib/model/tvshow/Tvshow';
+import { Platform } from '#lib/model/game/Platform';
+import { UserArtifact, UserArtifactStatus } from '#lib/model/UserArtifact';
+import { BacklogOrder, BacklogRankingType } from '#lib/model/Backlog';
 import type { BacklogFilters } from './BacklogFilters';
 import { createBacklogFilters, filterBacklogItems } from './BacklogFilters';
 

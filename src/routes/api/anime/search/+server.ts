@@ -1,4 +1,4 @@
-import { AnimeDB } from "$lib/server/model/anime/AnimeDB";
+import { AnimeDB } from "#lib/server/model/anime/AnimeDB";
 import { json } from "@sveltejs/kit";
 import type { RequestEvent } from "./$types";
 

@@ -1,6 +1,6 @@
 <script lang="ts">
-    import { ArtifactType } from "$lib/model/Artifact";
-    import { BacklogRankingType, BacklogType } from "$lib/model/Backlog";
+    import { ArtifactType } from "#lib/model/Artifact";
+    import { BacklogRankingType, BacklogType } from "#lib/model/Backlog";
     import { Alert, Button, Input, Label, Select } from "flowbite-svelte";
 
     let creationMessage: {

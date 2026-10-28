@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { get } from 'svelte/store';
 import { artifactItemStore, initializeStore, refreshArtifact, updateStatus, updateScore, updateDate, updateStartDate, updateEndDate } from './ArtifactItemStore';
-import { ArtifactType } from '$lib/model/Artifact';
-import { UserArtifactStatus } from '$lib/model/UserArtifact';
-import * as ArtifactService from '$lib/services/ArtifactService';
-import { Game } from '$lib/model/game/Game';
+import { ArtifactType } from '#lib/model/Artifact';
+import { UserArtifactStatus } from '#lib/model/UserArtifact';
+import * as ArtifactService from '#lib/services/ArtifactService';
+import { Game } from '#lib/model/game/Game';
 
 describe('ArtifactItemStore', () => {
     let mockArtifact: Game;

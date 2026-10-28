@@ -1,6 +1,6 @@
 import { error } from '@sveltejs/kit';
-import { User, UserRights } from '$lib/model/User';
-import { getServerLogs } from '$lib/server/ServerLog';
+import { User, UserRights } from '#lib/model/User';
+import { getServerLogs } from '#lib/server/ServerLog';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {

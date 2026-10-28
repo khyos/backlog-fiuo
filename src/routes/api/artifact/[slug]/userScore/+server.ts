@@ -1,5 +1,5 @@
-import { User } from "$lib/model/User";
-import { ArtifactDB } from "$lib/server/model/ArtifactDB";
+import { User } from "#lib/model/User";
+import { ArtifactDB } from "#lib/server/model/ArtifactDB";
 import { error, json } from "@sveltejs/kit";
 import type { RequestEvent } from "./$types";
 

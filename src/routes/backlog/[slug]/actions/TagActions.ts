@@ -1,10 +1,10 @@
-import type { BacklogItem } from "$lib/model/BacklogItem";
+import type { BacklogItem } from "#lib/model/BacklogItem";
 import { get } from "svelte/store";
 import { pageStore } from "../stores/PageStore";
 import { backlogStore, refreshBacklog } from "../stores/BacklogStore";
 import { tagStore } from "../stores/TagStore";
-import { Tag, type ITag } from "$lib/model/Tag";
-import { createTag as createTagAPI, addTag as addTagAPI, removeTag as removeTagAPI } from "$lib/services/TagService";
+import { Tag, type ITag } from "#lib/model/Tag";
+import { createTag as createTagAPI, addTag as addTagAPI, removeTag as removeTagAPI } from "#lib/services/TagService";
 
 export const fetchTags = async () => {
     const backlogStoreInst = get(backlogStore);

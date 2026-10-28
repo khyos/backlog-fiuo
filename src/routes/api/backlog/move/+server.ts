@@ -1,8 +1,8 @@
-import { User } from "$lib/model/User";
-import { BacklogDB } from "$lib/server/model/BacklogDB";
+import { User } from "#lib/model/User";
+import { BacklogDB } from "#lib/server/model/BacklogDB";
 import { error, json } from "@sveltejs/kit";
 import type { RequestEvent } from "./$types";
-import { ErrorUtil } from "$lib/util/ErrorUtil";
+import { ErrorUtil } from "#lib/util/ErrorUtil";
 
 export async function POST({ request, locals }: RequestEvent) {
     const user = User.deserialize(locals.user);

@@ -1,14 +1,14 @@
-import { MetaCritic } from "$lib/metacritic/MetaCritic";
-import { LinkType } from "$lib/model/Link";
-import { RatingType } from "$lib/model/Rating";
-import { User, UserRights } from "$lib/model/User";
-import { RottenTomatoes } from "$lib/rottentomatoes/RottenTomatoes";
-import { SensCritique } from "$lib/senscritique/SensCritique";
-import { LinkDB } from "$lib/server/model/LinkDB";
-import { RatingDB } from "$lib/server/model/RatingDB";
-import { SubscriptionServiceDB } from "$lib/server/model/SubscriptionServiceDB";
-import { MovieDB } from "$lib/server/model/movie/MovieDB";
-import { TMDB } from "$lib/tmdb/TMDB";
+import { MetaCritic } from "#lib/metacritic/MetaCritic";
+import { LinkType } from "#lib/model/Link";
+import { RatingType } from "#lib/model/Rating";
+import { User, UserRights } from "#lib/model/User";
+import { RottenTomatoes } from "#lib/rottentomatoes/RottenTomatoes";
+import { SensCritique } from "#lib/senscritique/SensCritique";
+import { LinkDB } from "#lib/server/model/LinkDB";
+import { RatingDB } from "#lib/server/model/RatingDB";
+import { SubscriptionServiceDB } from "#lib/server/model/SubscriptionServiceDB";
+import { MovieDB } from "#lib/server/model/movie/MovieDB";
+import { TMDB } from "#lib/tmdb/TMDB";
 import { error, json } from "@sveltejs/kit";
 import type { RequestEvent } from "./$types";
 

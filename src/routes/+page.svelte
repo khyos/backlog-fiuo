@@ -8,7 +8,7 @@
         ImageSolid,
         StarSolid
     } from "flowbite-svelte-icons";
-    import { ArtifactType } from "$lib/model/Artifact";
+    import { ArtifactType } from "#lib/model/Artifact";
 </script>
 
 <svelte:head>

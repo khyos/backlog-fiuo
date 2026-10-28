@@ -1,8 +1,8 @@
 import { error } from '@sveltejs/kit';
-import { User } from '$lib/model/User';
-import { getDbRows } from '$lib/server/database';
-import { ArtifactType } from '$lib/model/Artifact';
-import { UserArtifactStatus } from '$lib/model/UserArtifact';
+import { User } from '#lib/model/User';
+import { getDbRows } from '#lib/server/database';
+import { ArtifactType } from '#lib/model/Artifact';
+import { UserArtifactStatus } from '#lib/model/UserArtifact';
 import type { PageServerLoad } from './$types';
 
 export type AnimeWithMissingEpisodeDates = {

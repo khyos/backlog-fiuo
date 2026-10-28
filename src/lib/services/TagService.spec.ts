@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createTag, addTag, removeTag } from './TagService';
-import { ArtifactType } from '$lib/model/Artifact';
+import { ArtifactType } from '#lib/model/Artifact';
 
 describe('TagService', () => {
     const mockFetch = vi.fn();

@@ -1,7 +1,7 @@
 import { json } from '@sveltejs/kit';
-import { User } from '$lib/model/User';
-import { getDbRows } from '$lib/server/database';
-import { ArtifactType } from '$lib/model/Artifact';
+import { User } from '#lib/model/User';
+import { getDbRows } from '#lib/server/database';
+import { ArtifactType } from '#lib/model/Artifact';
 import type { RequestHandler } from './$types';
 
 type DataAnomalyEntry = {

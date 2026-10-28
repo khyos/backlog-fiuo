@@ -1,7 +1,7 @@
-import { User, UserRights } from '$lib/model/User';
-import { LinkType } from '$lib/model/Link';
-import { ArtifactDB } from '$lib/server/model/ArtifactDB';
-import { LinkDB } from '$lib/server/model/LinkDB';
+import { User, UserRights } from '#lib/model/User';
+import { LinkType } from '#lib/model/Link';
+import { ArtifactDB } from '#lib/server/model/ArtifactDB';
+import { LinkDB } from '#lib/server/model/LinkDB';
 import { JSDOM } from 'jsdom';
 import { error, json } from '@sveltejs/kit';
 import type { RequestEvent } from './$types';

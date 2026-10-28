@@ -1,16 +1,16 @@
-import { ArtifactType, type IArtifactDB } from "$lib/model/Artifact";
-import { BacklogOrder, BacklogRankingType } from "$lib/model/Backlog";
-import { BacklogItem } from "$lib/model/BacklogItem";
-import { Genre } from "$lib/model/Genre";
-import { Link } from "$lib/model/Link";
-import { Rating } from "$lib/model/Rating";
-import { Movie } from "$lib/model/movie/Movie";
-import { type IMovieReleaseDate, type IMovieReleaseDateDB } from "$lib/model/movie/MovieReleaseDate";
+import { ArtifactType, type IArtifactDB } from "#lib/model/Artifact";
+import { BacklogOrder, BacklogRankingType } from "#lib/model/Backlog";
+import { BacklogItem } from "#lib/model/BacklogItem";
+import { Genre } from "#lib/model/Genre";
+import { Link } from "#lib/model/Link";
+import { Rating } from "#lib/model/Rating";
+import { Movie } from "#lib/model/movie/Movie";
+import { type IMovieReleaseDate, type IMovieReleaseDateDB } from "#lib/model/movie/MovieReleaseDate";
 import { ArtifactDB } from "../ArtifactDB";
 import { BacklogItemDB } from "../BacklogItemDB";
 import { LinkDB } from "../LinkDB";
 import { RatingDB } from "../RatingDB";
-import { runDbQuery, getDbRows } from "$lib/server/database";
+import { runDbQuery, getDbRows } from "#lib/server/database";
 
 export class MovieDB {
     // ========================================

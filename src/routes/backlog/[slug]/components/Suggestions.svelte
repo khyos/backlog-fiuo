@@ -4,11 +4,11 @@
         Listgroup,
         ListgroupItem,
     } from "flowbite-svelte";
-    import { addBacklogItem } from "$lib/services/BacklogService";
+    import { addBacklogItem } from "#lib/services/BacklogService";
     import { backlogStore, refreshBacklog } from "../stores/BacklogStore";
     import { PlusOutline } from "flowbite-svelte-icons";
-    import type { Artifact } from "$lib/model/Artifact";
-    import { TimeUtil } from "$lib/util/TimeUtil";
+    import type { Artifact } from "#lib/model/Artifact";
+    import { TimeUtil } from "#lib/util/TimeUtil";
     
     export let canEdit: boolean;
 

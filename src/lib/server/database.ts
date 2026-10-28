@@ -8,7 +8,7 @@ export async function getDbPath(): Promise<string> {
     if (process.env.VITEST || process.env.NODE_ENV === 'test') {
         return './test-artifacts.db';
     }
-    const { DB_PATH } = await import('$env/static/private');
+    const { DB_PATH } = await import('$app/env/private');
     return DB_PATH;
 }
 

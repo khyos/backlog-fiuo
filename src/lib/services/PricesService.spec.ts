@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { fetchPrices } from './PricesService';
-import { ArtifactType } from '$lib/model/Artifact';
+import { ArtifactType } from '#lib/model/Artifact';
 
 describe('PricesService', () => {
     const mockFetch = vi.fn();

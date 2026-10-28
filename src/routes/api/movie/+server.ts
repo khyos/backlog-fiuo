@@ -1,15 +1,15 @@
-import { MetaCritic } from "$lib/metacritic/MetaCritic";
-import { Link, LinkType } from "$lib/model/Link";
-import { Rating, RatingType } from "$lib/model/Rating";
-import { User, UserRights } from "$lib/model/User";
-import { RottenTomatoes } from "$lib/rottentomatoes/RottenTomatoes";
-import { SensCritique } from "$lib/senscritique/SensCritique";
-import { LinkDB } from "$lib/server/model/LinkDB";
-import { MovieDB } from "$lib/server/model/movie/MovieDB";
-import { TMDB } from "$lib/tmdb/TMDB";
+import { MetaCritic } from "#lib/metacritic/MetaCritic";
+import { Link, LinkType } from "#lib/model/Link";
+import { Rating, RatingType } from "#lib/model/Rating";
+import { User, UserRights } from "#lib/model/User";
+import { RottenTomatoes } from "#lib/rottentomatoes/RottenTomatoes";
+import { SensCritique } from "#lib/senscritique/SensCritique";
+import { LinkDB } from "#lib/server/model/LinkDB";
+import { MovieDB } from "#lib/server/model/movie/MovieDB";
+import { TMDB } from "#lib/tmdb/TMDB";
 import { error, json } from "@sveltejs/kit";
 import type { RequestEvent } from "./$types";
-import { ArtifactType } from "$lib/model/Artifact";
+import { ArtifactType } from "#lib/model/Artifact";
 
 export async function POST({ request, locals }: RequestEvent) {
     const user = User.deserialize(locals.user);

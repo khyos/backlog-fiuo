@@ -6,10 +6,10 @@
         Select, 
         TabItem
     } from "flowbite-svelte";
-    import DoubleRange from "$lib/ui/DoubleRange.svelte";
-    import { ArtifactType } from "$lib/model/Artifact";
-    import type { Genre } from "$lib/model/Genre";
-    import type { Platform } from "$lib/model/game/Platform";
+    import DoubleRange from "#lib/ui/DoubleRange.svelte";
+    import { ArtifactType } from "#lib/model/Artifact";
+    import type { Genre } from "#lib/model/Genre";
+    import type { Platform } from "#lib/model/game/Platform";
     import { userListStore } from "../stores/UserListStore";
     
     export let selectedTab: string = "filters";

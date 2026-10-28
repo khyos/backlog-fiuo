@@ -1,4 +1,4 @@
-import type { Tag } from '$lib/model/Tag';
+import type { Tag } from '#lib/model/Tag';
 import { writable } from 'svelte/store';
 
 export type TagStore = {

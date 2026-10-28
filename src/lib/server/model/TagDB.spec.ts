@@ -1,8 +1,8 @@
 import { describe, expect, test, beforeAll, afterAll, beforeEach } from 'vitest';
 import { runDbQueriesParallel } from '../database';
 import { TagDB } from './TagDB';
-import { TagType } from '$lib/model/Tag';
-import { ArtifactType } from '$lib/model/Artifact';
+import { TagType } from '#lib/model/Tag';
+import { ArtifactType } from '#lib/model/Artifact';
 
 describe('TagDB', () => {
     const cleanupTestData = async () => {

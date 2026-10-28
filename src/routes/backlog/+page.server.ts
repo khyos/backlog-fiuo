@@ -1,5 +1,5 @@
-import { User, UserRights } from '$lib/model/User.js';
-import { BacklogDB } from '$lib/server/model/BacklogDB.js';
+import { User, UserRights } from '#lib/model/User.js';
+import { BacklogDB } from '#lib/server/model/BacklogDB.js';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ url, locals }) => {

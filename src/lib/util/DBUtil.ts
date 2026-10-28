@@ -1,20 +1,21 @@
-import { IGDB } from "$lib/igdb/IGDB";
-import { MAL } from "$lib/mal/MAL";
-import { createDatabase } from "$lib/server/database";
-import { ArtifactDB } from "$lib/server/model/ArtifactDB";
-import { BacklogDB } from "$lib/server/model/BacklogDB";
-import { LinkDB } from "$lib/server/model/LinkDB";
-import { RatingDB } from "$lib/server/model/RatingDB";
-import { SubscriptionServiceDB } from "$lib/server/model/SubscriptionServiceDB";
-import { TagDB } from "$lib/server/model/TagDB";
-import { UserArtifactOwnershipDB } from "$lib/server/model/UserArtifactOwnershipDB";
-import { UserDB } from "$lib/server/model/UserDB";
-import { AnimeDB } from "$lib/server/model/anime/AnimeDB";
-import { GameDB } from "$lib/server/model/game/GameDB";
-import { PlatformDB } from "$lib/server/model/game/PlatformDB";
-import { MovieDB } from "$lib/server/model/movie/MovieDB";
-import { TvshowDB } from "$lib/server/model/tvshow/TvshowDB";
-import { TMDB } from "$lib/tmdb/TMDB";
+import { IGDB } from "#lib/igdb/IGDB";
+import { MAL } from "#lib/mal/MAL";
+import { createDatabase } from "#lib/server/database";
+import { ArtifactDB } from "#lib/server/model/ArtifactDB";
+import { BacklogDB } from "#lib/server/model/BacklogDB";
+import { LinkDB } from "#lib/server/model/LinkDB";
+import { RatingDB } from "#lib/server/model/RatingDB";
+import { SubscriptionServiceDB } from "#lib/server/model/SubscriptionServiceDB";
+import { TagDB } from "#lib/server/model/TagDB";
+import { TierListDB } from "#lib/server/model/TierListDB";
+import { UserArtifactOwnershipDB } from "#lib/server/model/UserArtifactOwnershipDB";
+import { UserDB } from "#lib/server/model/UserDB";
+import { AnimeDB } from "#lib/server/model/anime/AnimeDB";
+import { GameDB } from "#lib/server/model/game/GameDB";
+import { PlatformDB } from "#lib/server/model/game/PlatformDB";
+import { MovieDB } from "#lib/server/model/movie/MovieDB";
+import { TvshowDB } from "#lib/server/model/tvshow/TvshowDB";
+import { TMDB } from "#lib/tmdb/TMDB";
 
 export class DBUtil {
     static async initDb(): Promise<void> {
@@ -43,6 +44,9 @@ export class DBUtil {
             SubscriptionServiceDB.createArtifactSubscriptionTable(),
             SubscriptionServiceDB.createUserSubscriptionTable(),
             TagDB.createTagTable(),
+            TierListDB.createTierListTable(),
+            TierListDB.createTierListTierTable(),
+            TierListDB.createTierListItemTable(),
             TvshowDB.createTvshowGenreTable(),
             TvshowDB.createTvshowTvshowGenreTable(),
             UserArtifactOwnershipDB.createUserArtifactOwnershipTable(),

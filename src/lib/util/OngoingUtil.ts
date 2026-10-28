@@ -1,6 +1,6 @@
-import type { Artifact } from '$lib/model/Artifact';
-import { ArtifactDB } from '$lib/server/model/ArtifactDB';
-import { UserArtifactStatus } from '$lib/model/UserArtifact';
+import type { Artifact } from '#lib/model/Artifact';
+import { ArtifactDB } from '#lib/server/model/ArtifactDB';
+import { UserArtifactStatus } from '#lib/model/UserArtifact';
 
 /**
  * Generic function to handle ongoing artifacts processing

@@ -1,6 +1,6 @@
-import { IGDB_CLIENT_ID, IGDB_CLIENT_SECRET } from "$env/static/private";
-import { GameDB } from "$lib/server/model/game/GameDB";
-import { PlatformDB } from "$lib/server/model/game/PlatformDB";
+import { IGDB_CLIENT_ID, IGDB_CLIENT_SECRET } from "$app/env/private";
+import { GameDB } from "#lib/server/model/game/GameDB";
+import { PlatformDB } from "#lib/server/model/game/PlatformDB";
 
 export type IGDBSearchGameResult = {
     id: number

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { fetchBacklog, fetchBacklogs, addBacklogItem, deleteBacklogItem, moveBacklogItemToOtherBacklog } from './BacklogService';
-import { ArtifactType } from '$lib/model/Artifact';
+import { ArtifactType } from '#lib/model/Artifact';
 
 describe('BacklogService', () => {
     const mockFetch = vi.fn();

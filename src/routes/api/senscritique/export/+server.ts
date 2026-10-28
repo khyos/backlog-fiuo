@@ -1,5 +1,5 @@
-import { exportUserCollection, UNIVERSE_ALIASES } from '$lib/senscritique/SensCritiqueExport';
-import { User, UserRights } from '$lib/model/User';
+import { exportUserCollection, UNIVERSE_ALIASES } from '#lib/senscritique/SensCritiqueExport';
+import { User, UserRights } from '#lib/model/User';
 import { error, json } from '@sveltejs/kit';
 import type { RequestEvent } from './$types';
 

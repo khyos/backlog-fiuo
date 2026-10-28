@@ -1,7 +1,7 @@
-import { LinkType } from "$lib/model/Link";
-import { MovieDB } from "$lib/server/model/movie/MovieDB";
-import { TMDB } from "$lib/tmdb/TMDB";
-import { User } from "$lib/model/User";
+import { LinkType } from "#lib/model/Link";
+import { MovieDB } from "#lib/server/model/movie/MovieDB";
+import { TMDB } from "#lib/tmdb/TMDB";
+import { User } from "#lib/model/User";
 import { error, json } from "@sveltejs/kit";
 import type { RequestEvent } from "./$types";
 

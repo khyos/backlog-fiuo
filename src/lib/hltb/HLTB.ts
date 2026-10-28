@@ -32,7 +32,7 @@ export class HLTB {
         let dom;
         try {
             dom = new JSDOM(htmlContent);
-            const timeTable = dom.window.document.querySelector('[class*="GameTimeTable-module"][class*="game_main_table"]');
+            const timeTable = dom.window.document.querySelector('[class*="game_main_table"]');
             const durationRows = timeTable?.children[1].children;
 
             let main;
@@ -63,7 +63,7 @@ export class HLTB {
 
     static async getGameDuration(gameId: string): Promise<number> {
         try {
-            const response = await got(`https://howlongtobeat.com/game?id=${gameId}`);
+            const response = await got(`https://howlongtobeat.com/game/${gameId}`);
             const durationText = this.extractDurationFromHtml(response.body);
             return this.parseDurationText(durationText || '');
         } catch (e) {

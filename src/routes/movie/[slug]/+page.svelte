@@ -1,8 +1,8 @@
 <script lang="ts">
-    import { Movie } from "$lib/model/movie/Movie";
-    import ArtifactItem from "$lib/components/ArtifactItem.svelte";
+    import { Movie } from "#lib/model/movie/Movie";
+    import ArtifactItem from "#lib/components/ArtifactItem.svelte";
     import type { PageData } from "./$types";
-    import { initializeStore } from "$lib/stores/ArtifactItemStore";
+    import { initializeStore } from "#lib/stores/ArtifactItemStore";
 
     export let data: PageData;
     let movie = Movie.fromJSON(data.movie);

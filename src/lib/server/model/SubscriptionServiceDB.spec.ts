@@ -3,8 +3,8 @@ import { runDbQueries } from '../database';
 import { SubscriptionServiceDB } from './SubscriptionServiceDB';
 import { UserDB } from './UserDB';
 import { ArtifactDB } from './ArtifactDB';
-import { ArtifactType } from '$lib/model/Artifact';
-import { SubscriptionService } from '$lib/model/SubscriptionService';
+import { ArtifactType } from '#lib/model/Artifact';
+import { SubscriptionService } from '#lib/model/SubscriptionService';
 
 describe('SubscriptionServiceDB', () => {
     let userId: number;

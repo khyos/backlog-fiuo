@@ -1,5 +1,5 @@
-import { User, UserRights } from '$lib/model/User.js';
-import { DBUtil } from '$lib/util/DBUtil.js';
+import { User, UserRights } from '#lib/model/User.js';
+import { DBUtil } from '#lib/util/DBUtil.js';
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 

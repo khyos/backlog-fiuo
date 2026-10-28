@@ -2,8 +2,8 @@
     import { Heading, P } from "flowbite-svelte";
     import { CheckCircleSolid, CreditCardSolid } from "flowbite-svelte-icons";
     import type { PageData } from "./$types";
-    import type { ISubscriptionService } from "$lib/model/SubscriptionService";
-    import { ArtifactType } from "$lib/model/Artifact";
+    import type { ISubscriptionService } from "#lib/model/SubscriptionService";
+    import { ArtifactType } from "#lib/model/Artifact";
 
     export let data: PageData;
 

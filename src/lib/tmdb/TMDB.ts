@@ -1,10 +1,10 @@
-import { TMDB_READ_ACCESS_TOKEN } from "$env/static/private";
-import { MovieDB } from "$lib/server/model/movie/MovieDB";
-import { TvshowDB } from "$lib/server/model/tvshow/TvshowDB";
-import type { SearchResult } from "$lib/types/SearchResult";
-import { ErrorUtil } from "$lib/util/ErrorUtil";
-import { TextUtil } from "$lib/util/TextUtil";
-import { type IMovieReleaseDate, TMDB_RELEASE_TYPE } from "$lib/model/movie/MovieReleaseDate";
+import { TMDB_READ_ACCESS_TOKEN } from "$app/env/private";
+import { MovieDB } from "#lib/server/model/movie/MovieDB";
+import { TvshowDB } from "#lib/server/model/tvshow/TvshowDB";
+import type { SearchResult } from "#lib/types/SearchResult";
+import { ErrorUtil } from "#lib/util/ErrorUtil";
+import { TextUtil } from "#lib/util/TextUtil";
+import { type IMovieReleaseDate, TMDB_RELEASE_TYPE } from "#lib/model/movie/MovieReleaseDate";
 
 type TMBDMovie = {
     id: number,

@@ -1,5 +1,5 @@
-import type { BacklogItem } from '$lib/model/BacklogItem';
-import { fetchBacklogs } from '$lib/services/BacklogService';
+import type { BacklogItem } from '#lib/model/BacklogItem';
+import { fetchBacklogs } from '#lib/services/BacklogService';
 import type { SelectOptionType } from 'flowbite-svelte';
 import { get, writable } from 'svelte/store';
 import { backlogStore } from './BacklogStore';

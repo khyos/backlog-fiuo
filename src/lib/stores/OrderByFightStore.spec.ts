@@ -1,14 +1,14 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
-import { ArtifactType } from '$lib/model/Artifact';
-import { Game } from '$lib/model/game/Game';
-import { BacklogItem } from '$lib/model/BacklogItem';
-import { Backlog, BacklogRankingType, BacklogType } from '$lib/model/Backlog';
-import * as ArtifactService from '$lib/services/ArtifactService';
+import { ArtifactType } from '#lib/model/Artifact';
+import { Game } from '#lib/model/game/Game';
+import { BacklogItem } from '#lib/model/BacklogItem';
+import { Backlog, BacklogRankingType, BacklogType } from '#lib/model/Backlog';
+import * as ArtifactService from '#lib/services/ArtifactService';
 import { get } from 'svelte/store';
 import { backlogStore } from '../../routes/backlog/[slug]/stores/BacklogStore';
 import { pageStore } from '../../routes/backlog/[slug]/stores/PageStore';
 import { orderByFightStore, startOrderByFight, getRandomItemA, getRandomItemB, updateSimilarElo, updateItemA } from './OrderByFightStore';
-import { Tag, TagType } from '$lib/model/Tag';
+import { Tag, TagType } from '#lib/model/Tag';
 import { createBacklogFilters } from '../../routes/backlog/[slug]/BacklogFilters';
 
 describe('OrderByFightStore', () => {

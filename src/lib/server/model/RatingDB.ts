@@ -1,4 +1,4 @@
-import { Rating, type IRatingDB } from "$lib/model/Rating";
+import { Rating, type IRatingDB } from "#lib/model/Rating";
 import { getDbRow, getDbRows, runDbQuery } from "../database";
 
 export class RatingDB {

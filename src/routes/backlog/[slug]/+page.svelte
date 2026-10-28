@@ -14,19 +14,19 @@
         CheckCircleSolid,
         PlusOutline,
     } from "flowbite-svelte-icons";
-    import { Tag } from "$lib/model/Tag";
+    import { Tag } from "#lib/model/Tag";
     import type { PageData } from "./$types";
-    import { deleteBacklogItem, moveBacklogItemToOtherBacklog as moveBacklogItemToOtherBacklogAPI } from "$lib/services/BacklogService";
-    import { fetchPrices } from "$lib/services/PricesService";
-    import type { Price } from "$lib/types/itad/Price";
+    import { deleteBacklogItem, moveBacklogItemToOtherBacklog as moveBacklogItemToOtherBacklogAPI } from "#lib/services/BacklogService";
+    import { fetchPrices } from "#lib/services/PricesService";
+    import type { Price } from "#lib/types/itad/Price";
     import BacklogDrawer from "./components/BacklogDrawer.svelte";
-    import { TimeUtil } from "$lib/util/TimeUtil";
+    import { TimeUtil } from "#lib/util/TimeUtil";
     import BacklogItemComp from "./components/BacklogItemComp.svelte";
     import { pageStore, hideMoveToBacklog, hideMoveToRank, toggleDrawer } from "./stores/PageStore";
     import { copyAiPrompt, filteredBacklogItems, initializeStore, refreshBacklog } from "./stores/BacklogStore";
     import { tagStore } from "./stores/TagStore";
-    import { Genre } from "$lib/model/Genre";
-    import { Platform } from "$lib/model/game/Platform";
+    import { Genre } from "#lib/model/Genre";
+    import { Platform } from "#lib/model/game/Platform";
     import { get } from "svelte/store";
     import { addTag, createTag, fetchTags } from "./actions/TagActions";
     import { onMount } from "svelte";
@@ -112,6 +112,19 @@
         prices = await fetchPrices(data.backlog.artifactType, artifactIds);
         await refreshBacklog();
     }
+
+    const createTierList = async () => {
+        const response = await fetch(`/api/tierlist`, {
+            method: "POST",
+            body: JSON.stringify({ backlogId: data.backlog.id })
+        });
+        if (!response.ok) {
+            console.error("Failed to create tier list");
+            return;
+        }
+        const { id } = await response.json();
+        window.location.href = `/tierlist/${id}`;
+    }
 </script>
 
 <div bind:this={sentinel} class="h-px -mb-px"></div>
@@ -134,6 +147,9 @@
         {/if}
 
         <Button size="xs" class="mr-1" onclick={copyAiPrompt}>AI</Button>
+        {#if data.canEdit}
+            <Button size="xs" class="mr-1" onclick={createTierList}>Create Tier List</Button>
+        {/if}
         <Button size="xs" onclick={toggleDrawer}>Filters / Add</Button>
     </div>
     {#each $filteredBacklogItems as backlogItem (backlogItem.artifact.id)}

@@ -1,8 +1,8 @@
-import { ArtifactType, type IArtifactDB } from "$lib/model/Artifact";
-import { AuthorizationStatus } from "$lib/model/AuthorizationStatus";
-import { Backlog, BacklogOrder, BacklogRankingType, BacklogType } from "$lib/model/Backlog";
-import { BacklogItem } from "$lib/model/BacklogItem";
-import { UserRights, type User } from "$lib/model/User";
+import { ArtifactType, type IArtifactDB } from "#lib/model/Artifact";
+import { AuthorizationStatus } from "#lib/model/AuthorizationStatus";
+import { Backlog, BacklogOrder, BacklogRankingType, BacklogType } from "#lib/model/Backlog";
+import { BacklogItem } from "#lib/model/BacklogItem";
+import { UserRights, type User } from "#lib/model/User";
 import { getDbRow, getDbRows, runDbInsert, runDbQuery } from "../database";
 import { AnimeDB } from "./anime/AnimeDB";
 import { BacklogItemDB } from "./BacklogItemDB";
