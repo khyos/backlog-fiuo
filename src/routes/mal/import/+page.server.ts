@@ -1,4 +1,4 @@
-import { User, UserRights } from '$lib/model/User';
+import { User, UserRights } from '#lib/model/User';
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 

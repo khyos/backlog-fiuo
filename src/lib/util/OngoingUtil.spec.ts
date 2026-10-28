@@ -1,11 +1,11 @@
 import { describe, expect, test, beforeEach, vi } from 'vitest';
-import { Tvshow } from '$lib/model/tvshow/Tvshow';
-import { TvshowSeason } from '$lib/model/tvshow/TvshowSeason';
-import { TvshowEpisode } from '$lib/model/tvshow/TvshowEpisode';
-import { ArtifactType } from '$lib/model/Artifact';
-import { UserArtifact, UserArtifactStatus } from '$lib/model/UserArtifact';
+import { Tvshow } from '#lib/model/tvshow/Tvshow';
+import { TvshowSeason } from '#lib/model/tvshow/TvshowSeason';
+import { TvshowEpisode } from '#lib/model/tvshow/TvshowEpisode';
+import { ArtifactType } from '#lib/model/Artifact';
+import { UserArtifact, UserArtifactStatus } from '#lib/model/UserArtifact';
 import { processOngoingArtifacts } from './OngoingUtil';
-import { ArtifactDB } from '$lib/server/model/ArtifactDB';
+import { ArtifactDB } from '#lib/server/model/ArtifactDB';
 
 describe('OngoingUtil', () => {
     let tvshow: Tvshow;

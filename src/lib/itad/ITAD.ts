@@ -1,5 +1,5 @@
-import { ITA_APP_ID } from "$env/static/private";
-import type { SearchResult } from "$lib/types/SearchResult";
+import { ITA_APP_ID } from "$app/env/private";
+import type { SearchResult } from "#lib/types/SearchResult";
 
 export type ITAD_Price = {
     id: string,

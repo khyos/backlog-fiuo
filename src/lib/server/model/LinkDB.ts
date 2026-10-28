@@ -1,6 +1,6 @@
-import type { ArtifactType } from "$lib/model/Artifact";
-import { Link, LinkType, type ILinkDB } from "$lib/model/Link";
-import { getDbRow, getDbRows, runDbQuery } from "$lib/server/database";
+import type { ArtifactType } from "#lib/model/Artifact";
+import { Link, LinkType, type ILinkDB } from "#lib/model/Link";
+import { getDbRow, getDbRows, runDbQuery } from "#lib/server/database";
 
 export class LinkDB {
     static async addLink(artifactId: number, type: string, url: string): Promise<void> {

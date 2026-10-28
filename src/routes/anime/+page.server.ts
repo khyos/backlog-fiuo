@@ -1,5 +1,5 @@
-import { User, UserRights } from '$lib/model/User.js';
-import { AnimeDB } from '$lib/server/model/anime/AnimeDB.js';
+import { User, UserRights } from '#lib/model/User.js';
+import { AnimeDB } from '#lib/server/model/anime/AnimeDB.js';
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types.js';
 

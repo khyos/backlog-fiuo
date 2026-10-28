@@ -1,4 +1,4 @@
-import type { Artifact } from '$lib/model/Artifact';
+import type { Artifact } from '#lib/model/Artifact';
 import { writable } from 'svelte/store';
 
 export type UserListPageStore = {

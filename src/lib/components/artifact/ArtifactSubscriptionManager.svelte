@@ -1,6 +1,6 @@
 <script lang="ts">
-    import type { ISubscriptionService } from "$lib/model/SubscriptionService";
-    import { artifactItemStore, addArtifactSubscription, removeArtifactSubscription } from "$lib/stores/ArtifactItemStore";
+    import type { ISubscriptionService } from "#lib/model/SubscriptionService";
+    import { artifactItemStore, addArtifactSubscription, removeArtifactSubscription } from "#lib/stores/ArtifactItemStore";
     import {
         Button,
         Modal,

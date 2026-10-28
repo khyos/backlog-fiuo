@@ -11,8 +11,8 @@
         CheckCircleOutline,
         PlusOutline,
     } from "flowbite-svelte-icons";
-    import type { Artifact } from "$lib/model/Artifact";
-    import { addBacklogItem } from "$lib/services/BacklogService";
+    import type { Artifact } from "#lib/model/Artifact";
+    import { addBacklogItem } from "#lib/services/BacklogService";
     import { backlogStore, refreshBacklog } from "../stores/BacklogStore";
     import Suggestions from "./Suggestions.svelte";
     

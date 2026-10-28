@@ -1,8 +1,8 @@
-import { MetaCritic } from "$lib/metacritic/MetaCritic";
-import { User, UserRights } from "$lib/model/User";
-import { RottenTomatoes } from "$lib/rottentomatoes/RottenTomatoes";
-import { SensCritique } from "$lib/senscritique/SensCritique";
-import { TMDB } from "$lib/tmdb/TMDB";
+import { MetaCritic } from "#lib/metacritic/MetaCritic";
+import { User, UserRights } from "#lib/model/User";
+import { RottenTomatoes } from "#lib/rottentomatoes/RottenTomatoes";
+import { SensCritique } from "#lib/senscritique/SensCritique";
+import { TMDB } from "#lib/tmdb/TMDB";
 import { error, json } from "@sveltejs/kit";
 import type { RequestEvent } from "./$types";
 

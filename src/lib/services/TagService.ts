@@ -1,4 +1,4 @@
-import type { ArtifactType } from "$lib/model/Artifact";
+import type { ArtifactType } from "#lib/model/Artifact";
 
 export async function createTag(id: string, artifactType: ArtifactType): Promise<void> {
     const response = await fetch(`/api/tag`, {

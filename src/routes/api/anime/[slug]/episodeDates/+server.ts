@@ -1,9 +1,9 @@
-import { User } from "$lib/model/User";
-import { ArtifactDB } from "$lib/server/model/ArtifactDB";
-import { AnimeDB } from "$lib/server/model/anime/AnimeDB";
-import { UserArtifactStatus } from "$lib/model/UserArtifact";
+import { User } from "#lib/model/User";
+import { ArtifactDB } from "#lib/server/model/ArtifactDB";
+import { AnimeDB } from "#lib/server/model/anime/AnimeDB";
+import { UserArtifactStatus } from "#lib/model/UserArtifact";
 import { error, json } from "@sveltejs/kit";
-import { getDbRows } from "$lib/server/database";
+import { getDbRows } from "#lib/server/database";
 import type { RequestEvent } from "./$types";
 
 interface EpisodeRow {

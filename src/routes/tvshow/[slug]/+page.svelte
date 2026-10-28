@@ -1,8 +1,8 @@
 <script lang="ts">
-    import { Tvshow } from "$lib/model/tvshow/Tvshow";
-    import ArtifactItem from "$lib/components/ArtifactItem.svelte";
+    import { Tvshow } from "#lib/model/tvshow/Tvshow";
+    import ArtifactItem from "#lib/components/ArtifactItem.svelte";
     import type { PageData } from "./$types";
-    import { initializeStore } from "$lib/stores/ArtifactItemStore";
+    import { initializeStore } from "#lib/stores/ArtifactItemStore";
 
 
     export let data: PageData;

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { openLink } from './LinkService';
-import { ArtifactType } from '$lib/model/Artifact';
-import type { LinkType } from '$lib/model/Link';
+import { ArtifactType } from '#lib/model/Artifact';
+import type { LinkType } from '#lib/model/Link';
 
 describe('LinkService', () => {
     const mockFetch = vi.fn();

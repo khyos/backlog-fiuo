@@ -1,7 +1,7 @@
 <script lang="ts">
-    import { ArtifactType } from "$lib/model/Artifact";
-    import { UserArtifactStatus } from "$lib/model/UserArtifact";
-    import { artifactItemStore, updateStatus, updateScore, updateDate, updateStartDate, updateEndDate } from "$lib/stores/ArtifactItemStore";
+    import { ArtifactType } from "#lib/model/Artifact";
+    import { UserArtifactStatus } from "#lib/model/UserArtifact";
+    import { artifactItemStore, updateStatus, updateScore, updateDate, updateStartDate, updateEndDate } from "#lib/stores/ArtifactItemStore";
     import {
         Label,
         Input,

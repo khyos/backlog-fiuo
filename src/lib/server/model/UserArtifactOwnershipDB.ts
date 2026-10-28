@@ -1,5 +1,5 @@
-import { UserArtifactOwnership, type IUserArtifactOwnershipDB } from "$lib/model/UserArtifactOwnership";
-import { getDbRows, runDbInsert, runDbQuery } from "$lib/server/database";
+import { UserArtifactOwnership, type IUserArtifactOwnershipDB } from "#lib/model/UserArtifactOwnership";
+import { getDbRows, runDbInsert, runDbQuery } from "#lib/server/database";
 
 export class UserArtifactOwnershipDB {
     static async createUserArtifactOwnershipTable(): Promise<void> {

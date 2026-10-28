@@ -1,5 +1,5 @@
-import { JWT_ACCESS_SECRET } from "$env/static/private";
-import { User, UserRole } from "$lib/model/User";
+import { JWT_ACCESS_SECRET } from "$app/env/private";
+import { User, UserRole } from "#lib/model/User";
 import { getDbRow, runDbQuery } from "../database";
 import bcrypt from "bcrypt";
 import jwt from 'jsonwebtoken';

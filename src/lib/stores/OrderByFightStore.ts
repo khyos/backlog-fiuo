@@ -1,10 +1,10 @@
-import { ArtifactType } from '$lib/model/Artifact';
-import type { BacklogItem } from '$lib/model/BacklogItem';
-import { getPosterURL } from '$lib/services/ArtifactService';
-import { OrderUtil } from '$lib/util/OrderUtil';
+import { ArtifactType } from '#lib/model/Artifact';
+import type { BacklogItem } from '#lib/model/BacklogItem';
+import { getPosterURL } from '#lib/services/ArtifactService';
+import { OrderUtil } from '#lib/util/OrderUtil';
 import { get, writable } from 'svelte/store';
 import { backlogStore } from '../../routes/backlog/[slug]/stores/BacklogStore';
-import { BacklogRankingType } from '$lib/model/Backlog';
+import { BacklogRankingType } from '#lib/model/Backlog';
 import { pageStore } from '../../routes/backlog/[slug]/stores/PageStore';
 
 export type OrderByFightStore = {

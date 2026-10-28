@@ -1,12 +1,12 @@
-import { Anime } from "$lib/model/anime/Anime";
-import { AnimeEpisode } from "$lib/model/anime/AnimeEpisode";
-import { Artifact, ArtifactType, type ArtifactAsyncInfo, type IArtifact } from "$lib/model/Artifact";
-import { Game, type IGame } from "$lib/model/game/Game";
-import { Movie } from "$lib/model/movie/Movie";
-import { Tvshow } from "$lib/model/tvshow/Tvshow";
-import { TvshowEpisode } from "$lib/model/tvshow/TvshowEpisode";
-import { TvshowSeason } from "$lib/model/tvshow/TvshowSeason";
-import { UserArtifact, UserArtifactStatus, type IUserArtifact } from "$lib/model/UserArtifact";
+import { Anime } from "#lib/model/anime/Anime";
+import { AnimeEpisode } from "#lib/model/anime/AnimeEpisode";
+import { Artifact, ArtifactType, type ArtifactAsyncInfo, type IArtifact } from "#lib/model/Artifact";
+import { Game, type IGame } from "#lib/model/game/Game";
+import { Movie } from "#lib/model/movie/Movie";
+import { Tvshow } from "#lib/model/tvshow/Tvshow";
+import { TvshowEpisode } from "#lib/model/tvshow/TvshowEpisode";
+import { TvshowSeason } from "#lib/model/tvshow/TvshowSeason";
+import { UserArtifact, UserArtifactStatus, type IUserArtifact } from "#lib/model/UserArtifact";
 
 export async function getAsyncInfo(artifactType: ArtifactType, artifactId: number) {
     const asyncInfo: ArtifactAsyncInfo = {

@@ -1,4 +1,4 @@
-import { runDbInsert, runDbQuery } from "$lib/server/database";
+import { runDbInsert, runDbQuery } from "#lib/server/database";
 
 export class PlatformDB {
     static async createPlatformTable() {

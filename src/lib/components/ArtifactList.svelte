@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { IArtifact, ArtifactType } from '$lib/model/Artifact';
+    import type { IArtifact, ArtifactType } from '#lib/model/Artifact';
     import { Button, Input, Listgroup, ListgroupItem } from 'flowbite-svelte';
     import { PlusOutline, SearchOutline, TrashBinSolid } from 'flowbite-svelte-icons';
     

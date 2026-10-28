@@ -2,7 +2,7 @@
     import { Badge, Button, Spinner, Table, TableBody, TableBodyCell, TableBodyRow, TableHead, TableHeadCell } from "flowbite-svelte";
     import { ExclamationCircleOutline } from "flowbite-svelte-icons";
     import type { PageData } from "./$types";
-    import { ArtifactType } from "$lib/model/Artifact";
+    import { ArtifactType } from "#lib/model/Artifact";
     import type { DataAnomalyEntry } from "./+page.server";
 
     export let data: PageData;

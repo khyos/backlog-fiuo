@@ -8,13 +8,13 @@
     } from "flowbite-svelte";
     import type { PageData } from "./$types";
     import ListDrawer from "./components/ListDrawer.svelte";
-    import { TimeUtil } from "$lib/util/TimeUtil";
+    import { TimeUtil } from "#lib/util/TimeUtil";
     import ListItemComp from "./components/ListItemComp.svelte";
     import { toggleDrawer } from "./stores/PageStore";
     import { filteredArtifacts, initializeStore } from "./stores/UserListStore";
-    import { Genre } from "$lib/model/Genre";
-    import { Platform } from "$lib/model/game/Platform";
-    import { ArtifactType } from "$lib/model/Artifact";
+    import { Genre } from "#lib/model/Genre";
+    import { Platform } from "#lib/model/game/Platform";
+    import { ArtifactType } from "#lib/model/Artifact";
 
     export let data: PageData;
 

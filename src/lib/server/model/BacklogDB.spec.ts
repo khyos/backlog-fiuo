@@ -5,10 +5,10 @@ import { BacklogItemDB } from './BacklogItemDB';
 import { TagDB } from './TagDB';
 import { UserDB } from './UserDB';
 import { ArtifactDB } from './ArtifactDB';
-import { ArtifactType } from '$lib/model/Artifact';
-import { BacklogRankingType, BacklogType } from '$lib/model/Backlog';
-import { User, UserRole } from '$lib/model/User';
-import { TagType } from '$lib/model/Tag';
+import { ArtifactType } from '#lib/model/Artifact';
+import { BacklogRankingType, BacklogType } from '#lib/model/Backlog';
+import { User, UserRole } from '#lib/model/User';
+import { TagType } from '#lib/model/Tag';
 
 // Mock some artifact DB methods that BacklogDB depends on
 const mockArtifactDBMethods = async () => {

@@ -1,14 +1,14 @@
-import { MAL } from "$lib/mal/MAL";
-import { Link, LinkType } from "$lib/model/Link";
-import { Rating, RatingType } from "$lib/model/Rating";
-import { User, UserRights } from "$lib/model/User";
-import { SensCritique } from "$lib/senscritique/SensCritique";
-import { LinkDB } from "$lib/server/model/LinkDB";
-import { AnimeDB } from "$lib/server/model/anime/AnimeDB";
+import { MAL } from "#lib/mal/MAL";
+import { Link, LinkType } from "#lib/model/Link";
+import { Rating, RatingType } from "#lib/model/Rating";
+import { User, UserRights } from "#lib/model/User";
+import { SensCritique } from "#lib/senscritique/SensCritique";
+import { LinkDB } from "#lib/server/model/LinkDB";
+import { AnimeDB } from "#lib/server/model/anime/AnimeDB";
 import { error, json } from "@sveltejs/kit";
 import type { RequestEvent } from "./$types";
-import { ArtifactDB } from "$lib/server/model/ArtifactDB";
-import { ArtifactType } from "$lib/model/Artifact";
+import { ArtifactDB } from "#lib/server/model/ArtifactDB";
+import { ArtifactType } from "#lib/model/Artifact";
 
 export async function POST({ request, locals }: RequestEvent) {
     const user = User.deserialize(locals.user);

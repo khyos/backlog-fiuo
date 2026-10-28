@@ -1,11 +1,11 @@
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { User } from '$lib/model/User';
-import { AnimeDB } from '$lib/server/model/anime/AnimeDB';
-import { TvshowDB } from '$lib/server/model/tvshow/TvshowDB';
-import { UserList } from '$lib/model/UserList';
-import { ArtifactType, type Artifact } from '$lib/model/Artifact';
-import { processOngoingArtifacts } from '$lib/util/OngoingUtil';
+import { User } from '#lib/model/User';
+import { AnimeDB } from '#lib/server/model/anime/AnimeDB';
+import { TvshowDB } from '#lib/server/model/tvshow/TvshowDB';
+import { UserList } from '#lib/model/UserList';
+import { ArtifactType, type Artifact } from '#lib/model/Artifact';
+import { processOngoingArtifacts } from '#lib/util/OngoingUtil';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const artifactType = params.slug;

@@ -1,10 +1,10 @@
 <script lang="ts">
-    import { ArtifactType, type ArtifactAsyncInfo } from "$lib/model/Artifact";
-    import type { Game } from "$lib/model/game/Game";
-    import { getMeanRatingColor, getRatingColor } from "$lib/model/Rating";
-    import { getAsyncInfo } from "$lib/services/ArtifactService";
-    import { artifactItemStore } from "$lib/stores/ArtifactItemStore";
-    import { TimeUtil } from "$lib/util/TimeUtil";
+    import { ArtifactType, type ArtifactAsyncInfo } from "#lib/model/Artifact";
+    import type { Game } from "#lib/model/game/Game";
+    import { getMeanRatingColor, getRatingColor } from "#lib/model/Rating";
+    import { getAsyncInfo } from "#lib/services/ArtifactService";
+    import { artifactItemStore } from "#lib/stores/ArtifactItemStore";
+    import { TimeUtil } from "#lib/util/TimeUtil";
     import {
         Card,
         Badge,
@@ -20,11 +20,11 @@
         StarSolid,
     } from "flowbite-svelte-icons";
     import { onMount } from "svelte";
-    import ArtifactLinkManager from "$lib/components/artifact/ArtifactLinkManager.svelte";
-    import ArtifactOwnershipManager from "$lib/components/artifact/ArtifactOwnershipManager.svelte";
-    import ArtifactSubscriptionManager from "$lib/components/artifact/ArtifactSubscriptionManager.svelte";
-    import ArtifactUserInfoPanel from "$lib/components/artifact/ArtifactUserInfoPanel.svelte";
-    import ArtifactChildrenTree from "$lib/components/artifact/ArtifactChildrenTree.svelte";
+    import ArtifactLinkManager from "#lib/components/artifact/ArtifactLinkManager.svelte";
+    import ArtifactOwnershipManager from "#lib/components/artifact/ArtifactOwnershipManager.svelte";
+    import ArtifactSubscriptionManager from "#lib/components/artifact/ArtifactSubscriptionManager.svelte";
+    import ArtifactUserInfoPanel from "#lib/components/artifact/ArtifactUserInfoPanel.svelte";
+    import ArtifactChildrenTree from "#lib/components/artifact/ArtifactChildrenTree.svelte";
 
     // Common properties that all artifact types share
     $: artifactItemStoreInst = $artifactItemStore;

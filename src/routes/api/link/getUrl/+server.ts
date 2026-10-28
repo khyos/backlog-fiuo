@@ -1,9 +1,9 @@
-import { ITAD } from "$lib/itad/ITAD";
-import { LinkType } from "$lib/model/Link";
+import { ITAD } from "#lib/itad/ITAD";
+import { LinkType } from "#lib/model/Link";
 import { error, json } from "@sveltejs/kit";
 import type { RequestEvent } from "./$types";
-import { ArtifactType } from "$lib/model/Artifact";
-import { IGDB } from "$lib/igdb/IGDB";
+import { ArtifactType } from "#lib/model/Artifact";
+import { IGDB } from "#lib/igdb/IGDB";
 
 export async function GET({ url }: RequestEvent) {
     const artifactType = url.searchParams.get('artifactType') as ArtifactType | null;

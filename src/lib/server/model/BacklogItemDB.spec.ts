@@ -5,9 +5,9 @@ import { BacklogDB } from './BacklogDB';
 import { TagDB } from './TagDB';
 import { ArtifactDB } from './ArtifactDB';
 import { UserDB } from './UserDB';
-import { Tag, TagType } from '$lib/model/Tag';
-import { ArtifactType } from '$lib/model/Artifact';
-import { BacklogRankingType, BacklogType } from '$lib/model/Backlog';
+import { Tag, TagType } from '#lib/model/Tag';
+import { ArtifactType } from '#lib/model/Artifact';
+import { BacklogRankingType, BacklogType } from '#lib/model/Backlog';
 
 describe('BacklogItemDB', () => {
     const cleanupTestData = async () => {

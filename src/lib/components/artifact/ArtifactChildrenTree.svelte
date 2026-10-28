@@ -1,13 +1,13 @@
 <script lang="ts">
-    import { ArtifactTypeUtil } from "$lib/model/ArtifactTypeUtil";
-    import { UserArtifactStatus } from "$lib/model/UserArtifact";
-    import type { Artifact } from "$lib/model/Artifact";
+    import { ArtifactTypeUtil } from "#lib/model/ArtifactTypeUtil";
+    import { UserArtifactStatus } from "#lib/model/UserArtifact";
+    import type { Artifact } from "#lib/model/Artifact";
     import {
         artifactItemStore,
         updateStatus,
         markFinishedUpTo,
-    } from "$lib/stores/ArtifactItemStore";
-    import { TimeUtil } from "$lib/util/TimeUtil";
+    } from "#lib/stores/ArtifactItemStore";
+    import { TimeUtil } from "#lib/util/TimeUtil";
     import {
         Button,
         Checkbox,

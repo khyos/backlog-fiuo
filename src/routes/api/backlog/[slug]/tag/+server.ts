@@ -1,6 +1,6 @@
-import { User } from "$lib/model/User";
-import { BacklogDB } from "$lib/server/model/BacklogDB";
-import { BacklogItemDB } from "$lib/server/model/BacklogItemDB";
+import { User } from "#lib/model/User";
+import { BacklogDB } from "#lib/server/model/BacklogDB";
+import { BacklogItemDB } from "#lib/server/model/BacklogItemDB";
 import { error, json } from "@sveltejs/kit";
 import type { RequestEvent } from "./$types";
 

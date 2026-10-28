@@ -11,9 +11,9 @@
         CheckCircleOutline,
         PlusOutline,
     } from "flowbite-svelte-icons";
-    import type { Artifact } from "$lib/model/Artifact";
-    import { UserArtifactStatus } from "$lib/model/UserArtifact";
-    import { addUserListItem } from "$lib/services/UserListService";
+    import type { Artifact } from "#lib/model/Artifact";
+    import { UserArtifactStatus } from "#lib/model/UserArtifact";
+    import { addUserListItem } from "#lib/services/UserListService";
     import { userListStore, refreshUserList } from "../stores/UserListStore";
     
     export let selectedTab: string = "filters";

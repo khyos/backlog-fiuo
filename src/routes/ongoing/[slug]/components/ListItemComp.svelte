@@ -1,10 +1,10 @@
 <script lang="ts">
     import { Button, TableBodyCell, TableBodyRow } from "flowbite-svelte";
     import { updateStatus, userListStore } from "../stores/UserListStore";
-    import { type Artifact } from "$lib/model/Artifact";
+    import { type Artifact } from "#lib/model/Artifact";
     import { CirclePauseSolid, ClapperboardPlaySolid, ClockArrowOutline } from "flowbite-svelte-icons";
-    import { UserArtifactStatus } from "$lib/model/UserArtifact";
-    import { TimeUtil } from "$lib/util/TimeUtil";
+    import { UserArtifactStatus } from "#lib/model/UserArtifact";
+    import { TimeUtil } from "#lib/util/TimeUtil";
 
     export let artifact: Artifact;
 

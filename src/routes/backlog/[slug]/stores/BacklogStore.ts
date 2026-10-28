@@ -1,10 +1,10 @@
-import { Backlog, BacklogRankingType, BacklogType, type IBacklog } from '$lib/model/Backlog';
-import { fetchBacklog } from '$lib/services/BacklogService';
+import { Backlog, BacklogRankingType, BacklogType, type IBacklog } from '#lib/model/Backlog';
+import { fetchBacklog } from '#lib/services/BacklogService';
 import { derived, get, writable } from 'svelte/store';
 import { createBacklogFilters, filterBacklogItems, type BacklogFilters } from '../BacklogFilters';
 import { showCopiedToast } from './PageStore';
-import { Artifact, ArtifactType, type IArtifact } from '$lib/model/Artifact';
-import { artifactFromJSON } from '$lib/services/ArtifactService';
+import { Artifact, ArtifactType, type IArtifact } from '#lib/model/Artifact';
+import { artifactFromJSON } from '#lib/services/ArtifactService';
 
 export type BacklogStore = {
     backlog: Backlog,

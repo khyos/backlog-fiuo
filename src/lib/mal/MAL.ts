@@ -1,5 +1,5 @@
-import { AnimeDB } from "$lib/server/model/anime/AnimeDB";
-import { ErrorUtil } from "$lib/util/ErrorUtil";
+import { AnimeDB } from "#lib/server/model/anime/AnimeDB";
+import { ErrorUtil } from "#lib/util/ErrorUtil";
 
 export interface MALAnime {
     mal_id: number;

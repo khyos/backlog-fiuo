@@ -2,8 +2,8 @@
     import { Badge, Table, TableBody, TableBodyCell, TableBodyRow, TableHead, TableHeadCell } from "flowbite-svelte";
     import { ExclamationCircleOutline } from "flowbite-svelte-icons";
     import type { PageData } from "./$types";
-    import { ArtifactType } from "$lib/model/Artifact";
-    import { UserArtifactStatus } from "$lib/model/UserArtifact";
+    import { ArtifactType } from "#lib/model/Artifact";
+    import { UserArtifactStatus } from "#lib/model/UserArtifact";
 
     export let data: PageData;
 

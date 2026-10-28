@@ -1,7 +1,7 @@
-import { IGDB } from "$lib/igdb/IGDB";
-import { LinkType } from "$lib/model/Link";
-import { GameDB } from "$lib/server/model/game/GameDB";
-import { User } from "$lib/model/User";
+import { IGDB } from "#lib/igdb/IGDB";
+import { LinkType } from "#lib/model/Link";
+import { GameDB } from "#lib/server/model/game/GameDB";
+import { User } from "#lib/model/User";
 import { error, json } from "@sveltejs/kit";
 import type { RequestEvent } from "./$types";
 

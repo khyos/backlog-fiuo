@@ -1,8 +1,8 @@
-import { LinkType } from "$lib/model/Link";
-import { MAL } from "$lib/mal/MAL";
+import { LinkType } from "#lib/model/Link";
+import { MAL } from "#lib/mal/MAL";
 import { error, json } from "@sveltejs/kit";
-import { AnimeDB } from "$lib/server/model/anime/AnimeDB";
-import { User } from "$lib/model/User";
+import { AnimeDB } from "#lib/server/model/anime/AnimeDB";
+import { User } from "#lib/model/User";
 import type { RequestEvent } from "./$types";
 
 export async function GET({ params, locals }: RequestEvent) {

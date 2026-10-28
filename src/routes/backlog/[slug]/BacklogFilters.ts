@@ -1,7 +1,7 @@
-import { ArtifactType } from "$lib/model/Artifact"
-import { BacklogOrder, BacklogRankingType } from "$lib/model/Backlog"
-import type { BacklogItem } from "$lib/model/BacklogItem";
-import type { Game } from "$lib/model/game/Game";
+import { ArtifactType } from "#lib/model/Artifact"
+import { BacklogOrder, BacklogRankingType } from "#lib/model/Backlog"
+import type { BacklogItem } from "#lib/model/BacklogItem";
+import type { Game } from "#lib/model/game/Game";
 
 const currentYear = new Date().getFullYear();
 

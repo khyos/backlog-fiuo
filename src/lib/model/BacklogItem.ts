@@ -1,4 +1,4 @@
-import { artifactFromJSON } from "$lib/services/ArtifactService";
+import { artifactFromJSON } from "#lib/services/ArtifactService";
 import { Artifact, type IArtifact } from "./Artifact";
 import type { ISerializable, Serializable } from "./Serializable";
 import { Tag, type ITag } from "./Tag";

@@ -1,7 +1,7 @@
-import { User, UserRights } from "$lib/model/User";
+import { User, UserRights } from "#lib/model/User";
 import { error, json } from "@sveltejs/kit";
 import type { RequestEvent } from "./$types";
-import { TvshowDB } from "$lib/server/model/tvshow/TvshowDB";
+import { TvshowDB } from "#lib/server/model/tvshow/TvshowDB";
 
 export async function GET({ params }: RequestEvent) {
 	const tvshowId = parseInt(params.slug);

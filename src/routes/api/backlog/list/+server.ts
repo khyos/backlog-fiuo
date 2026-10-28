@@ -1,8 +1,8 @@
-import { User } from "$lib/model/User";
-import { BacklogDB } from "$lib/server/model/BacklogDB";
+import { User } from "#lib/model/User";
+import { BacklogDB } from "#lib/server/model/BacklogDB";
 import { error, json } from "@sveltejs/kit";
 import type { RequestEvent } from "./$types";
-import { ArtifactType } from "$lib/model/Artifact";
+import { ArtifactType } from "#lib/model/Artifact";
 
 export async function GET({ url, locals }: RequestEvent) {
 	const page : number = parseInt(url.searchParams.get('page') ?? '0', 10);

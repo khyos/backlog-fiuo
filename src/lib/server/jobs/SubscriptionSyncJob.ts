@@ -1,9 +1,9 @@
-import { ArtifactType } from "$lib/model/Artifact";
-import { LinkType } from "$lib/model/Link";
-import { ArtifactDB } from "$lib/server/model/ArtifactDB";
-import { LinkDB } from "$lib/server/model/LinkDB";
-import { SubscriptionServiceDB } from "$lib/server/model/SubscriptionServiceDB";
-import { TMDB } from "$lib/tmdb/TMDB";
+import { ArtifactType } from "#lib/model/Artifact";
+import { LinkType } from "#lib/model/Link";
+import { ArtifactDB } from "#lib/server/model/ArtifactDB";
+import { LinkDB } from "#lib/server/model/LinkDB";
+import { SubscriptionServiceDB } from "#lib/server/model/SubscriptionServiceDB";
+import { TMDB } from "#lib/tmdb/TMDB";
 
 const BATCH_SIZE = 10;
 const TICK_INTERVAL_MS = 10 * 1000;

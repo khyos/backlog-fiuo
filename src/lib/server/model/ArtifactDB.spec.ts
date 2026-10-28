@@ -1,12 +1,12 @@
 import type sqlite3 from 'sqlite3';
 import { getDb, runDbInsert, runDbQueries } from '../database';
 import { describe, expect, test, beforeAll, afterAll, beforeEach } from 'vitest';
-import { ArtifactType, Artifact, type IArtifactDB } from '$lib/model/Artifact';
-import { UserArtifactStatus } from '$lib/model/UserArtifact';
-import { Genre } from '$lib/model/Genre';
-import { BacklogRankingType, BacklogOrder } from '$lib/model/Backlog';
-import { Movie } from '$lib/model/movie/Movie';
-import { Game } from '$lib/model/game/Game';
+import { ArtifactType, Artifact, type IArtifactDB } from '#lib/model/Artifact';
+import { UserArtifactStatus } from '#lib/model/UserArtifact';
+import { Genre } from '#lib/model/Genre';
+import { BacklogRankingType, BacklogOrder } from '#lib/model/Backlog';
+import { Movie } from '#lib/model/movie/Movie';
+import { Game } from '#lib/model/game/Game';
 import { ArtifactDB } from './ArtifactDB';
 import { MovieDB } from './movie/MovieDB';
 import { GameDB } from './game/GameDB';

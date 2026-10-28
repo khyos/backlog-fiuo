@@ -1,6 +1,6 @@
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { BacklogUtil } from '$lib/server/model/BacklogUtil';
+import { BacklogUtil } from '#lib/server/model/BacklogUtil';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const backlogId = parseInt(params.slug);

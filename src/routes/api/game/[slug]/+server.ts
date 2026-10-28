@@ -1,5 +1,5 @@
-import { User, UserRights } from "$lib/model/User";
-import { GameDB } from "$lib/server/model/game/GameDB";
+import { User, UserRights } from "#lib/model/User";
+import { GameDB } from "#lib/server/model/game/GameDB";
 import { error, json } from "@sveltejs/kit";
 import type { RequestEvent } from "./$types";
 

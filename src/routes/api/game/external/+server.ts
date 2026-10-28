@@ -1,11 +1,11 @@
-import { HLTB } from "$lib/hltb/HLTB";
-import { IGDB } from "$lib/igdb/IGDB";
-import { ITAD } from "$lib/itad/ITAD";
-import { MetaCritic } from "$lib/metacritic/MetaCritic";
-import { User, UserRights } from "$lib/model/User";
-import { OpenCritic } from "$lib/opencritic/OpenCritic";
-import { SensCritique } from "$lib/senscritique/SensCritique";
-import { Steam } from "$lib/steam/Steam";
+import { HLTB } from "#lib/hltb/HLTB";
+import { IGDB } from "#lib/igdb/IGDB";
+import { ITAD } from "#lib/itad/ITAD";
+import { MetaCritic } from "#lib/metacritic/MetaCritic";
+import { User, UserRights } from "#lib/model/User";
+import { OpenCritic } from "#lib/opencritic/OpenCritic";
+import { SensCritique } from "#lib/senscritique/SensCritique";
+import { Steam } from "#lib/steam/Steam";
 import { error, json } from "@sveltejs/kit";
 import type { RequestEvent } from "./$types";
 

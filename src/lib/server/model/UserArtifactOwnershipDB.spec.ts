@@ -3,8 +3,8 @@ import { runDbQueries } from '../database';
 import { UserArtifactOwnershipDB } from './UserArtifactOwnershipDB';
 import { UserDB } from './UserDB';
 import { ArtifactDB } from './ArtifactDB';
-import { ArtifactType } from '$lib/model/Artifact';
-import { UserArtifactOwnership } from '$lib/model/UserArtifactOwnership';
+import { ArtifactType } from '#lib/model/Artifact';
+import { UserArtifactOwnership } from '#lib/model/UserArtifactOwnership';
 
 describe('UserArtifactOwnershipDB', () => {
     let userId: number;

@@ -1,6 +1,6 @@
 import { Artifact, ArtifactType, type IArtifact } from "./Artifact";
 import type { ISerializable, Serializable } from "./Serializable";
-import { artifactFromJSON } from "$lib/services/ArtifactService";
+import { artifactFromJSON } from "#lib/services/ArtifactService";
 
 export enum UserListOrder {
     DATE_RELEASE = "dateRelease"

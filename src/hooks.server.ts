@@ -1,11 +1,11 @@
-import { UserDB } from "$lib/server/model/UserDB";
-import { JWT_ACCESS_SECRET } from '$env/static/private';
-import type { Handle } from "@sveltejs/kit";
+import { UserDB } from "#lib/server/model/UserDB";
+import { JWT_ACCESS_SECRET } from '$app/env/private';
+import type { Handle } from "@sveltejs/kit/hooks";
 import jwt from "jsonwebtoken";
 import { error } from "@sveltejs/kit";
-import { checkRateLimit } from "$lib/util/RateLimitUtil";
-import { startSubscriptionSyncJob } from "$lib/server/jobs/SubscriptionSyncJob";
-import "$lib/server/ServerLog";
+import { checkRateLimit } from "#lib/util/RateLimitUtil";
+import { startSubscriptionSyncJob } from "#lib/server/jobs/SubscriptionSyncJob";
+import "#lib/server/ServerLog";
 
 startSubscriptionSyncJob();
 

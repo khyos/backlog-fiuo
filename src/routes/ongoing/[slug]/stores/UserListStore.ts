@@ -1,7 +1,7 @@
-import { ArtifactType } from '$lib/model/Artifact';
-import { UserArtifactStatus } from '$lib/model/UserArtifact';
-import { UserList, type IUserList } from '$lib/model/UserList';
-import { updateDate, updateStatus as updateStatusAPI } from '$lib/services/ArtifactService';
+import { ArtifactType } from '#lib/model/Artifact';
+import { UserArtifactStatus } from '#lib/model/UserArtifact';
+import { UserList, type IUserList } from '#lib/model/UserList';
+import { updateDate, updateStatus as updateStatusAPI } from '#lib/services/ArtifactService';
 import { get, writable } from 'svelte/store';
 
 export type UserListStore = {

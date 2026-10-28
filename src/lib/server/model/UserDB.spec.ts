@@ -1,7 +1,7 @@
 import { describe, expect, test, beforeAll, afterAll, beforeEach } from 'vitest';
 import { runDbQueriesParallel, runDbQuery, getDbRow } from '../database';
 import { UserDB } from './UserDB';
-import { UserRole } from '$lib/model/User';
+import { UserRole } from '#lib/model/User';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 

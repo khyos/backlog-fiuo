@@ -1,6 +1,6 @@
-import { ArtifactType } from "$lib/model/Artifact";
-import { SubscriptionService, type ISubscriptionServiceDB } from "$lib/model/SubscriptionService";
-import { getDbRows, runDbInsert, runDbQuery } from "$lib/server/database";
+import { ArtifactType } from "#lib/model/Artifact";
+import { SubscriptionService, type ISubscriptionServiceDB } from "#lib/model/SubscriptionService";
+import { getDbRows, runDbInsert, runDbQuery } from "#lib/server/database";
 
 // Predefined subscription services seeded on DB initialization
 const PREDEFINED_SERVICES: { name: string; artifactTypes: ArtifactType[] }[] = [

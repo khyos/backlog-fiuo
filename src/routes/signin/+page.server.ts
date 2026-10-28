@@ -1,7 +1,7 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
-import { UserDB } from '$lib/server/model/UserDB';
-import { ErrorUtil } from '$lib/util/ErrorUtil';
+import { UserDB } from '#lib/server/model/UserDB';
+import { ErrorUtil } from '#lib/util/ErrorUtil';
 
 export const load: PageServerLoad = (event) => {
 	const user = event.locals.user;

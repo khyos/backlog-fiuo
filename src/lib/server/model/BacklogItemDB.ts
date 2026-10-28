@@ -1,4 +1,4 @@
-import { Tag, TagType } from "$lib/model/Tag";
+import { Tag, TagType } from "#lib/model/Tag";
 import { getDbRows, runDbQuery } from "../database";
 
 export class BacklogItemDB {

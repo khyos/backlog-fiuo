@@ -1,5 +1,5 @@
-import { User, UserRights } from '$lib/model/User.js';
-import { TvshowDB } from '$lib/server/model/tvshow/TvshowDB.js';
+import { User, UserRights } from '#lib/model/User.js';
+import { TvshowDB } from '#lib/server/model/tvshow/TvshowDB.js';
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types.js';
 

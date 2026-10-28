@@ -1,9 +1,9 @@
 import { describe, expect, test, beforeAll, afterAll, beforeEach } from 'vitest';
 import { runDbQueriesParallel } from '../database';
 import { LinkDB } from './LinkDB';
-import { LinkType } from '$lib/model/Link';
+import { LinkType } from '#lib/model/Link';
 import { ArtifactDB } from './ArtifactDB';
-import { ArtifactType } from '$lib/model/Artifact';
+import { ArtifactType } from '#lib/model/Artifact';
 
 describe('LinkDB', () => {
     const cleanupTestData = async () => {

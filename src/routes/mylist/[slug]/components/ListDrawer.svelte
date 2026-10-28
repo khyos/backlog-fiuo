@@ -6,8 +6,8 @@
     } from "flowbite-svelte";
     
     import { pageStore } from "../stores/PageStore";
-    import type { Genre } from "$lib/model/Genre";
-    import type { Platform } from "$lib/model/game/Platform";
+    import type { Genre } from "#lib/model/Genre";
+    import type { Platform } from "#lib/model/game/Platform";
     import ListDrawerTabFilters from "./ListDrawerTabFilters.svelte";
     import ListDrawerTabAdd from "./ListDrawerTabAdd.svelte";
     

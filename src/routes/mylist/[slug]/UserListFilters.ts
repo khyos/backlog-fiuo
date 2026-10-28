@@ -1,6 +1,6 @@
-import { Artifact, ArtifactType } from "$lib/model/Artifact";
-import { UserListOrder } from "$lib/model/UserList";
-import type { Game } from "$lib/model/game/Game";
+import { Artifact, ArtifactType } from "#lib/model/Artifact";
+import { UserListOrder } from "#lib/model/UserList";
+import type { Game } from "#lib/model/game/Game";
 
 const currentYear = new Date().getFullYear();
 

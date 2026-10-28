@@ -1,5 +1,5 @@
-import { ArtifactType } from "$lib/model/Artifact";
-import { SubscriptionServiceDB } from "$lib/server/model/SubscriptionServiceDB";
+import { ArtifactType } from "#lib/model/Artifact";
+import { SubscriptionServiceDB } from "#lib/server/model/SubscriptionServiceDB";
 import { json } from "@sveltejs/kit";
 import type { RequestEvent } from "./$types";
 

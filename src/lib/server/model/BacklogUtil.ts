@@ -1,7 +1,7 @@
-import { ArtifactType } from "$lib/model/Artifact";
-import type { Backlog } from "$lib/model/Backlog";
-import type { Tag } from "$lib/model/Tag";
-import { User, UserRights } from "$lib/model/User";
+import { ArtifactType } from "#lib/model/Artifact";
+import type { Backlog } from "#lib/model/Backlog";
+import type { Tag } from "#lib/model/Tag";
+import { User, UserRights } from "#lib/model/User";
 import { AnimeDB } from "./anime/AnimeDB";
 import { ArtifactDB } from "./ArtifactDB";
 import { BacklogDB } from "./BacklogDB";

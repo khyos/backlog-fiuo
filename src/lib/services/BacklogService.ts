@@ -1,5 +1,5 @@
-import type { ArtifactType } from "$lib/model/Artifact";
-import type { Backlog } from "$lib/model/Backlog";
+import type { ArtifactType } from "#lib/model/Artifact";
+import type { Backlog } from "#lib/model/Backlog";
 
 export async function fetchBacklog(backlogId: number) {
     const response = await fetch(`/api/backlog/${backlogId}`);

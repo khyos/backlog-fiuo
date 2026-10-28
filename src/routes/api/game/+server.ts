@@ -1,18 +1,18 @@
-import { HLTB } from "$lib/hltb/HLTB";
-import { IGDB } from "$lib/igdb/IGDB";
-import { ITAD } from "$lib/itad/ITAD";
-import { MetaCritic } from "$lib/metacritic/MetaCritic";
-import { Link, LinkType } from "$lib/model/Link";
-import { Rating, RatingType } from "$lib/model/Rating";
-import { User, UserRights } from "$lib/model/User";
-import { OpenCritic } from "$lib/opencritic/OpenCritic";
-import { SensCritique } from "$lib/senscritique/SensCritique";
-import { LinkDB } from "$lib/server/model/LinkDB";
-import { GameDB } from "$lib/server/model/game/GameDB";
-import { Steam } from "$lib/steam/Steam";
+import { HLTB } from "#lib/hltb/HLTB";
+import { IGDB } from "#lib/igdb/IGDB";
+import { ITAD } from "#lib/itad/ITAD";
+import { MetaCritic } from "#lib/metacritic/MetaCritic";
+import { Link, LinkType } from "#lib/model/Link";
+import { Rating, RatingType } from "#lib/model/Rating";
+import { User, UserRights } from "#lib/model/User";
+import { OpenCritic } from "#lib/opencritic/OpenCritic";
+import { SensCritique } from "#lib/senscritique/SensCritique";
+import { LinkDB } from "#lib/server/model/LinkDB";
+import { GameDB } from "#lib/server/model/game/GameDB";
+import { Steam } from "#lib/steam/Steam";
 import { error, json } from "@sveltejs/kit";
 import type { RequestEvent } from "./$types";
-import { ArtifactType } from "$lib/model/Artifact";
+import { ArtifactType } from "#lib/model/Artifact";
 
 export async function POST({ request, locals }: RequestEvent) {
     const user = User.deserialize(locals.user);

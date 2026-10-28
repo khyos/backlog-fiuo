@@ -3,11 +3,11 @@
     import { ChevronLeftOutline, ChevronRightOutline } from "flowbite-svelte-icons";
     import type { PageData } from "./$types";
     import type { StatEntry } from "./+page.server";
-    import { ArtifactType } from "$lib/model/Artifact";
-    import { UserArtifactStatus } from "$lib/model/UserArtifact";
-    import { TimeUtil } from "$lib/util/TimeUtil";
-    import { getPeriodBounds, getSubPeriods, type Period, type SubPeriod } from "$lib/util/PeriodUtil";
-    import BarChart from "$lib/ui/BarChart.svelte";
+    import { ArtifactType } from "#lib/model/Artifact";
+    import { UserArtifactStatus } from "#lib/model/UserArtifact";
+    import { TimeUtil } from "#lib/util/TimeUtil";
+    import { getPeriodBounds, getSubPeriods, type Period, type SubPeriod } from "#lib/util/PeriodUtil";
+    import BarChart from "#lib/ui/BarChart.svelte";
 
     export let data: PageData;
 

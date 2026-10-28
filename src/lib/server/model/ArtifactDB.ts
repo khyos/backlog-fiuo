@@ -1,10 +1,10 @@
-import type { IArtifactDB, ArtifactType, Artifact } from "$lib/model/Artifact";
-import { SERIALIZE_TYPE, UserArtifact, UserArtifactStatus, type IUserArtifactDB } from "$lib/model/UserArtifact";
-import { UserList } from "$lib/model/UserList";
-import { type IUserListItemDB } from "$lib/model/UserListItem";
-import { artifactFromJSON } from "$lib/services/ArtifactService";
-import { BacklogOrder, BacklogRankingType } from "$lib/model/Backlog";
-import { Genre } from "$lib/model/Genre";
+import type { IArtifactDB, ArtifactType, Artifact } from "#lib/model/Artifact";
+import { SERIALIZE_TYPE, UserArtifact, UserArtifactStatus, type IUserArtifactDB } from "#lib/model/UserArtifact";
+import { UserList } from "#lib/model/UserList";
+import { type IUserListItemDB } from "#lib/model/UserListItem";
+import { artifactFromJSON } from "#lib/services/ArtifactService";
+import { BacklogOrder, BacklogRankingType } from "#lib/model/Backlog";
+import { Genre } from "#lib/model/Genre";
 import { runDbQueries, runDbQuery, getDbRow, getDbRows, runDbInsert } from "../database";
 import { type IBacklogItemDB } from "./BacklogDB";
 import { SubscriptionServiceDB } from "./SubscriptionServiceDB";

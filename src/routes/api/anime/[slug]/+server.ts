@@ -1,7 +1,7 @@
-import { User, UserRights } from "$lib/model/User";
+import { User, UserRights } from "#lib/model/User";
 import { error, json } from "@sveltejs/kit";
 import type { RequestEvent } from "./$types";
-import { AnimeDB } from "$lib/server/model/anime/AnimeDB";
+import { AnimeDB } from "#lib/server/model/anime/AnimeDB";
 
 export async function GET({ params }: RequestEvent) {
 	const animeId = parseInt(params.slug);

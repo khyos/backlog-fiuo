@@ -1,8 +1,8 @@
 <script lang="ts">
-    import { ArtifactType } from "$lib/model/Artifact";
-    import type { Game } from "$lib/model/game/Game";
-    import type { IUserArtifactOwnership } from "$lib/model/UserArtifactOwnership";
-    import { artifactItemStore, addOwnership, editOwnership, removeOwnership } from "$lib/stores/ArtifactItemStore";
+    import { ArtifactType } from "#lib/model/Artifact";
+    import type { Game } from "#lib/model/game/Game";
+    import type { IUserArtifactOwnership } from "#lib/model/UserArtifactOwnership";
+    import { artifactItemStore, addOwnership, editOwnership, removeOwnership } from "#lib/stores/ArtifactItemStore";
     import {
         Label,
         Button,

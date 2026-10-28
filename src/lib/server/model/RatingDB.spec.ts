@@ -1,9 +1,9 @@
 import { describe, expect, test, beforeAll, afterAll, beforeEach } from 'vitest';
 import { runDbQueriesParallel } from '../database';
 import { RatingDB } from './RatingDB';
-import { RatingType } from '$lib/model/Rating';
+import { RatingType } from '#lib/model/Rating';
 import { ArtifactDB } from './ArtifactDB';
-import { ArtifactType } from '$lib/model/Artifact';
+import { ArtifactType } from '#lib/model/Artifact';
 
 describe('RatingDB', () => {
     const cleanupTestData = async () => {

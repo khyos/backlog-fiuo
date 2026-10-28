@@ -14,19 +14,19 @@
         CheckCircleSolid,
         PlusOutline,
     } from "flowbite-svelte-icons";
-    import { Tag } from "$lib/model/Tag";
+    import { Tag } from "#lib/model/Tag";
     import type { PageData } from "./$types";
-    import { deleteBacklogItem, moveBacklogItemToOtherBacklog as moveBacklogItemToOtherBacklogAPI } from "$lib/services/BacklogService";
-    import { fetchPrices } from "$lib/services/PricesService";
-    import type { Price } from "$lib/types/itad/Price";
+    import { deleteBacklogItem, moveBacklogItemToOtherBacklog as moveBacklogItemToOtherBacklogAPI } from "#lib/services/BacklogService";
+    import { fetchPrices } from "#lib/services/PricesService";
+    import type { Price } from "#lib/types/itad/Price";
     import BacklogDrawer from "../../[slug]/components/BacklogDrawer.svelte";
-    import { TimeUtil } from "$lib/util/TimeUtil";
+    import { TimeUtil } from "#lib/util/TimeUtil";
     import BacklogItemComp from "../../[slug]/components/BacklogItemComp.svelte";
     import { pageStore, hideMoveToBacklog, hideMoveToRank, toggleDrawer } from "../../[slug]/stores/PageStore";
     import { copyAiPrompt, filteredBacklogItems, initializeStore, refreshBacklog } from "../../[slug]/stores/BacklogStore";
     import { tagStore } from "../../[slug]/stores/TagStore";
-    import { Genre } from "$lib/model/Genre";
-    import { Platform } from "$lib/model/game/Platform";
+    import { Genre } from "#lib/model/Genre";
+    import { Platform } from "#lib/model/game/Platform";
     import { get } from "svelte/store";
     import { addTag, createTag, fetchTags } from "../../[slug]/actions/TagActions";
     import { onMount } from "svelte";

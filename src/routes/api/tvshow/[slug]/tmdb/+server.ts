@@ -1,8 +1,8 @@
-import { LinkType } from "$lib/model/Link";
-import { TMDB } from "$lib/tmdb/TMDB";
+import { LinkType } from "#lib/model/Link";
+import { TMDB } from "#lib/tmdb/TMDB";
 import { error, json } from "@sveltejs/kit";
-import { TvshowDB } from "$lib/server/model/tvshow/TvshowDB";
-import { User } from "$lib/model/User";
+import { TvshowDB } from "#lib/server/model/tvshow/TvshowDB";
+import { User } from "#lib/model/User";
 import type { RequestEvent } from "./$types";
 
 export async function GET({ params, locals }: RequestEvent) {

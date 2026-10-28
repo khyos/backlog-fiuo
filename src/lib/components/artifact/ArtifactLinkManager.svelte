@@ -1,8 +1,8 @@
 <script lang="ts">
-    import { getLinkTypeLabel, getLinkTypesByArtifactType, Link, LinkType } from "$lib/model/Link";
-    import { ArtifactType } from "$lib/model/Artifact";
-    import { openLink } from "$lib/services/LinkService";
-    import { artifactItemStore, refreshArtifact } from "$lib/stores/ArtifactItemStore";
+    import { getLinkTypeLabel, getLinkTypesByArtifactType, Link, LinkType } from "#lib/model/Link";
+    import { ArtifactType } from "#lib/model/Artifact";
+    import { openLink } from "#lib/services/LinkService";
+    import { artifactItemStore, refreshArtifact } from "#lib/stores/ArtifactItemStore";
     import {
         Label,
         Button,
