@@ -1,9 +1,12 @@
 <script lang="ts">
-    import { Button, Listgroup, ListgroupItem } from "flowbite-svelte";
+    import { Badge, Button, Listgroup, ListgroupItem } from "flowbite-svelte";
     import { TrashBinSolid } from "flowbite-svelte-icons";
     import type { PageData } from "./$types";
+    import CreateTierListModal from "./components/CreateTierListModal.svelte";
 
 	export let data: PageData;
+
+    let showCreateModal = false;
 
     async function deleteTierList(tierListId: number) {
         if (!confirm('Are you sure you want to delete this tier list?')) {
@@ -32,11 +35,19 @@
             window.location.href = `/tierlist/${tierListId}`;
         }
     }
+
+    function onCreated(id: number) {
+        showCreateModal = false;
+        window.location.href = `/tierlist/${id}`;
+    }
 </script>
 
 <div class="space-y-4">
     <div class="flex justify-between items-center">
         <h1 class="text-2xl font-extrabold dark:text-white">Tier Lists</h1>
+        {#if data.permissions.canEdit}
+            <Button size="sm" onclick={() => (showCreateModal = true)}>Create standalone tier list</Button>
+        {/if}
     </div>
 
     {#if data.tierLists.length === 0}
@@ -49,11 +60,14 @@
                 <ListgroupItem>
                     <div class="flex justify-between items-center w-full">
                         <button
-                            class="text-left cursor-pointer hover:underline flex-grow"
+                            class="text-left cursor-pointer hover:underline flex-grow flex items-center gap-2"
                             on:click={(event) => handleTierListClick(event, tierList.id)}
                             on:auxclick={(event) => handleTierListClick(event, tierList.id)}
                         >
                             {tierList.title}
+                            {#if tierList.isStandalone}
+                                <Badge color="gray">Standalone</Badge>
+                            {/if}
                         </button>
 
                         {#if data.permissions.canEdit}
@@ -72,3 +86,11 @@
         </Listgroup>
     {/if}
 </div>
+
+{#if data.permissions.canEdit}
+    <CreateTierListModal
+        bind:open={showCreateModal}
+        onClose={() => (showCreateModal = false)}
+        {onCreated}
+    />
+{/if}

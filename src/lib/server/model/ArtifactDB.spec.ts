@@ -1399,4 +1399,83 @@ describe('ArtifactDB', () => {
             expect(artifact?.type).toBe(ArtifactType.GAME);
         });
     });
+
+    /**
+     * Standards tests: countArtifacts
+     *
+     * New method added as part of the standalone tier lists feature — used by the
+     * /api/tierlist/[slug]/artifacts endpoint to return total counts for pagination.
+     * Only visible by reading the implementation, which contains two SQL branches:
+     * no-search (COUNT with type filter) and with-search (COUNT with LOWER LIKE).
+     */
+    describe('countArtifacts', () => {
+        test('returns the total count of artifacts matching a type when no search is provided', async () => {
+            await runDbQueries([
+                { query: "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Game Alpha', 'game', '2020-01-01', 60)" },
+                { query: "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Game Beta', 'game', '2021-01-01', 80)" },
+                { query: "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Movie Alpha', 'movie', '2019-01-01', 120)" }
+            ]);
+
+            const gameCount = await ArtifactDB.countArtifacts(ArtifactType.GAME);
+            expect(gameCount).toBe(2);
+
+            const movieCount = await ArtifactDB.countArtifacts(ArtifactType.MOVIE);
+            expect(movieCount).toBe(1);
+        });
+
+        test('returns 0 when no artifacts of the requested type exist', async () => {
+            // No anime inserted in this test run
+            const count = await ArtifactDB.countArtifacts(ArtifactType.ANIME);
+            expect(count).toBe(0);
+        });
+
+        test('with search, counts only artifacts whose title LIKE %search% (case-insensitive)', async () => {
+            await runDbQueries([
+                { query: "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('The Matrix', 'movie', '1999-01-01', 136)" },
+                { query: "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Inception', 'movie', '2010-01-01', 148)" },
+                { query: "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Matrix Reloaded', 'movie', '2003-01-01', 138)" }
+            ]);
+
+            // Lower-case search
+            const lowerCount = await ArtifactDB.countArtifacts(ArtifactType.MOVIE, 'matrix');
+            expect(lowerCount).toBe(2);
+
+            // Upper-case search should give the same result (LOWER(title) LIKE ?)
+            const upperCount = await ArtifactDB.countArtifacts(ArtifactType.MOVIE, 'MATRIX');
+            expect(upperCount).toBe(2);
+        });
+
+        test('with search, only counts artifacts of the matching type', async () => {
+            await runDbQueries([
+                { query: "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('Matrix Game', 'game', '2003-01-01', 1200)" },
+                { query: "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('The Matrix', 'movie', '1999-01-01', 136)" }
+            ]);
+
+            // Counting movies named 'matrix' must not include the game
+            const movieCount = await ArtifactDB.countArtifacts(ArtifactType.MOVIE, 'matrix');
+            expect(movieCount).toBe(1);
+        });
+
+        test('with search that matches nothing, returns 0', async () => {
+            await runDbQueries([
+                { query: "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('The Matrix', 'movie', '1999-01-01', 136)" }
+            ]);
+
+            const count = await ArtifactDB.countArtifacts(ArtifactType.MOVIE, 'zzznomatch');
+            expect(count).toBe(0);
+        });
+
+        test('count is consistent with getArtifacts pagination (total >= page results)', async () => {
+            await runDbQueries([
+                { query: "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('G1', 'game', '2020-01-01', 60)" },
+                { query: "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('G2', 'game', '2020-01-01', 60)" },
+                { query: "INSERT INTO artifact (title, type, releaseDate, duration) VALUES ('G3', 'game', '2020-01-01', 60)" }
+            ]);
+
+            const total = await ArtifactDB.countArtifacts(ArtifactType.GAME);
+            const page = await ArtifactDB.getArtifacts(ArtifactType.GAME, 0, 2);
+            expect(total).toBeGreaterThanOrEqual(page.length);
+            expect(total).toBeGreaterThanOrEqual(3);
+        });
+    });
 });

@@ -9,6 +9,7 @@
     export let canEdit: boolean = false;
     export let onDrop: (artifactId: number, sourceTierId: TierId, targetTierId: TierId, targetPosition: number) => void | Promise<void>;
     export let onUpdateTier: (tierId: number, label: string, color: string) => void | Promise<void>;
+    export let onRemove: ((artifactId: number) => void | Promise<void>) | undefined = undefined;
 
     // Grow the label textarea to fit its content so multi-line labels are
     // fully visible while editing.
@@ -46,7 +47,7 @@
         use:dropzone={{ canEdit, tierId: tier.id, position: tier.items.length, onDrop }}
     >
         {#each tier.items as item (item.artifact.id)}
-            <TierListItemComp {item} {artifactType} {canEdit} tierId={tier.id} {onDrop} />
+            <TierListItemComp {item} {artifactType} {canEdit} tierId={tier.id} {onDrop} {onRemove} />
         {/each}
     </div>
 </div>

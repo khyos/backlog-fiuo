@@ -8,6 +8,7 @@
     export let artifactType: ArtifactType;
     export let canEdit: boolean = false;
     export let onDrop: (artifactId: number, sourceTierId: TierId, targetTierId: TierId, targetPosition: number) => void | Promise<void>;
+    export let onRemove: ((artifactId: number) => void | Promise<void>) | undefined = undefined;
 </script>
 
 <div class="unranked-pool">
@@ -17,7 +18,7 @@
         use:dropzone={{ canEdit, tierId: null, position: items.length, onDrop }}
     >
         {#each items as item (item.artifact.id)}
-            <TierListItemComp {item} {artifactType} {canEdit} tierId={null} {onDrop} />
+            <TierListItemComp {item} {artifactType} {canEdit} tierId={null} {onDrop} {onRemove} />
         {/each}
     </div>
 </div>

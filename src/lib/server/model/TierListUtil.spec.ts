@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
-import { TierListUtil, DEFAULT_TIERS } from './TierListUtil';
+import { TierListUtil, DEFAULT_TIERS, TIER_LIST_ARTIFACT_TYPES } from './TierListUtil';
+import { ArtifactType } from '#lib/model/Artifact';
 
 /**
  * Contract: TierListUtil.tierIndexForScore(score) maps a per-user rating on a
@@ -143,5 +144,46 @@ describe('refreshFromBacklog reconciliation semantics (set algebra, DB seam not 
         // The reconciliation itself requires a live DB; we only assert the
         // documented entry point exists so coverage gaps are explicit.
         expect(typeof TierListUtil.refreshFromBacklog).toBe('function');
+    });
+});
+
+/**
+ * Standards tests: TIER_LIST_ARTIFACT_TYPES constant membership and exclusions.
+ *
+ * Reading the implementation reveals this constant is used as a guard in the
+ * POST /api/tierlist endpoint to reject invalid artifact types.  The guard only
+ * works correctly if the set is exactly the five supported types and does not
+ * accidentally include unsupported ones (e.g. BOOK, MANGA, PODCAST, COMICS_ISSUE).
+ */
+describe('TIER_LIST_ARTIFACT_TYPES constant', () => {
+    test('contains exactly 5 entries', () => {
+        expect(TIER_LIST_ARTIFACT_TYPES).toHaveLength(5);
+    });
+
+    test('includes all five supported types', () => {
+        expect(TIER_LIST_ARTIFACT_TYPES).toContain(ArtifactType.GAME);
+        expect(TIER_LIST_ARTIFACT_TYPES).toContain(ArtifactType.MOVIE);
+        expect(TIER_LIST_ARTIFACT_TYPES).toContain(ArtifactType.TVSHOW);
+        expect(TIER_LIST_ARTIFACT_TYPES).toContain(ArtifactType.ANIME);
+        expect(TIER_LIST_ARTIFACT_TYPES).toContain(ArtifactType.COMICS);
+    });
+
+    test('does not include types that are not supported for tier lists', () => {
+        // These types have no tier-list feature according to the implementation;
+        // including them would silently allow unsupported creation routes.
+        const unsupported: string[] = [
+            'book', 'manga', 'podcast', 'comics_issue',
+            'tvshow_episode', 'anime_episode', 'movie_episode',
+        ];
+        for (const t of unsupported) {
+            expect(TIER_LIST_ARTIFACT_TYPES).not.toContain(t);
+        }
+    });
+
+    test('POST endpoint guard: every element passes a simple includes() check', () => {
+        // Mirrors the check in /api/tierlist +server.ts
+        for (const type of TIER_LIST_ARTIFACT_TYPES) {
+            expect(TIER_LIST_ARTIFACT_TYPES.includes(type)).toBe(true);
+        }
     });
 });

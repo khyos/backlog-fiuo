@@ -13,6 +13,7 @@ export interface ITierListDB {
     backlogId: number | null;
     artifactType: ArtifactType;
     title: string;
+    isStandalone: number;
     createdAt: number;
 }
 
@@ -71,7 +72,7 @@ export class TierListDB {
             `SELECT * FROM tier_list WHERE userId = ? ORDER BY id ASC LIMIT ? OFFSET ?`,
             [userId, pageSize, page * pageSize]
         );
-        return rows.map(row => new TierList(row.id, row.userId, row.backlogId, row.artifactType, row.title));
+        return rows.map(row => new TierList(row.id, row.userId, row.backlogId, row.artifactType, row.title, !!row.isStandalone));
     }
 
     static async getTierListById(id: number): Promise<TierList | null> {
@@ -79,7 +80,7 @@ export class TierListDB {
         if (!row) {
             return null;
         }
-        return new TierList(row.id, row.userId, row.backlogId, row.artifactType, row.title);
+        return new TierList(row.id, row.userId, row.backlogId, row.artifactType, row.title, !!row.isStandalone);
     }
 
     static async getTierListByIdWithItems(id: number): Promise<TierList | null> {
@@ -120,13 +121,13 @@ export class TierListDB {
         ));
         const unranked = toItems(itemRows.filter(itemRow => itemRow.tierId === null));
 
-        return new TierList(row.id, row.userId, row.backlogId, row.artifactType, row.title, tiers, unranked);
+        return new TierList(row.id, row.userId, row.backlogId, row.artifactType, row.title, !!row.isStandalone, tiers, unranked);
     }
 
-    static async insertTierList(userId: number, backlogId: number | null, artifactType: ArtifactType, title: string): Promise<number> {
+    static async insertTierList(userId: number, backlogId: number | null, artifactType: ArtifactType, title: string, isStandalone: boolean = false): Promise<number> {
         return await runDbInsert(
-            `INSERT INTO tier_list (userId, backlogId, artifactType, title) VALUES (?, ?, ?, ?)`,
-            [userId, backlogId, artifactType, title]
+            `INSERT INTO tier_list (userId, backlogId, artifactType, title, isStandalone) VALUES (?, ?, ?, ?, ?)`,
+            [userId, backlogId, artifactType, title, isStandalone ? 1 : 0]
         );
     }
 
@@ -279,9 +280,17 @@ export class TierListDB {
             backlogId INTEGER,
             artifactType TEXT NOT NULL,
             title TEXT NOT NULL,
+            isStandalone INTEGER NOT NULL DEFAULT 0,
             createdAt INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
             FOREIGN KEY (userId) REFERENCES user(id)
         )`);
+    }
+
+    static async unlinkFromBacklog(id: number): Promise<void> {
+        await runDbQuery(
+            `UPDATE tier_list SET backlogId = NULL, isStandalone = 1 WHERE id = ?`,
+            [id]
+        );
     }
 
     static async createTierListTierTable() {

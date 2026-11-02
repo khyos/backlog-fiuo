@@ -46,6 +46,17 @@ export class ArtifactDB {
         return await getDbRows<IArtifactDB>(query, params);
     }
 
+    static async countArtifacts(artifactType: ArtifactType, search: string = ''): Promise<number> {
+        const query = search
+            ? `SELECT COUNT(*) as total FROM artifact WHERE type = ? AND LOWER(title) LIKE ?`
+            : `SELECT COUNT(*) as total FROM artifact WHERE type = ?`;
+        const params = search
+            ? [artifactType, `%${search.toLowerCase()}%`]
+            : [artifactType];
+        const row = await getDbRow<{ total: number }>(query, params);
+        return row?.total ?? 0;
+    }
+
     static async getArtifactById(id: number): Promise<IArtifactDB | null> {
         return await getDbRow<IArtifactDB>(`SELECT * FROM artifact WHERE id = ?`, [id]);
     }

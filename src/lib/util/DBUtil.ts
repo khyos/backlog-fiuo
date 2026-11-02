@@ -59,9 +59,5 @@ export class DBUtil {
         await TMDB.initMovieGenres();
         await TMDB.initTvshowGenres();
         await SubscriptionServiceDB.seedPredefinedServices();
-        // migrateAddUniqueConstraint must run before migrateToMultiType:
-        // dedup rows first so that the subsequent column removal doesn't leave orphan duplicates.
-        await SubscriptionServiceDB.migrateAddUniqueConstraint();
-        await SubscriptionServiceDB.migrateToMultiType();
     }
 }

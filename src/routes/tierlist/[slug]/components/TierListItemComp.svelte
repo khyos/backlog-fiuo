@@ -10,6 +10,7 @@
     export let canEdit: boolean = false;
     export let tierId: TierId;
     export let onDrop: (artifactId: number, sourceTierId: TierId, targetTierId: TierId, targetPosition: number) => void | Promise<void>;
+    export let onRemove: ((artifactId: number) => void | Promise<void>) | undefined = undefined;
 
     let posterUrl: string | null = null;
     onMount(() => {
@@ -26,6 +27,14 @@
     use:draggable={{ canEdit, artifactId: item.artifact.id, sourceTierId: tierId, sourceIndex: item.position }}
     use:dropzone={{ canEdit, tierId, position: item.position, itemArtifactId: item.artifact.id, horizontal: true, onDrop }}
 >
+    {#if canEdit && onRemove !== undefined}
+        <button
+            class="tier-item-remove"
+            onclick={() => onRemove!(item.artifact.id)}
+            title="Remove"
+            aria-label="Remove {item.artifact.title}"
+        >×</button>
+    {/if}
     {#if posterUrl}
         <img src={posterUrl} alt="{item.artifact.title} poster" class="tier-item-poster" />
     {:else}
@@ -54,6 +63,28 @@
         margin: 0.25rem 0;
         padding: 0 0.25rem;
         position: relative;
+    }
+    .tier-item-remove {
+        display: none;
+        position: absolute;
+        top: 0;
+        right: 0;
+        z-index: 10;
+        background: rgba(0,0,0,0.6);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 1.25rem;
+        height: 1.25rem;
+        font-size: 0.875rem;
+        line-height: 1;
+        cursor: pointer;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+    }
+    .tier-item:hover .tier-item-remove {
+        display: flex;
     }
     .tier-item:global(.drop-before)::before,
     .tier-item:global(.drop-after)::after {

@@ -351,4 +351,100 @@ describe('TierListDB (live DB)', () => {
             expect(status.status).toBe(404);
         });
     });
+
+    /**
+     * Standards tests: isStandalone persistence and boolean hydration
+     *
+     * The schema stores isStandalone as INTEGER 0/1.  The hydration uses `!!row.isStandalone`
+     * to convert it to a JS boolean.  These tests verify that both sides of the conversion
+     * (0 → false, 1 → true) work correctly across the three public read methods.
+     */
+    describe('isStandalone persistence and hydration', () => {
+        test('insertTierList with isStandalone=false stores 0 and reads back as false', async () => {
+            const id = await TierListDB.insertTierList(ownerId, null, ArtifactType.GAME, 'Non-standalone', false);
+            const tl = await TierListDB.getTierListById(id);
+            expect(tl).not.toBeNull();
+            expect(tl!.isStandalone).toBe(false);
+            expect(typeof tl!.isStandalone).toBe('boolean');
+        });
+
+        test('insertTierList with isStandalone=true stores 1 and reads back as true', async () => {
+            const id = await TierListDB.insertTierList(ownerId, null, ArtifactType.GAME, 'Standalone', true);
+            const tl = await TierListDB.getTierListById(id);
+            expect(tl).not.toBeNull();
+            expect(tl!.isStandalone).toBe(true);
+            expect(typeof tl!.isStandalone).toBe('boolean');
+        });
+
+        test('getTierListByIdWithItems hydrates isStandalone=true as boolean true', async () => {
+            const id = await TierListDB.insertTierList(ownerId, null, ArtifactType.GAME, 'SA Full', true);
+            await TierListDB.insertTier(id, 'S', '#f00', 0);
+            const tl = await TierListDB.getTierListByIdWithItems(id);
+            expect(tl).not.toBeNull();
+            expect(tl!.isStandalone).toBe(true);
+        });
+
+        test('getTierLists hydrates isStandalone for all returned rows', async () => {
+            await TierListDB.insertTierList(ownerId, null, ArtifactType.GAME, 'Backlog-linked', false);
+            await TierListDB.insertTierList(ownerId, null, ArtifactType.MOVIE, 'Standalone', true);
+
+            const lists = await TierListDB.getTierLists(ownerId, 0, 50);
+            expect(lists.length).toBeGreaterThanOrEqual(2);
+
+            const nonSA = lists.find(l => l.title === 'Backlog-linked');
+            const sa = lists.find(l => l.title === 'Standalone');
+            expect(nonSA).toBeDefined();
+            expect(sa).toBeDefined();
+            expect(nonSA!.isStandalone).toBe(false);
+            expect(sa!.isStandalone).toBe(true);
+            // Verify JS booleans, not integers
+            expect(typeof nonSA!.isStandalone).toBe('boolean');
+            expect(typeof sa!.isStandalone).toBe('boolean');
+        });
+    });
+
+    /**
+     * Standards tests: unlinkFromBacklog
+     *
+     * Sets backlogId = NULL and isStandalone = 1 in a single UPDATE.  Tested against
+     * a real DB to confirm both columns are written atomically and the in-memory
+     * model reads back the expected values.
+     */
+    describe('unlinkFromBacklog', () => {
+        test('sets backlogId to null and isStandalone to true for the target tier list', async () => {
+            const id = await TierListDB.insertTierList(ownerId, 99, ArtifactType.GAME, 'Linked List', false);
+            // Confirm initial state
+            const before = await TierListDB.getTierListById(id);
+            expect(before!.backlogId).toBe(99);
+            expect(before!.isStandalone).toBe(false);
+
+            await TierListDB.unlinkFromBacklog(id);
+
+            const after = await TierListDB.getTierListById(id);
+            expect(after!.backlogId).toBeNull();
+            expect(after!.isStandalone).toBe(true);
+        });
+
+        test('does not affect other tier lists when unlinking one', async () => {
+            const id1 = await TierListDB.insertTierList(ownerId, 10, ArtifactType.GAME, 'List1', false);
+            const id2 = await TierListDB.insertTierList(ownerId, 20, ArtifactType.MOVIE, 'List2', false);
+
+            await TierListDB.unlinkFromBacklog(id1);
+
+            const list1 = await TierListDB.getTierListById(id1);
+            const list2 = await TierListDB.getTierListById(id2);
+            expect(list1!.backlogId).toBeNull();
+            expect(list1!.isStandalone).toBe(true);
+            expect(list2!.backlogId).toBe(20);
+            expect(list2!.isStandalone).toBe(false);
+        });
+
+        test('calling unlinkFromBacklog on an already-standalone list is idempotent', async () => {
+            const id = await TierListDB.insertTierList(ownerId, null, ArtifactType.GAME, 'Already SA', true);
+            await expect(TierListDB.unlinkFromBacklog(id)).resolves.not.toThrow();
+            const tl = await TierListDB.getTierListById(id);
+            expect(tl!.isStandalone).toBe(true);
+            expect(tl!.backlogId).toBeNull();
+        });
+    });
 });
