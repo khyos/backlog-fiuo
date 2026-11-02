@@ -261,4 +261,92 @@ describe('TierListUtil DB orchestration (live DB, boundaries mocked)', () => {
             expect(info).toBeNull();
         });
     });
+
+    /**
+     * Standards tests: createStandaloneTierList
+     *
+     * Only visible by reading the implementation — TDD tests cannot reach this because
+     * the function requires a live DB to verify tier creation and the isStandalone flag.
+     */
+    describe('createStandaloneTierList', () => {
+        test('creates a tier list with isStandalone=true and backlogId=null', async () => {
+            const tierListId = await TierListUtil.createStandaloneTierList(ownerId, ArtifactType.GAME, 'Standalone List');
+
+            const tierList = await TierListDB.getTierListById(tierListId);
+            expect(tierList).not.toBeNull();
+            expect(tierList!.isStandalone).toBe(true);
+            expect(tierList!.backlogId).toBeNull();
+            expect(tierList!.userId).toBe(ownerId);
+            expect(tierList!.artifactType).toBe(ArtifactType.GAME);
+            expect(tierList!.title).toBe('Standalone List');
+        });
+
+        test('creates exactly DEFAULT_TIERS.length tiers (6) with correct labels', async () => {
+            const tierListId = await TierListUtil.createStandaloneTierList(ownerId, ArtifactType.MOVIE, 'Movie List');
+
+            const tiers = await getDbRows<{ label: string; position: number }>(
+                `SELECT label, position FROM tier_list_tier WHERE tierListId = ? ORDER BY position ASC`,
+                [tierListId]
+            );
+            expect(tiers).toHaveLength(DEFAULT_TIERS.length);
+            expect(tiers.map(t => t.label)).toEqual(DEFAULT_TIERS.map(t => t.label));
+            // Positions are 0-based sequential indices matching DEFAULT_TIERS order
+            expect(tiers.map(t => t.position)).toEqual(DEFAULT_TIERS.map((_, i) => i));
+        });
+
+        test('creates tiers with the colors from DEFAULT_TIERS', async () => {
+            const tierListId = await TierListUtil.createStandaloneTierList(ownerId, ArtifactType.ANIME, 'Anime List');
+
+            const tiers = await getDbRows<{ label: string; color: string }>(
+                `SELECT label, color FROM tier_list_tier WHERE tierListId = ? ORDER BY position ASC`,
+                [tierListId]
+            );
+            for (let i = 0; i < DEFAULT_TIERS.length; i++) {
+                expect(tiers[i].color).toBe(DEFAULT_TIERS[i].color);
+            }
+        });
+
+        test('starts with an empty item pool (no unranked or ranked items)', async () => {
+            const tierListId = await TierListUtil.createStandaloneTierList(ownerId, ArtifactType.GAME, 'Empty List');
+
+            const items = await TierListDB.getItemArtifactIds(tierListId);
+            expect(items).toHaveLength(0);
+        });
+
+        test('returned id is the id of the created tier list', async () => {
+            const tierListId = await TierListUtil.createStandaloneTierList(ownerId, ArtifactType.TVSHOW, 'TV Shows');
+            const list = await TierListDB.getTierListById(tierListId);
+            expect(list!.id).toBe(tierListId);
+        });
+    });
+
+    /**
+     * Standards tests: refreshFromBacklog isStandalone guard path
+     *
+     * The implementation has an early-return when `tierList.isStandalone` is true,
+     * returning { added: [], removalCandidates: [] } without ever calling BacklogDB.
+     * This path is only exercisable against a live DB and was not testable
+     * from the contract alone.
+     */
+    describe('refreshFromBacklog — isStandalone guard', () => {
+        test('returns empty result immediately for a standalone tier list (no BacklogDB call)', async () => {
+            // Create a standalone tier list with some items
+            const tierListId = await TierListDB.insertTierList(ownerId, null, ArtifactType.GAME, 'Standalone', true);
+            await TierListDB.insertTier(tierListId, 'S', '#ff0', 0);
+            await TierListDB.addUnrankedItems(tierListId, [ART[0]]);
+
+            const getBacklog = vi.spyOn(BacklogDB, 'getBacklogByIdWithItems');
+
+            const result = await TierListUtil.refreshFromBacklog(tierListId);
+
+            // Early return — nothing was added or flagged for removal
+            expect(result).toEqual({ added: [], removalCandidates: [] });
+            // BacklogDB must never be called for a standalone list
+            expect(getBacklog).not.toHaveBeenCalled();
+
+            // Items remain untouched
+            const ids = await TierListDB.getItemArtifactIds(tierListId);
+            expect(ids).toEqual([ART[0]]);
+        });
+    });
 });

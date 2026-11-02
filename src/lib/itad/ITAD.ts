@@ -25,21 +25,40 @@ export type ITAD_Subscription = {
 }
 
 export class ITAD {
+    // The prices and subs endpoints reject requests with more than 200 game IDs (HTTP 400).
+    private static readonly MAX_IDS_PER_REQUEST = 200;
+
+    private static chunk<T>(items: T[], size: number): T[][] {
+        const chunks: T[][] = [];
+        for (let i = 0; i < items.length; i += size) {
+            chunks.push(items.slice(i, i + size));
+        }
+        return chunks;
+    }
+
     static async getPrices(gameIds: string[]): Promise<ITAD_Price[]> {
-        const response = await fetch(`https://api.isthereanydeal.com/games/prices/v3?key=${ITA_APP_ID}&country=FR&shops=6,16,28,35,36,37,52,61,62,`, {
-            method: 'POST',
-            body: JSON.stringify(gameIds)
+        const batches = ITAD.chunk(gameIds, ITAD.MAX_IDS_PER_REQUEST).map(async batch => {
+            const response = await fetch(`https://api.isthereanydeal.com/games/prices/v3?key=${ITA_APP_ID}&country=FR&shops=6,16,28,35,36,37,52,61,62,`, {
+                method: 'POST',
+                body: JSON.stringify(batch)
+            });
+            if (!response.ok) return [] as ITAD_Price[];
+            return (await response.json()) as ITAD_Price[];
         });
-        return (await response.json());
+        return (await Promise.all(batches)).flat();
     }
 
     static async getSubscriptions(gameIds: string[]): Promise<ITAD_Subscription[]> {
-        const response = await fetch(`https://api.isthereanydeal.com/games/subs/v1?key=${ITA_APP_ID}&country=US`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(gameIds)
+        const batches = ITAD.chunk(gameIds, ITAD.MAX_IDS_PER_REQUEST).map(async batch => {
+            const response = await fetch(`https://api.isthereanydeal.com/games/subs/v1?key=${ITA_APP_ID}&country=US`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(batch)
+            });
+            if (!response.ok) return [] as ITAD_Subscription[];
+            return (await response.json()) as ITAD_Subscription[];
         });
-        return (await response.json());
+        return (await Promise.all(batches)).flat();
     }
 
     static async getIdFromSlug(slug: string): Promise<string> {

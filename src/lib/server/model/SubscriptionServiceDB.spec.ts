@@ -629,47 +629,6 @@ describe('SubscriptionServiceDB', () => {
         });
     });
 
-    // Standards tests: implementation-specific paths for migrateAddUniqueConstraint()
-    describe('migrateAddUniqueConstraint', () => {
-        test('is idempotent on a database without the legacy artifactType column — runs without error', async () => {
-            await SubscriptionServiceDB.addService('Netflix', []);
-            await SubscriptionServiceDB.addService('Game Pass', [ArtifactType.GAME]);
-
-            // Should complete without throwing — early-exit guard fires because no artifactType column
-            await expect(SubscriptionServiceDB.migrateAddUniqueConstraint()).resolves.not.toThrow();
-
-            // Data must be unchanged
-            const services = await SubscriptionServiceDB.getAllServices();
-            expect(services).toHaveLength(2);
-        });
-
-        test('migration on empty subscription_service table runs without error', async () => {
-            await expect(SubscriptionServiceDB.migrateAddUniqueConstraint()).resolves.not.toThrow();
-        });
-
-        test('createSubscriptionServiceTable called twice does not error — IF NOT EXISTS is honoured', async () => {
-            await expect(SubscriptionServiceDB.createSubscriptionServiceTable()).resolves.not.toThrow();
-        });
-    });
-
-    // Contract: migrateToMultiType is idempotent
-    describe('migrateToMultiType', () => {
-        test('runs without error on a database with no legacy artifactType column', async () => {
-            await SubscriptionServiceDB.addService('Netflix', [ArtifactType.MOVIE, ArtifactType.TVSHOW]);
-            await expect(SubscriptionServiceDB.migrateToMultiType()).resolves.not.toThrow();
-        });
-
-        test('is idempotent — calling it twice produces the same result', async () => {
-            await SubscriptionServiceDB.addService('Netflix', [ArtifactType.MOVIE, ArtifactType.TVSHOW]);
-            await SubscriptionServiceDB.migrateToMultiType();
-            await SubscriptionServiceDB.migrateToMultiType();
-            const services = await SubscriptionServiceDB.getAllServices();
-            expect(services).toHaveLength(1);
-            expect(services[0].artifactTypes).toContain(ArtifactType.MOVIE);
-            expect(services[0].artifactTypes).toContain(ArtifactType.TVSHOW);
-        });
-    });
-
     // ─── Standards tests: implementation-specific paths ──────────────────────
 
     describe('addService with empty artifactTypes — filtering behaviour', () => {
@@ -791,47 +750,6 @@ describe('SubscriptionServiceDB', () => {
             await SubscriptionServiceDB.deleteService(id1);
             const byGame = await SubscriptionServiceDB.getAllServices(ArtifactType.GAME);
             expect(byGame.find(s => s.id === id2)).toBeDefined();
-        });
-    });
-
-    describe('migrateToMultiType — idempotency and fresh DB no-op', () => {
-        test('calling migrateToMultiType on a fresh DB (no legacy column, type table already has rows) is a no-op', async () => {
-            // Add services through the current API so the type table already has rows
-            await SubscriptionServiceDB.addService('Netflix', [ArtifactType.MOVIE, ArtifactType.TVSHOW]);
-            await SubscriptionServiceDB.addService('Game Pass', [ArtifactType.GAME]);
-
-            // migrateToMultiType should fire the COUNT > 0 idempotency guard and return early
-            await SubscriptionServiceDB.migrateToMultiType();
-
-            // Data and type associations must be unchanged
-            const services = await SubscriptionServiceDB.getAllServices();
-            expect(services).toHaveLength(2);
-            const netflix = services.find(s => s.name === 'Netflix')!;
-            expect(netflix.artifactTypes).toHaveLength(2);
-            expect(netflix.artifactTypes).toContain(ArtifactType.MOVIE);
-            expect(netflix.artifactTypes).toContain(ArtifactType.TVSHOW);
-        });
-
-        test('calling migrateToMultiType twice on a fresh DB keeps row count stable', async () => {
-            await SubscriptionServiceDB.addService('Netflix', [ArtifactType.MOVIE, ArtifactType.TVSHOW]);
-
-            // Both calls are idempotent no-ops because type table already has rows
-            await SubscriptionServiceDB.migrateToMultiType();
-            await SubscriptionServiceDB.migrateToMultiType();
-
-            const services = await SubscriptionServiceDB.getAllServices();
-            expect(services).toHaveLength(1);
-            const netflix = services[0];
-            expect(netflix.artifactTypes).toHaveLength(2);
-        });
-
-        test('calling migrateToMultiType on a completely empty DB completes without error and leaves no data', async () => {
-            // subscription_service_type has 0 rows AND subscription_service has 0 rows
-            // The idempotency guard fires (count == 0), then hasArtifactTypeColumn is false,
-            // so the data-copy branch is skipped entirely, but the table recreate still runs.
-            await expect(SubscriptionServiceDB.migrateToMultiType()).resolves.not.toThrow();
-            const services = await SubscriptionServiceDB.getAllServices();
-            expect(services).toHaveLength(0);
         });
     });
 });

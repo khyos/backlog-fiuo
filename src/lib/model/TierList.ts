@@ -11,6 +11,7 @@ export interface ITierList extends ISerializable {
     backlogId: number | null;
     artifactType: ArtifactType;
     title: string;
+    isStandalone: boolean;
     tiers: ITier[];
     unranked: ITierListItem[];
 }
@@ -21,6 +22,7 @@ export class TierList implements Serializable<ITierList> {
     backlogId: number | null;
     artifactType: ArtifactType;
     title: string;
+    isStandalone: boolean;
     tiers: Tier[];
     unranked: TierListItem[];
 
@@ -30,6 +32,7 @@ export class TierList implements Serializable<ITierList> {
         backlogId: number | null,
         artifactType: ArtifactType,
         title: string,
+        isStandalone: boolean = false,
         tiers: Tier[] = [],
         unranked: TierListItem[] = []
     ) {
@@ -38,6 +41,7 @@ export class TierList implements Serializable<ITierList> {
         this.backlogId = backlogId;
         this.artifactType = artifactType;
         this.title = title;
+        this.isStandalone = isStandalone;
         this.tiers = tiers;
         this.unranked = unranked;
     }
@@ -50,6 +54,7 @@ export class TierList implements Serializable<ITierList> {
             backlogId: this.backlogId,
             artifactType: this.artifactType,
             title: this.title,
+            isStandalone: this.isStandalone,
             tiers: this.tiers.map(tier => tier.toJSON()),
             unranked: this.unranked.map(item => item.toJSON()),
         };
@@ -65,6 +70,7 @@ export class TierList implements Serializable<ITierList> {
             json.backlogId,
             json.artifactType,
             json.title,
+            json.isStandalone,
             json.tiers.map(tier => Tier.fromJSON(tier)),
             json.unranked.map(item => TierListItem.fromJSON(item))
         );

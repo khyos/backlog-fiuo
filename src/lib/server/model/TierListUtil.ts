@@ -1,4 +1,5 @@
 import { ArtifactType } from "#lib/model/Artifact";
+export { TIER_LIST_ARTIFACT_TYPES } from "#lib/model/TierListConstants";
 import { User, UserRights } from "#lib/model/User";
 import { ArtifactDB } from "./ArtifactDB";
 import { BacklogDB } from "./BacklogDB";
@@ -70,6 +71,16 @@ export class TierListUtil {
         return tierListId;
     }
 
+    static async createStandaloneTierList(userId: number, artifactType: ArtifactType, title: string): Promise<number> {
+        const tierListId = await TierListDB.insertTierList(userId, null, artifactType, title, true);
+
+        for (let i = 0; i < DEFAULT_TIERS.length; i++) {
+            await TierListDB.insertTier(tierListId, DEFAULT_TIERS[i].label, DEFAULT_TIERS[i].color, i);
+        }
+
+        return tierListId;
+    }
+
     static async loadTierListPageInfo(id: number, locals: App.Locals) {
         const user = User.deserialize(locals.user);
         const tierList = await TierListDB.getTierListByIdWithItems(id);
@@ -85,6 +96,10 @@ export class TierListUtil {
     static async refreshFromBacklog(tierListId: number): Promise<{ added: IArtifactSummary[]; removalCandidates: IArtifactSummary[] }> {
         const tierList = await TierListDB.getTierListById(tierListId);
         if (!tierList) {
+            return { added: [], removalCandidates: [] };
+        }
+
+        if (tierList.isStandalone) {
             return { added: [], removalCandidates: [] };
         }
 

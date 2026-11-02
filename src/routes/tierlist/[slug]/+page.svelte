@@ -6,6 +6,7 @@
     import TierRow from "./components/TierRow.svelte";
     import UnrankedPool from "./components/UnrankedPool.svelte";
     import TierEditor from "./components/TierEditor.svelte";
+    import AddItemModal from "./components/AddItemModal.svelte";
     import type { TierId } from "./components/dnd";
     import type { IArtifactSummary } from "#lib/server/model/TierListUtil";
 
@@ -16,6 +17,7 @@
     $: store = $tierListStore;
 
     let showEditor = false;
+    let showAddItemModal = false;
     let boardEl: HTMLElement;
     let unrankedEl: HTMLElement;
     let addedSummaries: IArtifactSummary[] = [];
@@ -66,12 +68,31 @@
         await refreshTierList();
     };
 
+    const unlinkFromBacklog = async () => {
+        if (!confirm('Are you sure? This cannot be undone.')) {
+            return;
+        }
+        const response = await fetch(`/api/tierlist/${store.tierList.id}/unlink`, { method: "POST" });
+        if (!response.ok) {
+            return;
+        }
+        await refreshTierList();
+    };
+
     const confirmRemoval = async (artifactId: number) => {
         await fetch(`/api/tierlist/${store.tierList.id}/item`, {
             method: "DELETE",
             body: JSON.stringify({ artifactId })
         });
         removalCandidates = removalCandidates.filter(candidate => candidate.id !== artifactId);
+        await refreshTierList();
+    };
+
+    const removeItem = async (artifactId: number) => {
+        await fetch(`/api/tierlist/${store.tierList.id}/item`, {
+            method: "DELETE",
+            body: JSON.stringify({ artifactId })
+        });
         await refreshTierList();
     };
 
@@ -100,7 +121,13 @@
         {#if data.canEdit}
             <div class="flex gap-2">
                 <Button size="sm" color="light" onclick={() => (showEditor = !showEditor)}>Edit tiers</Button>
-                <Button size="sm" color="light" onclick={refreshFromBacklog}>Refresh from backlog</Button>
+                {#if !store.tierList.isStandalone}
+                    <Button size="sm" color="light" onclick={refreshFromBacklog}>Refresh from backlog</Button>
+                    <Button size="sm" color="yellow" onclick={unlinkFromBacklog}>Unlink from backlog</Button>
+                {/if}
+                {#if store.tierList.isStandalone}
+                    <Button size="sm" color="light" onclick={() => (showAddItemModal = true)}>Add item</Button>
+                {/if}
                 <Button size="sm" onclick={exportPng}>Export PNG</Button>
             </div>
         {/if}
@@ -135,6 +162,7 @@
                 canEdit={data.canEdit}
                 onDrop={onDropItem}
                 {onUpdateTier}
+                onRemove={store.tierList.isStandalone && data.canEdit ? removeItem : undefined}
             />
         {/each}
         <div bind:this={unrankedEl}>
@@ -143,7 +171,17 @@
                 artifactType={store.tierList.artifactType}
                 canEdit={data.canEdit}
                 onDrop={onDropItem}
+                onRemove={store.tierList.isStandalone && data.canEdit ? removeItem : undefined}
             />
         </div>
     </div>
 </div>
+
+{#if data.canEdit && store.tierList.isStandalone}
+    <AddItemModal
+        tierListId={store.tierList.id}
+        bind:open={showAddItemModal}
+        onClose={() => (showAddItemModal = false)}
+        onAdded={refreshTierList}
+    />
+{/if}
