@@ -1,5 +1,5 @@
-import { User, UserRights } from "$lib/model/User";
-import { MangaDB } from "$lib/server/model/manga/MangaDB";
+import { User, UserRights } from "#lib/model/User";
+import { MangaDB } from "#lib/server/model/manga/MangaDB";
 import { error, json } from "@sveltejs/kit";
 import type { RequestEvent } from "./$types";
 

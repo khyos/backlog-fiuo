@@ -11,8 +11,6 @@
 		"strict": true,
 		"moduleResolution": "bundler",
 		"paths": {
-			"$lib": ["./src/lib"],
-			"$lib/*": ["./src/lib/*"],
 			"#lib": ["./src/lib/index.ts"],
 			"#lib/*": ["./src/lib/*"]
 		}

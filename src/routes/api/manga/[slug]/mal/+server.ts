@@ -1,7 +1,7 @@
-import { LinkType } from "$lib/model/Link";
-import { MAL } from "$lib/mal/MAL";
-import { User } from "$lib/model/User";
-import { MangaDB } from "$lib/server/model/manga/MangaDB";
+import { LinkType } from "#lib/model/Link";
+import { MAL } from "#lib/mal/MAL";
+import { User } from "#lib/model/User";
+import { MangaDB } from "#lib/server/model/manga/MangaDB";
 import { error, json } from "@sveltejs/kit";
 import type { RequestEvent } from "./$types";
 

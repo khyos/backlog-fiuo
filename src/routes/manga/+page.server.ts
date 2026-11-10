@@ -1,5 +1,5 @@
-import { User, UserRights } from '$lib/model/User.js';
-import { MangaDB } from '$lib/server/model/manga/MangaDB.js';
+import { User, UserRights } from '#lib/model/User.js';
+import { MangaDB } from '#lib/server/model/manga/MangaDB.js';
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types.js';
 

@@ -1,12 +1,12 @@
-import { MAL } from "$lib/mal/MAL";
-import { Link, LinkType } from "$lib/model/Link";
-import { Rating, RatingType } from "$lib/model/Rating";
-import { User, UserRights } from "$lib/model/User";
-import { SensCritique } from "$lib/senscritique/SensCritique";
-import { LinkDB } from "$lib/server/model/LinkDB";
-import { MangaDB } from "$lib/server/model/manga/MangaDB";
-import { ArtifactDB } from "$lib/server/model/ArtifactDB";
-import { ArtifactType } from "$lib/model/Artifact";
+import { MAL } from "#lib/mal/MAL";
+import { Link, LinkType } from "#lib/model/Link";
+import { Rating, RatingType } from "#lib/model/Rating";
+import { User, UserRights } from "#lib/model/User";
+import { SensCritique } from "#lib/senscritique/SensCritique";
+import { LinkDB } from "#lib/server/model/LinkDB";
+import { MangaDB } from "#lib/server/model/manga/MangaDB";
+import { ArtifactDB } from "#lib/server/model/ArtifactDB";
+import { ArtifactType } from "#lib/model/Artifact";
 import { error, json } from "@sveltejs/kit";
 import type { RequestEvent } from "./$types";
 

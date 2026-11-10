@@ -1,4 +1,4 @@
-import { MangaDB } from "$lib/server/model/manga/MangaDB";
+import { MangaDB } from "#lib/server/model/manga/MangaDB";
 import { json } from "@sveltejs/kit";
 import type { RequestEvent } from "./$types";
 

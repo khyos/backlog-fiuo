@@ -1,7 +1,7 @@
-import { MAL } from "$lib/mal/MAL";
-import { User, UserRights } from "$lib/model/User";
-import { SensCritique } from "$lib/senscritique/SensCritique";
-import { ErrorUtil } from "$lib/util/ErrorUtil";
+import { MAL } from "#lib/mal/MAL";
+import { User, UserRights } from "#lib/model/User";
+import { SensCritique } from "#lib/senscritique/SensCritique";
+import { ErrorUtil } from "#lib/util/ErrorUtil";
 import { error, json } from "@sveltejs/kit";
 import type { RequestEvent } from "./$types";
 
