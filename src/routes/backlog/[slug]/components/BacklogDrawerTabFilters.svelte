@@ -42,6 +42,8 @@
 
     // Event Callbacks
     export let onFetchPrices: () => Promise<void>;
+    export let canEdit: boolean = false;
+    export let onCreateTierList: (() => Promise<void>) | undefined = undefined;
 
     const formatDurationDisplay = (duration: number) => {
         if (backlogStoreInst.backlog.artifactType === ArtifactType.GAME || backlogStoreInst.backlog.artifactType === ArtifactType.TVSHOW
@@ -100,4 +102,7 @@
             Owned or Subscription
         </Checkbox>
     </div>
+    {#if canEdit && onCreateTierList}
+        <Button class="mt-4 w-full" onclick={onCreateTierList}>Create Tier List</Button>
+    {/if}
 </TabItem>
