@@ -213,7 +213,7 @@
                                     <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
                                     <p>Go to <a href="{site.url}" class="text-blue-600 hover:underline" rel="noopener noreferrer" target="_blank">{site.name}</a></p>
                                     {#each site.helpText as line (line)}
-                                        <p class="mt-1">{@html line}</p>
+                                        <p class="mt-1">{line}</p>
                                     {/each}
                                 </div>
                             </Popover>

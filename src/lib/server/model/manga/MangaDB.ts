@@ -52,8 +52,7 @@ export class MangaDB {
 
     /**
      * Fetches direct children for each manga:
-     * - MangaVolume rows → pushed into manga.children, then their chapters are fetched.
-     * - Standalone MangaChapter rows → pushed into manga.children directly.
+     * - MangaVolume rows & MangaChapter rows → pushed into manga.children directly.
      */
     static async fetchChildren(mangas: Manga[]): Promise<void> {
         for (const manga of mangas) {
@@ -70,15 +69,6 @@ export class MangaDB {
                     chapter.parent = manga;
                     manga.children.push(chapter);
                 }
-            }
-            // Fetch chapters for each volume
-            for (const volume of manga.volumes) {
-                const chapterRows = await ArtifactDB.getChildrenByParentId(volume.id);
-                volume.children = chapterRows.map((row: IArtifactDB) => {
-                    const chapter = new MangaChapter(row.id, row.child_index, row.title, row.type, new Date(row.releaseDate), row.duration);
-                    chapter.parent = volume;
-                    return chapter;
-                });
             }
         }
     }

@@ -14,7 +14,7 @@ export interface IManga extends IArtifact {
 }
 
 export class Manga extends Artifact implements Serializable<IManga> {
-    /** Direct children: MangaVolume items and/or standalone MangaChapter items. */
+    /** Direct children: MangaVolume items and/or MangaChapter items. */
     override children: Array<MangaVolume | MangaChapter> = [];
     volumeCount?: number;
     chapterCount?: number;
@@ -31,7 +31,7 @@ export class Manga extends Artifact implements Serializable<IManga> {
     }
 
     /** Chapters that are direct children of this manga (not inside a volume). */
-    get standaloneChapters(): MangaChapter[] {
+    get chapters(): MangaChapter[] {
         return this.children.filter((c): c is MangaChapter => c instanceof MangaChapter);
     }
 
@@ -51,11 +51,8 @@ export class Manga extends Artifact implements Serializable<IManga> {
         last: MangaChapter | null,
         next: MangaChapter | null
     } {
-        // Collect all chapters in reading order: chapters from volumes first, then standalone chapters.
-        const allChapters: MangaChapter[] = [
-            ...this.volumes.flatMap(v => v.children),
-            ...this.standaloneChapters
-        ];
+        // All chapters are direct children of the manga (flat list, no nesting inside volumes).
+        const allChapters: MangaChapter[] = this.chapters;
         const result: { last: MangaChapter | null; next: MangaChapter | null } = { last: null, next: null };
         for (let i = 0; i < allChapters.length; i++) {
             const child = allChapters[i];

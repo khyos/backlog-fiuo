@@ -196,95 +196,120 @@
     </div>
 {:else if artifactDepth === 1 && artifact.children.length > 0}
     <div class="children-container">
-        <div class="flex items-center mb-2">
-            <ChevronDoubleRightOutline class="w-4 h-4 mr-2 text-purple-500" />
-            <P weight="medium" class="text-lg"
-                >{ArtifactTypeUtil.getChildName(artifact.type, 0)}</P
-            >
-        </div>
-
-        <div class="secondLevelChildren-list p-3 bg-gray-50">
-            <table class="w-full text-sm">
-                <thead class="bg-gray-50 border-b">
-                    <tr>
-                        <th class="p-2 text-left">Index</th>
-                        <th class="p-2 text-left"
-                            >{ArtifactTypeUtil.getChildName(
-                                artifact.type,
-                                0,
-                            )}</th
-                        >
-                        <th class="p-2 text-left">Duration</th>
-                        {#if userConnected}
+        {#if ArtifactTypeUtil.hasParallelChildren(artifact.type)}
+            <!-- Manga: two independent flat sections — Volumes and Chapters -->
+            {#each ArtifactTypeUtil.getParallelChildSections(artifact.type) as section (section.type)}
+                {@const sectionChildren = artifact.children.filter(c => c.type === section.type)}
+                {#if sectionChildren.length > 0}
+                    <div class="mb-6">
+                        <div class="flex items-center mb-2">
+                            <ChevronDoubleRightOutline class="w-4 h-4 mr-2 text-purple-500" />
+                            <P weight="medium" class="text-lg">{section.label}</P>
+                        </div>
+                        <div class="secondLevelChildren-list p-3 bg-gray-50">
+                            <table class="w-full text-sm">
+                                <thead class="bg-gray-50 border-b">
+                                    <tr>
+                                        <th class="p-2 text-left">Index</th>
+                                        <th class="p-2 text-left">Title</th>
+                                        <th class="p-2 text-left">Duration</th>
+                                        {#if userConnected}
+                                        <th class="p-2 text-left"></th>
+                                        {/if}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {#each sectionChildren as child, index (child.id)}
+                                        <tr class="border-b last:border-b-0 border-gray-300 hover:bg-gray-100">
+                                            <td class="p-2">{index + 1}</td>
+                                            <td class="p-2">{child.title}</td>
+                                            <td class="p-2">
+                                                {#if child.duration}
+                                                    {TimeUtil.formatDuration(child.duration)}
+                                                {:else}
+                                                    <span class="text-gray-500 italic">N/A</span>
+                                                {/if}
+                                            </td>
+                                            {#if userConnected}
+                                            <td class="p-2">
+                                                <div class="flex items-center gap-1">
+                                                    <Checkbox
+                                                        checked={child.userInfo?.status === UserArtifactStatus.FINISHED}
+                                                        onchange={(event) => handleCheckboxStatusChange(event, child)}
+                                                    />
+                                                    <Button size="xs" color="light" class="!p-1">
+                                                        <DotsVerticalOutline class="w-3 h-3" />
+                                                    </Button>
+                                                    <Dropdown placement="bottom-end">
+                                                        <DropdownItem onclick={() => markFinishedUpTo(child.id)}>Mark finished up to here</DropdownItem>
+                                                    </Dropdown>
+                                                </div>
+                                            </td>
+                                            {/if}
+                                        </tr>
+                                    {/each}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                {/if}
+            {/each}
+        {:else}
+            <!-- Single-type flat list (e.g. Anime episodes) -->
+            <div class="flex items-center mb-2">
+                <ChevronDoubleRightOutline class="w-4 h-4 mr-2 text-purple-500" />
+                <P weight="medium" class="text-lg">{ArtifactTypeUtil.getChildName(artifact.type, 0)}</P>
+            </div>
+            <div class="secondLevelChildren-list p-3 bg-gray-50">
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-50 border-b">
+                        <tr>
+                            <th class="p-2 text-left">Index</th>
+                            <th class="p-2 text-left">{ArtifactTypeUtil.getChildName(artifact.type, 0)}</th>
+                            <th class="p-2 text-left">Duration</th>
+                            {#if userConnected}
                             <th class="p-2 text-left">
                                 <Checkbox
-                                    checked={artifact.userInfo?.status ===
-                                        UserArtifactStatus.FINISHED}
-                                    onchange={(event) =>
-                                        handleCheckboxStatusChange(
-                                            event,
-                                            artifact,
-                                        )}
+                                    checked={artifact.userInfo?.status === UserArtifactStatus.FINISHED}
+                                    onchange={(event) => handleCheckboxStatusChange(event, artifact)}
                                 />
                             </th>
-                        {/if}
-                    </tr>
-                </thead>
-                <tbody>
-                    {#each artifact.children as secondLevelChild, index (secondLevelChild.id)}
-                        <tr
-                            class="border-b last:border-b-0 border-gray-300 hover:bg-gray-100"
-                        >
-                            <td class="p-2">{index + 1}</td>
-                            <td class="p-2">{secondLevelChild.title}</td>
-                            <td class="p-2">
-                                {#if secondLevelChild.duration}
-                                    {TimeUtil.formatDuration(
-                                        secondLevelChild.duration,
-                                    )}
-                                {:else}
-                                    <span class="text-gray-500 italic">N/A</span
-                                    >
-                                {/if}
-                            </td>
-                            {#if userConnected}
+                            {/if}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {#each artifact.children as secondLevelChild, index (secondLevelChild.id)}
+                            <tr class="border-b last:border-b-0 border-gray-300 hover:bg-gray-100">
+                                <td class="p-2">{index + 1}</td>
+                                <td class="p-2">{secondLevelChild.title}</td>
+                                <td class="p-2">
+                                    {#if secondLevelChild.duration}
+                                        {TimeUtil.formatDuration(secondLevelChild.duration)}
+                                    {:else}
+                                        <span class="text-gray-500 italic">N/A</span>
+                                    {/if}
+                                </td>
+                                {#if userConnected}
                                 <td class="p-2">
                                     <div class="flex items-center gap-1">
                                         <Checkbox
-                                            checked={secondLevelChild.userInfo
-                                                ?.status ===
-                                                UserArtifactStatus.FINISHED}
-                                            onchange={(event) =>
-                                                handleCheckboxStatusChange(
-                                                    event,
-                                                    secondLevelChild,
-                                                )}
+                                            checked={secondLevelChild.userInfo?.status === UserArtifactStatus.FINISHED}
+                                            onchange={(event) => handleCheckboxStatusChange(event, secondLevelChild)}
                                         />
-                                        <Button
-                                            size="xs"
-                                            color="light"
-                                            class="!p-1"
-                                        >
-                                            <DotsVerticalOutline
-                                                class="w-3 h-3"
-                                            />
+                                        <Button size="xs" color="light" class="!p-1">
+                                            <DotsVerticalOutline class="w-3 h-3" />
                                         </Button>
                                         <Dropdown placement="bottom-end">
-                                            <DropdownItem
-                                                onclick={() =>
-                                                    markFinishedUpTo(
-                                                        secondLevelChild.id,
-                                                    )}
-                                                >Mark finished up to here</DropdownItem
-                                            >
+                                            <DropdownItem onclick={() => markFinishedUpTo(secondLevelChild.id)}>Mark finished up to here</DropdownItem>
                                         </Dropdown>
                                     </div>
                                 </td>
-                            {/if}
-                        </tr>
-                    {/each}
-                </tbody>
-            </table>
-        </div>
+                                {/if}
+                            </tr>
+                        {/each}
+                    </tbody>
+                </table>
+            </div>
+        {/if}
     </div>
 {/if}
