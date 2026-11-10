@@ -17,6 +17,14 @@ export class ArtifactTypeUtil {
         }
         if (artifactType === ArtifactType.MANGA) {
             if (index === 0) {
+                return 'Volume';
+            }
+            if (index === 1) {
+                return 'Chapter';
+            }
+        }
+        if (artifactType === ArtifactType.MANGA_VOLUME) {
+            if (index === 0) {
                 return 'Chapter';
             }
         }
@@ -31,6 +39,9 @@ export class ArtifactTypeUtil {
             return 1;
         }
         if (artifactType === ArtifactType.MANGA) {
+            return 2;
+        }
+        if (artifactType === ArtifactType.MANGA_VOLUME) {
             return 1;
         }
         return 0;

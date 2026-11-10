@@ -4,6 +4,7 @@ import { Artifact, ArtifactType, type ArtifactAsyncInfo, type IArtifact } from "
 import { Game, type IGame } from "#lib/model/game/Game";
 import { Manga, type IManga } from "#lib/model/manga/Manga";
 import { MangaChapter } from "#lib/model/manga/MangaChapter";
+import { MangaVolume, type IMangaVolume } from "#lib/model/manga/MangaVolume";
 import { Movie } from "#lib/model/movie/Movie";
 import { Tvshow } from "#lib/model/tvshow/Tvshow";
 import { TvshowEpisode } from "#lib/model/tvshow/TvshowEpisode";
@@ -71,6 +72,8 @@ export const artifactFromJSON = (type: ArtifactType, json: IArtifact): Artifact 
             return Manga.fromJSON(json as IManga);
         case ArtifactType.MANGA_CHAPTER:
             return MangaChapter.fromJSON(json);
+        case ArtifactType.MANGA_VOLUME:
+            return MangaVolume.fromJSON(json as IMangaVolume);
         case ArtifactType.GAME:
             return Game.fromJSON(json as IGame);
         case ArtifactType.MOVIE:

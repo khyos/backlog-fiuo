@@ -29,6 +29,7 @@ export interface MALManga {
     mal_id: number;
     title: string;
     synopsis?: string;
+    status?: string;
     published: {
         from?: string;
         to?: string;
@@ -282,9 +283,10 @@ export class MAL {
                 mal_id: manga.mal_id,
                 title: manga.title,
                 synopsis: manga.synopsis,
+                status: manga.status ?? undefined,
                 published: manga.published,
-                volumes: manga.volumes,
-                chapters: manga.chapters,
+                volumes: manga.volumes ?? undefined,
+                chapters: manga.chapters ?? undefined,
                 score: score,
                 genres: manga.genres,
                 images: manga.images,

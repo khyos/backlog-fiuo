@@ -6,6 +6,7 @@ import { Link } from "$lib/model/Link";
 import { Rating } from "$lib/model/Rating";
 import { Manga } from "$lib/model/manga/Manga";
 import { MangaChapter } from "$lib/model/manga/MangaChapter";
+import { MangaVolume } from "$lib/model/manga/MangaVolume";
 import { runDbInsert } from "$lib/server/database";
 import { ArtifactDB } from "../ArtifactDB";
 import { BacklogItemDB } from "../BacklogItemDB";
@@ -16,7 +17,7 @@ export class MangaDB {
     // ========================================
     // Basic Getters
     // ========================================
-    static async getById(id: number, fetchChapters: boolean = false): Promise<Manga | null> {
+    static async getById(id: number, fetchChildren: boolean = false): Promise<Manga | null> {
         const row = await ArtifactDB.getArtifactById(id);
         if (!row) return null;
 
@@ -27,8 +28,8 @@ export class MangaDB {
         manga.ratings = await RatingDB.getRatings(id);
         manga.links = await LinkDB.getLinks(id);
 
-        if (fetchChapters) {
-            await MangaDB.fetchChapters([manga]);
+        if (fetchChildren) {
+            await MangaDB.fetchChildren([manga]);
         }
 
         return manga;
@@ -48,13 +49,37 @@ export class MangaDB {
     // ========================================
     // Children/Relationship Fetchers
     // ========================================
-    static async fetchChapters(mangas: Manga[]): Promise<void> {
+
+    /**
+     * Fetches direct children for each manga:
+     * - MangaVolume rows → pushed into manga.children, then their chapters are fetched.
+     * - Standalone MangaChapter rows → pushed into manga.children directly.
+     */
+    static async fetchChildren(mangas: Manga[]): Promise<void> {
         for (const manga of mangas) {
-            const chapterRows = await ArtifactDB.getChildrenByParentId(manga.id);
-            manga.children = chapterRows.map((row: IArtifactDB) => {
+            const childRows = await ArtifactDB.getChildrenByParentId(manga.id);
+            manga.children = [];
+            for (const row of childRows) {
                 const releaseDate = new Date(row.releaseDate);
-                return new MangaChapter(row.id, row.child_index, row.title, row.type, releaseDate, row.duration);
-            });
+                if (row.type === ArtifactType.MANGA_VOLUME) {
+                    const volume = new MangaVolume(row.id, row.child_index, row.title, row.type, releaseDate, row.duration);
+                    volume.parent = manga;
+                    manga.children.push(volume);
+                } else if (row.type === ArtifactType.MANGA_CHAPTER) {
+                    const chapter = new MangaChapter(row.id, row.child_index, row.title, row.type, releaseDate, row.duration);
+                    chapter.parent = manga;
+                    manga.children.push(chapter);
+                }
+            }
+            // Fetch chapters for each volume
+            for (const volume of manga.volumes) {
+                const chapterRows = await ArtifactDB.getChildrenByParentId(volume.id);
+                volume.children = chapterRows.map((row: IArtifactDB) => {
+                    const chapter = new MangaChapter(row.id, row.child_index, row.title, row.type, new Date(row.releaseDate), row.duration);
+                    chapter.parent = volume;
+                    return chapter;
+                });
+            }
         }
     }
 
@@ -94,7 +119,7 @@ export class MangaDB {
             const releaseDate = new Date(row.releaseDate);
             return new Manga(row.id, row.title, row.type, releaseDate, row.duration);
         });
-        await this.fetchChapters(mangas);
+        await this.fetchChildren(mangas);
         return mangas;
     }
 
@@ -138,10 +163,18 @@ export class MangaDB {
         return manga;
     }
 
-    static async createMangaChapter(mangaId: number, chapterNumber: number, title: string, releaseDate: Date = new Date(7258118400000), duration: number = 0): Promise<MangaChapter> {
+    static async createMangaVolume(mangaId: number, volumeNumber: number, title: string, releaseDate: Date = new Date(7258118400000), duration: number = 0): Promise<MangaVolume> {
+        const mangaVolumeId = await runDbInsert(
+            `INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES (?, ?, ?, ?, ?, ?)`,
+            [title, ArtifactType.MANGA_VOLUME, mangaId, volumeNumber, releaseDate.getTime(), duration]
+        );
+        return new MangaVolume(mangaVolumeId, volumeNumber, title, ArtifactType.MANGA_VOLUME, releaseDate, duration);
+    }
+
+    static async createMangaChapter(parentId: number, chapterNumber: number, title: string, releaseDate: Date = new Date(7258118400000), duration: number = 0): Promise<MangaChapter> {
         const mangaChapterId = await runDbInsert(
             `INSERT INTO artifact (title, type, parent_artifact_id, child_index, releaseDate, duration) VALUES (?, ?, ?, ?, ?, ?)`,
-            [title, ArtifactType.MANGA_CHAPTER, mangaId, chapterNumber, releaseDate.getTime(), duration]
+            [title, ArtifactType.MANGA_CHAPTER, parentId, chapterNumber, releaseDate.getTime(), duration]
         );
         return new MangaChapter(mangaChapterId, chapterNumber, title, ArtifactType.MANGA_CHAPTER, releaseDate, duration);
     }
@@ -151,6 +184,10 @@ export class MangaDB {
     // ========================================
     static async updateManga(id: number, title: string, releaseDate: Date = new Date(7258118400000), duration: number = 0): Promise<void> {
         return await ArtifactDB.updateArtifact(id, title, releaseDate, duration);
+    }
+
+    static async updateMangaVolume(mangaVolumeId: number, volumeNumber: number, title: string, releaseDate: Date = new Date(7258118400000), duration: number = 0): Promise<void> {
+        return await ArtifactDB.updateArtifactWithIndex(mangaVolumeId, volumeNumber, title, releaseDate, duration);
     }
 
     static async updateMangaChapter(mangaChapterId: number, chapterNumber: number, title: string, releaseDate: Date = new Date(7258118400000), duration: number = 0): Promise<void> {
@@ -165,6 +202,10 @@ export class MangaDB {
         if (manga) {
             await ArtifactDB.deleteArtifactAndChildren(manga, 'manga_manga_genre');
         }
+    }
+
+    static async deleteMangaVolume(id: number) {
+        return await ArtifactDB.deleteChildArtifact(id);
     }
 
     static async deleteMangaChapter(id: number) {

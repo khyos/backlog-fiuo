@@ -2,25 +2,37 @@ import { Artifact, ArtifactType, type IArtifact } from "../Artifact";
 import type { Serializable } from "../Serializable";
 import { UserArtifactStatus } from "../UserArtifact";
 import { type IMangaChapter, MangaChapter } from "./MangaChapter";
+import { MangaVolume, type IMangaVolume } from "./MangaVolume";
 
 export const SERIALIZE_TYPE = 'Manga';
 
 export interface IManga extends IArtifact {
-    children: IMangaChapter[]
-    volumes?: number
-    chapters?: number
+    children: (IMangaVolume | IMangaChapter)[]
+    volumeCount?: number
+    chapterCount?: number
     authors?: string
 }
 
 export class Manga extends Artifact implements Serializable<IManga> {
-    override children: MangaChapter[] = [];
-    volumes?: number;
-    chapters?: number;
+    /** Direct children: MangaVolume items and/or standalone MangaChapter items. */
+    override children: Array<MangaVolume | MangaChapter> = [];
+    volumeCount?: number;
+    chapterCount?: number;
     authors?: string;
 
     constructor(id: number, title: string, type: ArtifactType, releaseDate: Date, duration: number, status?: string | null) {
         super(id, title, type, releaseDate, duration, status);
         this.type = ArtifactType.MANGA;
+    }
+
+    /** Volumes that are direct children of this manga. */
+    get volumes(): MangaVolume[] {
+        return this.children.filter((c): c is MangaVolume => c instanceof MangaVolume);
+    }
+
+    /** Chapters that are direct children of this manga (not inside a volume). */
+    get standaloneChapters(): MangaChapter[] {
+        return this.children.filter((c): c is MangaChapter => c instanceof MangaChapter);
     }
 
     computeMeanRating(): number | null {
@@ -39,39 +51,35 @@ export class Manga extends Artifact implements Serializable<IManga> {
         last: MangaChapter | null,
         next: MangaChapter | null
     } {
-        const lastAndNextOnGoing: {
-            last: MangaChapter | null,
-            next: MangaChapter | null
-        } = {
-            last: null,
-            next: null
-        };
-        for (let i = 0; i < this.children.length; i++) {
-            const child = this.children[i];
-            const nextChild = i < this.children.length - 1 ? this.children[i + 1] : null;
+        // Collect all chapters in reading order: chapters from volumes first, then standalone chapters.
+        const allChapters: MangaChapter[] = [
+            ...this.volumes.flatMap(v => v.children),
+            ...this.standaloneChapters
+        ];
+        const result: { last: MangaChapter | null; next: MangaChapter | null } = { last: null, next: null };
+        for (let i = 0; i < allChapters.length; i++) {
+            const child = allChapters[i];
+            const nextChild = i < allChapters.length - 1 ? allChapters[i + 1] : null;
             if (child.userInfo?.status !== UserArtifactStatus.FINISHED) {
-                return {
-                    last: null,
-                    next: child
-                }
+                return { last: null, next: child };
             }
             if (child.userInfo?.status === UserArtifactStatus.FINISHED) {
-                lastAndNextOnGoing.last = child;
+                result.last = child;
                 if (nextChild?.userInfo?.status !== UserArtifactStatus.FINISHED) {
-                    lastAndNextOnGoing.next = nextChild;
+                    result.next = nextChild;
                     break;
                 }
             }
         }
-        return lastAndNextOnGoing;
+        return result;
     }
 
     toJSON(): IManga {
         return {
             ...super.toJSON(),
             __type: SERIALIZE_TYPE,
-            volumes: this.volumes,
-            chapters: this.chapters,
+            volumeCount: this.volumeCount,
+            chapterCount: this.chapterCount,
             authors: this.authors,
             status: this.status
         };
@@ -80,18 +88,24 @@ export class Manga extends Artifact implements Serializable<IManga> {
     static fromJSON(data: IManga): Manga {
         const artifactData = super.fromJSON(data);
         const manga = new Manga(artifactData.id, artifactData.title, artifactData.type, artifactData.releaseDate, artifactData.duration, artifactData.status);
-        manga.children = data.children.map((child) => {
-            const chapter = MangaChapter.fromJSON(child);
-            chapter.parent = manga;
-            return chapter;
+        manga.children = (data.children ?? []).map((child) => {
+            if (child.type === ArtifactType.MANGA_VOLUME) {
+                const volume = MangaVolume.fromJSON(child as IMangaVolume);
+                volume.parent = manga;
+                return volume;
+            } else {
+                const chapter = MangaChapter.fromJSON(child as IMangaChapter);
+                chapter.parent = manga;
+                return chapter;
+            }
         });
         manga.links = artifactData.links;
         manga.genres = artifactData.genres;
         manga.ratings = artifactData.ratings;
         manga.tags = artifactData.tags;
         manga.userInfo = artifactData.userInfo;
-        manga.volumes = data.volumes;
-        manga.chapters = data.chapters;
+        manga.volumeCount = data.volumeCount;
+        manga.chapterCount = data.chapterCount;
         manga.authors = data.authors;
         manga.status = data.status ?? null;
         return manga;

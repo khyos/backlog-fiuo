@@ -57,7 +57,11 @@ export async function POST({ request, locals }: RequestEvent) {
     }
 
     // Duration estimate: chapters × 10 min × 60 s
+    // For ongoing manga (still publishing), Jikan has no chapter-list endpoint —
+    // volumes/chapters reflect MAL's last known counts, or undefined if MAL doesn't track them yet.
+    const isPublishing = malManga.status === 'Publishing';
     const chapterCount = malManga.chapters ?? 0;
+    const volumeCount = malManga.volumes ?? 0;
     const durationPerChapter = 10 * 60;
     const duration = chapterCount * durationPerChapter;
 
@@ -71,10 +75,33 @@ export async function POST({ request, locals }: RequestEvent) {
         ratings
     );
 
-    if (chapterCount > 0) {
-        for (let i = 1; i <= chapterCount; i++) {
-            await MangaDB.createMangaChapter(manga.id, i, `Chapter ${i}`, releaseDate, durationPerChapter);
+    if (volumeCount > 0) {
+        // Create one volume stub per known published volume.
+        for (let i = 1; i <= volumeCount; i++) {
+            await MangaDB.createMangaVolume(manga.id, i, `Volume ${i}`, releaseDate, 0);
         }
+    }
+
+    if (chapterCount > 0) {
+        // Chapters beyond the collected volumes are standalone (published but not yet bound).
+        // For ongoing manga the volume count may lag behind, so we use a ~10 ch/volume heuristic.
+        const chaptersInVolumes = volumeCount > 0 ? volumeCount * 10 : 0;
+        const standaloneCount = Math.max(0, chapterCount - chaptersInVolumes);
+
+        if (standaloneCount > 0) {
+            for (let i = chapterCount - standaloneCount + 1; i <= chapterCount; i++) {
+                await MangaDB.createMangaChapter(manga.id, i, `Chapter ${i}`, releaseDate, durationPerChapter);
+            }
+        } else if (volumeCount === 0) {
+            // No volumes at all — all chapters are standalone.
+            for (let i = 1; i <= chapterCount; i++) {
+                await MangaDB.createMangaChapter(manga.id, i, `Chapter ${i}`, releaseDate, durationPerChapter);
+            }
+        }
+    } else if (isPublishing && volumeCount === 0) {
+        // Counts are unknown (null from MAL) and the manga is still publishing.
+        // Jikan v4 has no chapter-list endpoint for manga, so we can't enumerate chapters.
+        // The manga is created without stubs; volumes/chapters can be added manually.
     }
 
     await ArtifactDB.updateDuration(manga.id, duration);
