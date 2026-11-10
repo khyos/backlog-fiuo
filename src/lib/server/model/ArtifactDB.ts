@@ -20,6 +20,8 @@ const ALLOWED_GENRE_TABLES = new Set([
     'anime_anime_genre',
     'game_genre',
     'game_game_genre',
+    'manga_genre',
+    'manga_manga_genre',
     'movie_genre',
     'movie_movie_genre',
     'tvshow_genre',

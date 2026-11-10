@@ -60,7 +60,7 @@
             helpText: [
                 "Search for the anime you want to add",
                 "Copy the text and numeric from the URL of the page",
-                "Example: https://www.senscritique.com/serie/<span style=\"color: red; font-weight: bold\">attack-on-titan/12345</span>/"
+                "Example: https://www.senscritique.com/bd/<span style=\"color: red; font-weight: bold\">attack-on-titan/12345</span>/"
             ]
         }
     ];

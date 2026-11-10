@@ -1,4 +1,5 @@
 import { AnimeDB } from "#lib/server/model/anime/AnimeDB";
+import { MangaDB } from "#lib/server/model/manga/MangaDB";
 import { ErrorUtil } from "#lib/util/ErrorUtil";
 
 export interface MALAnime {
@@ -19,6 +20,33 @@ export interface MALAnime {
     };
     episodes: number;
     genres?: {
+        mal_id: number;
+        name: string;
+    }[];
+}
+
+export interface MALManga {
+    mal_id: number;
+    title: string;
+    synopsis?: string;
+    published: {
+        from?: string;
+        to?: string;
+    };
+    volumes?: number;
+    chapters?: number;
+    score?: number;
+    images?: {
+        jpg?: {
+            image_url?: string;
+            large_image_url?: string;
+        }
+    };
+    genres?: {
+        mal_id: number;
+        name: string;
+    }[];
+    authors?: {
         mal_id: number;
         name: string;
     }[];
@@ -206,5 +234,85 @@ export class MAL {
             return new Date(aired.from);
         }
         return new Date();
+    }
+
+    static async searchManga(query: string): Promise<{
+        id: number;
+        name: string;
+        link: string;
+        date?: string;
+        poster?: string;
+    }[]> {
+        try {
+            const response = await fetch(`${this.JIKAN_BASE_URL}/manga?q=${encodeURIComponent(query)}&limit=25`);
+            if (!response.ok) {
+                throw new Error(`MAL manga search failed: ${response.status}`);
+            }
+            const data = await response.json();
+            return data.data.map((manga: {
+                mal_id: number;
+                title: string;
+                url: string;
+                published?: { from?: string };
+                images?: { jpg?: { image_url: string } };
+            }) => ({
+                id: manga.mal_id,
+                name: manga.title,
+                link: manga.url,
+                date: manga.published?.from,
+                poster: manga.images?.jpg?.image_url
+            }));
+        } catch (error) {
+            console.error('MAL manga search error:', error);
+            return [];
+        }
+    }
+
+    static async getManga(mangaId: string): Promise<MALManga | null> {
+        try {
+            const response = await fetch(`${this.JIKAN_BASE_URL}/manga/${mangaId}/full`);
+            if (!response.ok) {
+                throw new Error(`MAL get manga failed: ${response.status}`);
+            }
+            const result = await response.json();
+            const manga = result.data;
+            const score = manga.score ? Math.round(manga.score * 10) : undefined;
+
+            return {
+                mal_id: manga.mal_id,
+                title: manga.title,
+                synopsis: manga.synopsis,
+                published: manga.published,
+                volumes: manga.volumes,
+                chapters: manga.chapters,
+                score: score,
+                genres: manga.genres,
+                images: manga.images,
+                authors: manga.authors
+            };
+        } catch (error) {
+            console.error('MAL get manga error:', error);
+            return null;
+        }
+    }
+
+    static async initMangaGenres(): Promise<void> {
+        try {
+            const response = await fetch(`${this.JIKAN_BASE_URL}/genres/manga`);
+            if (!response.ok) {
+                throw new Error(`MAL manga genres failed: ${response.status}`);
+            }
+            const genres = await response.json();
+
+            for (const genre of genres.data) {
+                try {
+                    await MangaDB.addGenreDefinition(genre.mal_id, genre.name);
+                } catch (error) {
+                    console.error(ErrorUtil.getErrorMessage(error));
+                }
+            }
+        } catch (error) {
+            console.error(ErrorUtil.getErrorMessage(error));
+        }
     }
 }

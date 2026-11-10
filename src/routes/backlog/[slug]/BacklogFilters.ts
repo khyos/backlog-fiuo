@@ -9,12 +9,15 @@ const ANIME_RELEASE_DATE_MIN = 1917;
 const ANIME_RELEASE_DATE_MAX = currentYear;
 const GAME_RELEASE_DATE_MIN = 1970;
 const GAME_RELEASE_DATE_MAX = currentYear;
+const MANGA_RELEASE_DATE_MIN = 1900;
+const MANGA_RELEASE_DATE_MAX = currentYear;
 const MOVIE_RELEASE_DATE_MIN = 1895;
 const MOVIE_RELEASE_DATE_MAX = currentYear;
 const TVSHOW_RELEASE_DATE_MIN = 1930;
 const TVSHOW_RELEASE_DATE_MAX = currentYear;
 const ANIME_MAX_DURATION = 400;
 const GAME_MAX_DURATION = 200;
+const MANGA_MAX_DURATION = 500;
 const MOVIE_MAX_DURATION = 240;
 const TVSHOW_MAX_DURATION = 400;
 
@@ -108,6 +111,14 @@ export function createBacklogFilters(artifactType: ArtifactType, rankingType: Ba
         filters.releaseDate.max = ANIME_RELEASE_DATE_MAX;
         filters.releaseDate.absoluteMin = ANIME_RELEASE_DATE_MIN;
         filters.releaseDate.absoluteMax = ANIME_RELEASE_DATE_MAX;
+    } else if (artifactType === ArtifactType.MANGA) {
+        filters.duration.max = MANGA_MAX_DURATION;
+        filters.duration.absoluteMax = MANGA_MAX_DURATION;
+        filters.duration.unit = 'hours';
+        filters.releaseDate.min = MANGA_RELEASE_DATE_MIN;
+        filters.releaseDate.max = MANGA_RELEASE_DATE_MAX;
+        filters.releaseDate.absoluteMin = MANGA_RELEASE_DATE_MIN;
+        filters.releaseDate.absoluteMax = MANGA_RELEASE_DATE_MAX;
     } else if (artifactType === ArtifactType.GAME) {
         filters.duration.max = GAME_MAX_DURATION;
         filters.duration.absoluteMax = GAME_MAX_DURATION;
@@ -212,7 +223,7 @@ export function filterBacklogItems(items: BacklogItem[], artifactType: ArtifactT
     if (filters.duration.max < filters.duration.absoluteMax) {
         let maxDurationInSeconds: number;
         if (artifactType === ArtifactType.GAME || artifactType === ArtifactType.TVSHOW
-            || artifactType === ArtifactType.ANIME
+            || artifactType === ArtifactType.ANIME || artifactType === ArtifactType.MANGA
         ) {
             maxDurationInSeconds = filters.duration.max * 3600;
         } else if (artifactType === ArtifactType.MOVIE) {

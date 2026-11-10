@@ -59,6 +59,8 @@ const getURLFromId = async function(artifactType: ArtifactType | null, type: Lin
                 return `https://www.senscritique.com/film/${url}`;
             } else if (artifactType === ArtifactType.TVSHOW || artifactType === ArtifactType.ANIME) {
                 return `https://www.senscritique.com/serie/${url}`;
+            } else if (artifactType === ArtifactType.MANGA) {
+                return `https://www.senscritique.com/bd/${url}`;
             }
             break;
         case LinkType.STEAM:

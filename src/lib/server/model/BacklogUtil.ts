@@ -6,6 +6,7 @@ import { AnimeDB } from "./anime/AnimeDB";
 import { ArtifactDB } from "./ArtifactDB";
 import { BacklogDB } from "./BacklogDB";
 import { GameDB } from "./game/GameDB";
+import { MangaDB } from "./manga/MangaDB";
 import { MovieDB } from "./movie/MovieDB";
 import { TvshowDB } from "./tvshow/TvshowDB";
 
@@ -27,6 +28,9 @@ export class BacklogUtil {
     static async fetchGenres(artifactType: ArtifactType) {
         if (artifactType === ArtifactType.ANIME) {
             return await AnimeDB.getGenreDefinitions();
+        }
+        else if (artifactType === ArtifactType.MANGA) {
+            return await MangaDB.getGenreDefinitions();
         }
         else if (artifactType === ArtifactType.GAME) {
             return await GameDB.getGenreDefinitions();

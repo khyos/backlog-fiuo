@@ -50,6 +50,8 @@ export function getLinkTypesByArtifactType(artifactType: ArtifactType) {
         return getTvshowLinkTypes();
     } else if (artifactType === ArtifactType.ANIME) {
         return getAnimeLinkTypes();
+    } else if (artifactType === ArtifactType.MANGA) {
+        return getMangaLinkTypes();
     }
     return [];
 }
@@ -67,6 +69,10 @@ export function getTvshowLinkTypes() {
 }
 
 export function getAnimeLinkTypes() {
+    return [LinkType.MAL, LinkType.SENSCRITIQUE];
+}
+
+export function getMangaLinkTypes() {
     return [LinkType.MAL, LinkType.SENSCRITIQUE];
 }
 

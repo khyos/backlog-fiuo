@@ -6,6 +6,7 @@ import type { PageServerLoad } from './$types';
 import { User } from '#lib/model/User';
 import { TvshowDB } from '#lib/server/model/tvshow/TvshowDB';
 import { AnimeDB } from '#lib/server/model/anime/AnimeDB';
+import { MangaDB } from '#lib/server/model/manga/MangaDB';
 import { ArtifactDB } from '#lib/server/model/ArtifactDB';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
@@ -24,6 +25,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		artifactType = ArtifactType.TVSHOW;
 	} else if (artifactTypeSlug === 'anime') {
 		artifactType = ArtifactType.ANIME;
+	} else if (artifactTypeSlug === 'manga') {
+		artifactType = ArtifactType.MANGA;
 	} else {
 		error(400, 'Invalid artifact type');
 	}
@@ -58,6 +61,9 @@ async function fetchGenres(artifactType: ArtifactType) {
 	}
 	else if (artifactType === ArtifactType.ANIME) {
 		return await AnimeDB.getGenreDefinitions();
+	}
+	else if (artifactType === ArtifactType.MANGA) {
+		return await MangaDB.getGenreDefinitions();
 	}
 	return [];
 }

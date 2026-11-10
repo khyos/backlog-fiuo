@@ -2,6 +2,8 @@ import { Anime } from "#lib/model/anime/Anime";
 import { AnimeEpisode } from "#lib/model/anime/AnimeEpisode";
 import { Artifact, ArtifactType, type ArtifactAsyncInfo, type IArtifact } from "#lib/model/Artifact";
 import { Game, type IGame } from "#lib/model/game/Game";
+import { Manga, type IManga } from "#lib/model/manga/Manga";
+import { MangaChapter } from "#lib/model/manga/MangaChapter";
 import { Movie } from "#lib/model/movie/Movie";
 import { Tvshow } from "#lib/model/tvshow/Tvshow";
 import { TvshowEpisode } from "#lib/model/tvshow/TvshowEpisode";
@@ -16,6 +18,11 @@ export async function getAsyncInfo(artifactType: ArtifactType, artifactId: numbe
 
     if (artifactType === ArtifactType.ANIME) {
         const response = await fetch(`/api/anime/${artifactId}/mal`);
+        const info = await response.json();
+        asyncInfo.poster = info?.images?.jpg?.image_url;
+        asyncInfo.description = info?.synopsis;
+    } else if (artifactType === ArtifactType.MANGA) {
+        const response = await fetch(`/api/manga/${artifactId}/mal`);
         const info = await response.json();
         asyncInfo.poster = info?.images?.jpg?.image_url;
         asyncInfo.description = info?.synopsis;
@@ -60,6 +67,10 @@ export const artifactFromJSON = (type: ArtifactType, json: IArtifact): Artifact 
             return Anime.fromJSON(json);
         case ArtifactType.ANIME_EPISODE:
             return AnimeEpisode.fromJSON(json);
+        case ArtifactType.MANGA:
+            return Manga.fromJSON(json as IManga);
+        case ArtifactType.MANGA_CHAPTER:
+            return MangaChapter.fromJSON(json);
         case ArtifactType.GAME:
             return Game.fromJSON(json as IGame);
         case ArtifactType.MOVIE:

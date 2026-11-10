@@ -10,6 +10,8 @@ export enum ArtifactType {
     ANIME_EPISODE = 'anime_episode',
     COMICS = 'comics',
     GAME = 'game',
+    MANGA = 'manga',
+    MANGA_CHAPTER = 'manga_chapter',
     MOVIE = 'movie',
     TVSHOW = 'tvshow',
     TVSHOW_SEASON = 'tvshow_season',

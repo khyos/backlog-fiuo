@@ -12,6 +12,7 @@ import { UserArtifactOwnershipDB } from "#lib/server/model/UserArtifactOwnership
 import { UserDB } from "#lib/server/model/UserDB";
 import { AnimeDB } from "#lib/server/model/anime/AnimeDB";
 import { GameDB } from "#lib/server/model/game/GameDB";
+import { MangaDB } from "#lib/server/model/manga/MangaDB";
 import { PlatformDB } from "#lib/server/model/game/PlatformDB";
 import { MovieDB } from "#lib/server/model/movie/MovieDB";
 import { TvshowDB } from "#lib/server/model/tvshow/TvshowDB";
@@ -34,6 +35,8 @@ export class DBUtil {
             GameDB.createGameGameGenreTable(),
             GameDB.createGameReleaseDateTable(),
             LinkDB.createLinkTable(),
+            MangaDB.createMangaGenreTable(),
+            MangaDB.createMangaMangaGenreTable(),
             MovieDB.createMovieGenreTable(),
             MovieDB.createMovieMovieGenreTable(),
             MovieDB.createMovieReleaseDateTable(),
@@ -56,6 +59,7 @@ export class DBUtil {
         await IGDB.initGenres();
         await IGDB.initPlatforms();
         await MAL.initGenres();
+        await MAL.initMangaGenres();
         await TMDB.initMovieGenres();
         await TMDB.initTvshowGenres();
         await SubscriptionServiceDB.seedPredefinedServices();

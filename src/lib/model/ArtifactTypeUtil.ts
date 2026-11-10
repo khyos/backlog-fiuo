@@ -15,6 +15,11 @@ export class ArtifactTypeUtil {
                 return 'Episode';
             }
         }
+        if (artifactType === ArtifactType.MANGA) {
+            if (index === 0) {
+                return 'Chapter';
+            }
+        }
         return null;
     }
 
@@ -23,6 +28,9 @@ export class ArtifactTypeUtil {
             return 2;
         }
         if (artifactType === ArtifactType.ANIME) {
+            return 1;
+        }
+        if (artifactType === ArtifactType.MANGA) {
             return 1;
         }
         return 0;

@@ -12,6 +12,7 @@
 
     let artifactTypes = [
         { value: ArtifactType.GAME, name: 'Game' },
+        { value: ArtifactType.MANGA, name: 'Manga' },
         { value: ArtifactType.MOVIE, name: 'Movie' },
         { value: ArtifactType.TVSHOW, name: 'TV Show' },
         { value: ArtifactType.ANIME, name: 'Anime' },
