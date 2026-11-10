@@ -147,9 +147,6 @@
         {/if}
 
         <Button size="xs" class="mr-1" onclick={copyAiPrompt}>AI</Button>
-        {#if data.canEdit}
-            <Button size="xs" class="mr-1" onclick={createTierList}>Create Tier List</Button>
-        {/if}
         <Button size="xs" onclick={toggleDrawer}>Filters / Add</Button>
     </div>
     {#each $filteredBacklogItems as backlogItem (backlogItem.artifact.id)}
@@ -166,13 +163,14 @@
 </Listgroup>
 
 <!-- Use the extracted drawer component -->
-<BacklogDrawer 
+<BacklogDrawer
     canEdit={data.canEdit}
     {genres}
     {backlogTags}
     {platforms}
     onMoveBacklogItem={moveBacklogItem}
     onFetchPrices={fetchPricesCb}
+    onCreateTierList={createTierList}
 />
 
 <!-- The Modals remain in the main file -->
