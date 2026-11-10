@@ -1,4 +1,5 @@
 import { MAL } from "$lib/mal/MAL";
+import { ArtifactType } from "$lib/model/Artifact";
 import { LinkType } from "$lib/model/Link";
 import { RatingType } from "$lib/model/Rating";
 import { User, UserRights } from "$lib/model/User";
@@ -97,15 +98,40 @@ const updateMAL = async (mangaId: number, malId: string) => {
 
     const releaseDate = malManga.published?.from ? new Date(malManga.published.from) : new Date();
     const chapterCount = malManga.chapters ?? 0;
+    const volumeCount = malManga.volumes ?? 0;
     const durationPerChapter = 10 * 60;
+
+    const existingChapters = manga.children.filter(c => c.type === ArtifactType.MANGA_CHAPTER);
+    const existingVolumes = manga.children.filter(c => c.type === ArtifactType.MANGA_VOLUME);
 
     if (chapterCount > 0) {
         for (let i = 1; i <= chapterCount; i++) {
-            const existingChapter = manga.children.find(child => child.childIndex === i);
-            if (!existingChapter) {
+            const existing = existingChapters.find(c => c.childIndex === i);
+            if (!existing) {
                 await MangaDB.createMangaChapter(manga.id, i, `Chapter ${i}`, releaseDate, durationPerChapter);
             } else {
-                await MangaDB.updateMangaChapter(existingChapter.id, i, existingChapter.title, releaseDate, durationPerChapter);
+                await MangaDB.updateMangaChapter(existing.id, i, existing.title, releaseDate, durationPerChapter);
+            }
+        }
+        for (const chapter of existingChapters) {
+            if (chapter.childIndex === null || chapter.childIndex > chapterCount) {
+                await MangaDB.deleteMangaChapter(chapter.id);
+            }
+        }
+    }
+
+    if (volumeCount > 0) {
+        for (let i = 1; i <= volumeCount; i++) {
+            const existing = existingVolumes.find(v => v.childIndex === i);
+            if (!existing) {
+                await MangaDB.createMangaVolume(manga.id, i, `Volume ${i}`, releaseDate, 0);
+            } else {
+                await MangaDB.updateMangaVolume(existing.id, i, existing.title, releaseDate, 0);
+            }
+        }
+        for (const volume of existingVolumes) {
+            if (volume.childIndex === null || volume.childIndex > volumeCount) {
+                await MangaDB.deleteMangaVolume(volume.id);
             }
         }
     }

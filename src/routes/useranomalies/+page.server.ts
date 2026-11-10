@@ -9,7 +9,8 @@ const TRACKED_TYPES = [
 	ArtifactType.GAME,
 	ArtifactType.MOVIE,
 	ArtifactType.TVSHOW,
-	ArtifactType.ANIME
+	ArtifactType.ANIME,
+	ArtifactType.MANGA
 ];
 
 export type AnomalyEntry = {

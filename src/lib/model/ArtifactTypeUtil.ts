@@ -15,6 +15,11 @@ export class ArtifactTypeUtil {
                 return 'Episode';
             }
         }
+        if (artifactType === ArtifactType.MANGA) {
+            if (index === 0) {
+                return 'Chapter';
+            }
+        }
         return null;
     }
 

@@ -33,6 +33,9 @@ const getURLFromId = async function(artifactType: ArtifactType | null, type: Lin
             return `https://isthereanydeal.com/game/${finalUrl}`;
         }
         case LinkType.MAL:
+            if (artifactType === ArtifactType.MANGA) {
+                return `https://myanimelist.net/manga/${url}`;
+            }
             return `https://myanimelist.net/anime/${url}`;
         case LinkType.METACRITIC:
             if (artifactType === ArtifactType.GAME) {

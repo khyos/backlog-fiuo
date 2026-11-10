@@ -9,12 +9,14 @@ const MAIN_ARTIFACT_TYPES = [
 	ArtifactType.GAME,
 	ArtifactType.MOVIE,
 	ArtifactType.TVSHOW,
-	ArtifactType.ANIME
+	ArtifactType.ANIME,
+	ArtifactType.MANGA
 ];
 
 const EPISODE_ARTIFACT_TYPES = [
 	ArtifactType.ANIME_EPISODE,
-	ArtifactType.TVSHOW_EPISODE
+	ArtifactType.TVSHOW_EPISODE,
+	ArtifactType.MANGA_CHAPTER
 ];
 
 const ALL_QUERIED_TYPES = [...MAIN_ARTIFACT_TYPES, ...EPISODE_ARTIFACT_TYPES];

@@ -34,12 +34,16 @@ export class LinkDB {
         return links;
     }
 
-    static async getArtifactByLink(type: LinkType, url: string): Promise<{ id: number; title: string; artifactType: string } | null> {
+    static async getArtifactByLink(type: LinkType, url: string, artifactType?: ArtifactType): Promise<{ id: number; title: string; artifactType: string } | null> {
         const row = await getDbRow<{ id: number; title: string; artifactType: string }>(
-            `SELECT artifact.id as id, artifact.title as title, artifact.type as artifactType
-             FROM link INNER JOIN artifact ON link.artifactId = artifact.id
-             WHERE link.type = ? AND link.url = ?`,
-            [type, url]
+            artifactType
+                ? `SELECT artifact.id as id, artifact.title as title, artifact.type as artifactType
+                   FROM link INNER JOIN artifact ON link.artifactId = artifact.id
+                   WHERE link.type = ? AND link.url = ? AND artifact.type = ?`
+                : `SELECT artifact.id as id, artifact.title as title, artifact.type as artifactType
+                   FROM link INNER JOIN artifact ON link.artifactId = artifact.id
+                   WHERE link.type = ? AND link.url = ?`,
+            artifactType ? [type, url, artifactType] : [type, url]
         );
         return row ?? null;
     }

@@ -187,5 +187,21 @@
                 </div>
             </Card>
         </a>
+
+        <!-- Manga Chapter Dates -->
+        <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
+        <a href="/tools/manga-chapter-dates" class="group no-underline">
+            <Card class="h-full transition-all duration-300 hover:-translate-y-1 hover:shadow-lg cursor-pointer">
+                <div class="flex items-center gap-4 pl-2">
+                    <div class="flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-fuchsia-400 to-pink-500 shadow-md shrink-0 group-hover:scale-110 transition-transform duration-300">
+                        <CalendarMonthSolid class="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-1">Manga Chapter &amp; Volume Dates</h2>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Set end dates for finished manga chapters and volumes by distributing them between two dates.</p>
+                    </div>
+                </div>
+            </Card>
+        </a>
     </div>
 </div>

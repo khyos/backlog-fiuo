@@ -163,10 +163,15 @@
     onMount(() => {
         const params = new URLSearchParams(window.location.search);
         const preScId = params.get('scId');
+        const preMalId = params.get('malId');
         const preTitle = params.get('title');
         if (preScId) {
             const input = document.getElementById('scId') as HTMLInputElement | null;
             if (input) input.value = preScId;
+        }
+        if (preMalId) {
+            const input = document.getElementById('malId') as HTMLInputElement | null;
+            if (input) input.value = preMalId;
         }
         if (preTitle) searchTerm = preTitle;
     });

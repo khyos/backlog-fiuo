@@ -74,6 +74,7 @@
         { value: 'film',   name: 'Films' },
         { value: 'game',   name: 'Games' },
         { value: 'tvshow', name: 'TV Shows / Anime' },
+        { value: 'bd',     name: 'Manga / BD' },
     ];
 
     const modeOptions = [
@@ -90,7 +91,7 @@
      * Returns the URL of the create page pre-filled with the SC id for items not yet in the DB.
      * When the universe is tvshow (series on SC), the user can choose movie/tvshow/anime.
      */
-    function createUrl(item: ReconcileItem, type: 'movie' | 'game' | 'tvshow' | 'anime'): string {
+    function createUrl(item: ReconcileItem, type: 'movie' | 'game' | 'tvshow' | 'anime' | 'manga'): string {
         return `/${type}/create?scId=${encodeURIComponent(item.scId)}&title=${encodeURIComponent(item.title)}`;
     }
 
@@ -234,10 +235,11 @@
         return scoreDesynced || dateDesynced;
     }
 
-    function scUniverseForItem(item: ReconcileItem): 'movie' | 'game' | 'tvshow' | 'serie' {
-        // SC universe numbers: 1=Films, 3=Jeux vidéo, 4=Séries
+    function scUniverseForItem(item: ReconcileItem): 'movie' | 'game' | 'tvshow' | 'serie' | 'bd' {
+        // SC universe numbers: 1=Films, 3=Jeux vidéo, 4=Séries, 6=BDs
         if (item.universe === 1) return 'movie';
         if (item.universe === 3) return 'game';
+        if (item.universe === 6) return 'bd';
         return 'serie'; // 4 = Séries (tvshow or anime)
     }
 </script>
@@ -478,6 +480,9 @@
                                         {:else if scUniverse === 'game'}
                                             <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
                                             <Button size="xs" color="blue" href={createUrl(item, 'game')} target="_blank" rel="noopener noreferrer">Create Game</Button>
+                                        {:else if scUniverse === 'bd'}
+                                            <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
+                                            <Button size="xs" color="blue" href={createUrl(item, 'manga')} target="_blank" rel="noopener noreferrer">Create Manga</Button>
                                         {:else}
                                             <!-- serie — could be TV show or anime -->
                                             <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->

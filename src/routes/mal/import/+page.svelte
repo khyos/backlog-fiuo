@@ -36,6 +36,7 @@
     interface MALReconcileResult {
         username: string;
         fetchedAt: string;
+        listType: 'anime' | 'manga';
         totalFetched: number;
         matchedCount: number;
         missingCount: number;
@@ -92,7 +93,8 @@
     }
 
     function createUrl(item: MALReconcileItem): string {
-        return `/anime/create?malId=${encodeURIComponent(item.malId)}&title=${encodeURIComponent(item.title)}`;
+        const type = result?.listType === 'manga' ? 'manga' : 'anime';
+        return `/${type}/create?malId=${encodeURIComponent(item.malId)}&title=${encodeURIComponent(item.title)}`;
     }
 
     function isDesynced(item: MALReconcileItem): boolean {
@@ -244,7 +246,7 @@
 <div class="max-w-8xl mx-auto p-4">
     <h2 class="text-4xl font-extrabold dark:text-white mb-2">MyAnimeList Import</h2>
     <p class="text-gray-500 dark:text-gray-400 mb-4">
-        Reconcile your MAL anime list with the local database.
+        Reconcile your MAL anime or manga list with the local database.
         Items already in the database are linked; missing items offer a quick path to create them.
     </p>
 
@@ -253,7 +255,7 @@
         <strong>How to export your MAL list:</strong>
         <ol class="list-decimal ml-5 mt-1 space-y-1">
             <li>Go to <a href="https://myanimelist.net/panel.php?go=export" target="_blank" rel="noopener noreferrer" class="underline">myanimelist.net/panel.php?go=export</a></li>
-            <li>Click <em>Export Anime List</em> and download the <code>.xml.gz</code> file</li>
+            <li>Click <em>Export Anime List</em> or <em>Export Manga List</em> and download the <code>.xml.gz</code> file</li>
             <li>Extract the <code>.xml</code> file from the archive</li>
             <li>Upload it below</li>
         </ol>
@@ -480,7 +482,7 @@
                                 {:else}
                                     <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
                                     <Button size="xs" color="blue" href={createUrl(item)} target="_blank" rel="noopener noreferrer">
-                                        Create Anime
+                                        Create {result?.listType === 'manga' ? 'Manga' : 'Anime'}
                                     </Button>
                                 {/if}
                             </TableBodyCell>
