@@ -14,7 +14,7 @@ export type MangaWithMissingDates = {
 	childType: 'chapter' | 'volume';
 };
 
-const missingDatesQuery = (childArtifactType: ArtifactType) => `
+const missingDatesQuery = () => `
 	SELECT
 		a.id AS mangaId,
 		a.title,
@@ -41,11 +41,11 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	const [chapterRows, volumeRows] = await Promise.all([
 		getDbRows<Omit<MangaWithMissingDates, 'childType'>>(
-			missingDatesQuery(ArtifactType.MANGA_CHAPTER),
+			missingDatesQuery(),
 			[ArtifactType.MANGA_CHAPTER, user.id, UserArtifactStatus.FINISHED, user.id, ArtifactType.MANGA]
 		),
 		getDbRows<Omit<MangaWithMissingDates, 'childType'>>(
-			missingDatesQuery(ArtifactType.MANGA_VOLUME),
+			missingDatesQuery(),
 			[ArtifactType.MANGA_VOLUME, user.id, UserArtifactStatus.FINISHED, user.id, ArtifactType.MANGA]
 		),
 	]);

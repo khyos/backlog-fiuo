@@ -19,7 +19,7 @@ vi.mock('#lib/server/model/TierListUtil', () => ({
         createTierListFromBacklog: vi.fn(),
         createStandaloneTierList: vi.fn()
     },
-    TIER_LIST_ARTIFACT_TYPES: ['game', 'movie', 'tvshow', 'anime', 'comics']
+    TIER_LIST_ARTIFACT_TYPES: ['game', 'movie', 'tvshow', 'anime', 'manga', 'comics']
 }));
 
 vi.mock('#lib/server/model/BacklogDB', () => ({

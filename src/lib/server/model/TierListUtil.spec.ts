@@ -152,19 +152,20 @@ describe('refreshFromBacklog reconciliation semantics (set algebra, DB seam not 
  *
  * Reading the implementation reveals this constant is used as a guard in the
  * POST /api/tierlist endpoint to reject invalid artifact types.  The guard only
- * works correctly if the set is exactly the five supported types and does not
- * accidentally include unsupported ones (e.g. BOOK, MANGA, PODCAST, COMICS_ISSUE).
+ * works correctly if the set is exactly the six supported types and does not
+ * accidentally include unsupported ones (e.g. BOOK, PODCAST, COMICS_ISSUE).
  */
 describe('TIER_LIST_ARTIFACT_TYPES constant', () => {
-    test('contains exactly 5 entries', () => {
-        expect(TIER_LIST_ARTIFACT_TYPES).toHaveLength(5);
+    test('contains exactly 6 entries', () => {
+        expect(TIER_LIST_ARTIFACT_TYPES).toHaveLength(6);
     });
 
-    test('includes all five supported types', () => {
+    test('includes all six supported types', () => {
         expect(TIER_LIST_ARTIFACT_TYPES).toContain(ArtifactType.GAME);
         expect(TIER_LIST_ARTIFACT_TYPES).toContain(ArtifactType.MOVIE);
         expect(TIER_LIST_ARTIFACT_TYPES).toContain(ArtifactType.TVSHOW);
         expect(TIER_LIST_ARTIFACT_TYPES).toContain(ArtifactType.ANIME);
+        expect(TIER_LIST_ARTIFACT_TYPES).toContain(ArtifactType.MANGA);
         expect(TIER_LIST_ARTIFACT_TYPES).toContain(ArtifactType.COMICS);
     });
 
@@ -172,8 +173,9 @@ describe('TIER_LIST_ARTIFACT_TYPES constant', () => {
         // These types have no tier-list feature according to the implementation;
         // including them would silently allow unsupported creation routes.
         const unsupported: string[] = [
-            'book', 'manga', 'podcast', 'comics_issue',
+            'book', 'podcast', 'comics_issue',
             'tvshow_episode', 'anime_episode', 'movie_episode',
+            'manga_chapter', 'manga_volume',
         ];
         for (const t of unsupported) {
             expect(TIER_LIST_ARTIFACT_TYPES).not.toContain(t);
