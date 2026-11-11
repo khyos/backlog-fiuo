@@ -123,7 +123,7 @@ export class AnimeDB {
     // ========================================
     // Create Operations
     // ========================================
-    static async createAnime(title: string, description: string = '', releaseDate: Date = new Date(), duration: number = 0, genreIds: number[], links: Link[], ratings: Rating[]): Promise<Anime> {
+    static async createAnime(title: string, description: string = '', releaseDate: Date = new Date(7258118400000), duration: number = 0, genreIds: number[], links: Link[], ratings: Rating[]): Promise<Anime> {
         const animeId = await ArtifactDB.createArtifact(title, ArtifactType.ANIME, description, releaseDate, duration);
         
         // Add genres

@@ -299,7 +299,7 @@ export class ArtifactDB {
         title: string,
         artifactType: ArtifactType,
         description: string = '',
-        releaseDate: Date = new Date(),
+        releaseDate: Date = new Date(7258118400000),
         duration: number = 0
     ): Promise<number> {
         const query = `INSERT INTO artifact (title, description, type, releaseDate, duration) VALUES (?, ?, ?, ?, ?)`;
