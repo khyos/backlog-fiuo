@@ -1,4 +1,5 @@
 import { MAL } from "#lib/mal/MAL";
+import { MangaBaka, type MangaBakaManga } from "#lib/mangabaka/MangaBaka";
 import { Link, LinkType } from "#lib/model/Link";
 import { Rating, RatingType } from "#lib/model/Rating";
 import { User, UserRights } from "#lib/model/User";
@@ -15,7 +16,7 @@ export async function POST({ request, locals }: RequestEvent) {
     if (!user.hasRight(UserRights.CREATE_ARTIFACT)) {
         return error(403, "Forbidden");
     }
-    const { malId, scId } = await request.json();
+    const { malId, scId, mbId } = await request.json();
     if (!malId) {
         return error(400, 'No MyAnimeList ID provided');
     }
@@ -47,6 +48,26 @@ export async function POST({ request, locals }: RequestEvent) {
         }
     }
 
+    let mangaBakaManga: MangaBakaManga | null = null;
+    if (mbId) {
+        const mangaBakaId = MangaBaka.extractId(mbId);
+        if (!mangaBakaId) {
+            return error(400, 'Not a valid MangaBaka link');
+        }
+        try {
+            mangaBakaManga = await MangaBaka.getManga(mangaBakaId);
+        } catch {
+            return error(502, 'Could not fetch manga from MangaBaka');
+        }
+        if (!mangaBakaManga) {
+            return error(404, 'MangaBaka manga not found');
+        }
+        if (mangaBakaManga.type !== 'manga') {
+            return error(400, 'MangaBaka series is not a manga');
+        }
+        links.push(new Link(LinkType.MANGABAKA, mangaBakaId));
+    }
+
     const releaseDate = malManga.published?.from ? new Date(malManga.published.from) : undefined;
 
     const genreIds: number[] = [];
@@ -57,9 +78,9 @@ export async function POST({ request, locals }: RequestEvent) {
     }
 
     // Duration estimate: chapters × 10 min × 60 s
-    const chapterCount = malManga.chapters ?? 0;
-    const volumeCount = malManga.volumes ?? 0;
     const durationPerChapter = 10 * 60;
+    const chapterCount = mangaBakaManga?.totalChapters ?? malManga.chapters ?? 0;
+    const volumeCount = mangaBakaManga?.finalVolume ?? malManga.volumes ?? 0;
     const duration = chapterCount * durationPerChapter;
 
     const manga = await MangaDB.createManga(
@@ -74,11 +95,11 @@ export async function POST({ request, locals }: RequestEvent) {
 
     // Volumes and chapters are independent flat children of the manga — no nesting.
     for (let i = 1; i <= volumeCount; i++) {
-        await MangaDB.createMangaVolume(manga.id, i, `Volume ${i}`, releaseDate, 0);
+        await MangaDB.createMangaVolume(manga.id, i, `Volume ${i}`, mangaBakaManga ? undefined : releaseDate, 0);
     }
 
     for (let i = 1; i <= chapterCount; i++) {
-        await MangaDB.createMangaChapter(manga.id, i, `Chapter ${i}`, releaseDate, durationPerChapter);
+        await MangaDB.createMangaChapter(manga.id, i, `Chapter ${i}`, mangaBakaManga ? undefined : releaseDate, durationPerChapter);
     }
 
     await ArtifactDB.updateDuration(manga.id, duration);

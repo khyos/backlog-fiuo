@@ -1,4 +1,5 @@
 import { MAL } from "#lib/mal/MAL";
+import { MangaBaka } from "#lib/mangabaka/MangaBaka";
 import { ArtifactType } from "#lib/model/Artifact";
 import { LinkType } from "#lib/model/Link";
 import { RatingType } from "#lib/model/Rating";
@@ -48,6 +49,12 @@ const setLinkInfo = async (mangaId: number, type: LinkType, url: string): Promis
         if (scRating) {
             await RatingDB.addRating(mangaId, RatingType.SENSCRITIQUE, scRating);
         }
+    } else if (type === LinkType.MANGABAKA) {
+        const id = MangaBaka.extractId(url);
+        if (!id) {
+            return '';
+        }
+        return id;
     }
     return url;
 };
@@ -65,7 +72,13 @@ export async function PUT({ params, request, locals }: RequestEvent) {
         const url = links.find(link => link.type === type)?.url;
         if (url) {
             if (type === LinkType.MAL) {
-                await updateMAL(mangaId, url);
+                await updateMAL(mangaId, url, links.some(l => l.type === LinkType.MANGABAKA));
+            } else if (type === LinkType.MANGABAKA) {
+                try {
+                    await updateMangaBaka(mangaId, url);
+                } catch {
+                    return error(500, "Failed to Update MANGABAKA");
+                }
             } else if (type === LinkType.SENSCRITIQUE) {
                 try {
                     const scRating = await SensCritique.getBDRating(url);
@@ -81,7 +94,7 @@ export async function PUT({ params, request, locals }: RequestEvent) {
     return json({ success: true });
 }
 
-const updateMAL = async (mangaId: number, malId: string) => {
+const updateMAL = async (mangaId: number, malId: string, skipChildren = false) => {
     const manga = await MangaDB.getById(mangaId, true);
     if (!manga) {
         return error(500, "Can't update a Manga that doesn't exist");
@@ -100,6 +113,11 @@ const updateMAL = async (mangaId: number, malId: string) => {
     const chapterCount = malManga.chapters ?? 0;
     const volumeCount = malManga.volumes ?? 0;
     const durationPerChapter = 10 * 60;
+
+    if (skipChildren) {
+        await MangaDB.updateManga(mangaId, manga.title, releaseDate, manga.duration);
+        return;
+    }
 
     const existingChapters = manga.children.filter(c => c.type === ArtifactType.MANGA_CHAPTER);
     const existingVolumes = manga.children.filter(c => c.type === ArtifactType.MANGA_VOLUME);
@@ -139,3 +157,57 @@ const updateMAL = async (mangaId: number, malId: string) => {
     const duration = chapterCount * durationPerChapter;
     await MangaDB.updateManga(mangaId, manga.title, releaseDate, duration);
 };
+
+async function updateMangaBaka(mangaId: number, id: string): Promise<void> {
+    const manga = await MangaDB.getById(mangaId, true);
+    if (!manga) {
+        throw new Error("Can't update a Manga that doesn't exist");
+    }
+
+    const mangaBakaManga = await MangaBaka.getManga(id);
+    if (!mangaBakaManga || mangaBakaManga.type !== 'manga') {
+        throw new Error("MangaBaka manga not found");
+    }
+
+    const durationPerChapter = 10 * 60;
+
+    const existingChapters = manga.children.filter(c => c.type === ArtifactType.MANGA_CHAPTER);
+    const existingVolumes = manga.children.filter(v => v.type === ArtifactType.MANGA_VOLUME);
+
+    const chapterCount = mangaBakaManga.totalChapters;
+    if (chapterCount !== null) {
+        for (let i = 1; i <= chapterCount; i++) {
+            const existing = existingChapters.find(c => c.childIndex === i);
+            if (!existing) {
+                await MangaDB.createMangaChapter(manga.id, i, `Chapter ${i}`, undefined, durationPerChapter);
+            } else {
+                await MangaDB.updateMangaChapter(existing.id, i, `Chapter ${i}`, undefined, durationPerChapter);
+            }
+        }
+        for (const chapter of existingChapters) {
+            if (chapter.childIndex === null || chapter.childIndex > chapterCount) {
+                await MangaDB.deleteMangaChapter(chapter.id);
+            }
+        }
+    }
+
+    const volumeCount = mangaBakaManga.finalVolume;
+    if (volumeCount !== null) {
+        for (let i = 1; i <= volumeCount; i++) {
+            const existing = existingVolumes.find(v => v.childIndex === i);
+            if (!existing) {
+                await MangaDB.createMangaVolume(manga.id, i, `Volume ${i}`, undefined, 0);
+            } else {
+                await MangaDB.updateMangaVolume(existing.id, i, `Volume ${i}`, undefined, 0);
+            }
+        }
+        for (const volume of existingVolumes) {
+            if (volume.childIndex === null || volume.childIndex > volumeCount) {
+                await MangaDB.deleteMangaVolume(volume.id);
+            }
+        }
+    }
+
+    const duration = chapterCount === null ? manga.duration : chapterCount * durationPerChapter;
+    await MangaDB.updateManga(mangaId, manga.title, manga.releaseDate, duration);
+}

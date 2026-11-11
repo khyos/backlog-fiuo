@@ -60,6 +60,16 @@
                 "Copy the text and numeric from the URL of the page",
                 "Example: https://www.senscritique.com/bd/<span style=\"color: red; font-weight: bold\">monster/12345</span>/"
             ]
+        },
+        {
+            id: "mb",
+            name: "MangaBaka",
+            url: "https://mangabaka.org/",
+            helpText: [
+                "Search for a manga above or open its MangaBaka series page",
+                "Enter the series ID or its full page URL",
+                "Example: https://mangabaka.org/manga/<span style=\"color:red;font-weight:bold\">1692</span>/BERSERK"
+            ]
         }
     ];
 

@@ -1,4 +1,5 @@
 import { MAL } from "#lib/mal/MAL";
+import { MangaBaka } from "#lib/mangabaka/MangaBaka";
 import { User, UserRights } from "#lib/model/User";
 import { SensCritique } from "#lib/senscritique/SensCritique";
 import { ErrorUtil } from "#lib/util/ErrorUtil";
@@ -26,5 +27,12 @@ export async function GET({ url, locals }: RequestEvent) {
         scResults = { error: ErrorUtil.getErrorMessage(err) };
     }
 
-    return json({ mal: malResults, sc: scResults });
+    let mbResults;
+    try {
+        mbResults = await MangaBaka.searchManga(query);
+    } catch (err) {
+        mbResults = { error: ErrorUtil.getErrorMessage(err) };
+    }
+
+    return json({ mal: malResults, sc: scResults, mb: mbResults });
 }

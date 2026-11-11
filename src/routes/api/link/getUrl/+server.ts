@@ -4,6 +4,7 @@ import { error, json } from "@sveltejs/kit";
 import type { RequestEvent } from "./$types";
 import { ArtifactType } from "#lib/model/Artifact";
 import { IGDB } from "#lib/igdb/IGDB";
+import { MangaBaka } from "#lib/mangabaka/MangaBaka";
 
 export async function GET({ url }: RequestEvent) {
     const artifactType = url.searchParams.get('artifactType') as ArtifactType | null;
@@ -37,6 +38,8 @@ const getURLFromId = async function(artifactType: ArtifactType | null, type: Lin
                 return `https://myanimelist.net/manga/${url}`;
             }
             return `https://myanimelist.net/anime/${url}`;
+        case LinkType.MANGABAKA:
+            return MangaBaka.getUrlFromId(url);
         case LinkType.METACRITIC:
             if (artifactType === ArtifactType.GAME) {
                 return `https://www.metacritic.com/game/${url}`;
