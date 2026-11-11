@@ -61,7 +61,7 @@ export class SensCritique {
     }
 
     static async searchBD(query: string) {
-        return await SensCritique.searchArtifact(query, 'bd');
+        return await SensCritique.searchArtifact(query, 'comicBook');
     }
 
     static async searchArtifact(query: string, universe: string) {

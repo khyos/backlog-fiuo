@@ -1,4 +1,5 @@
 import { type Artifact } from "#lib/model/Artifact";
+import { ArtifactTypeUtil } from "#lib/model/ArtifactTypeUtil";
 import { UserArtifactStatus } from "#lib/model/UserArtifact";
 import type { IUserArtifactOwnership } from "#lib/model/UserArtifactOwnership";
 import {
@@ -113,17 +114,20 @@ export const markFinishedUpTo = async (targetArtifactId: number) => {
     const parent = target.parent;
     if (!parent) throw new Error('Cannot mark root artifact');
 
-    const targetIndex = parent.children.indexOf(target);
+    const siblings = parent === root && ArtifactTypeUtil.hasParallelChildren(root.type)
+        ? parent.children.filter(child => child.type === target.type)
+        : parent.children;
+    const targetIndex = siblings.indexOf(target);
     const idsToMark: number[] = [];
 
     if (parent.parent === null) {
         // Target is a direct child of root
         for (let i = 0; i <= targetIndex; i++) {
-            idsToMark.push(...root.children[i].getArtifactIds());
+            idsToMark.push(...siblings[i].getArtifactIds());
         }
         await updateStatusAPI(idsToMark, UserArtifactStatus.FINISHED);
         for (let i = 0; i <= targetIndex; i++) {
-            root.children[i].updateUserStatus(UserArtifactStatus.FINISHED);
+            siblings[i].updateUserStatus(UserArtifactStatus.FINISHED);
         }
     } else {
         // Target is a 2nd level child; parent is a 1st level child

@@ -1,10 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { get } from 'svelte/store';
-import { artifactItemStore, initializeStore, refreshArtifact, updateStatus, updateScore, updateDate, updateStartDate, updateEndDate } from './ArtifactItemStore';
+import { artifactItemStore, initializeStore, refreshArtifact, updateStatus, updateScore, updateDate, updateStartDate, updateEndDate, markFinishedUpTo } from './ArtifactItemStore';
 import { ArtifactType } from '#lib/model/Artifact';
 import { UserArtifactStatus } from '#lib/model/UserArtifact';
 import * as ArtifactService from '#lib/services/ArtifactService';
 import { Game } from '#lib/model/game/Game';
+import { Manga } from '#lib/model/manga/Manga';
+import { MangaChapter } from '#lib/model/manga/MangaChapter';
+import { MangaVolume } from '#lib/model/manga/MangaVolume';
 
 describe('ArtifactItemStore', () => {
     let mockArtifact: Game;
@@ -91,6 +94,31 @@ describe('ArtifactItemStore', () => {
 
             await expect(updateStatus(999, UserArtifactStatus.ON_GOING))
                 .rejects.toThrow('Artifact Not Found');
+        });
+    });
+
+    describe('markFinishedUpTo', () => {
+        it('marks only items in the target parallel-child section up to the target', async () => {
+            const manga = new Manga(10, 'Test Manga', ArtifactType.MANGA, new Date(), 0);
+            const volume = new MangaVolume(11, 1, 'Volume 1', ArtifactType.MANGA_VOLUME, new Date(), 0);
+            const firstChapter = new MangaChapter(12, 1, 'Chapter 1', ArtifactType.MANGA_CHAPTER, new Date(), 0);
+            const secondVolume = new MangaVolume(13, 2, 'Volume 2', ArtifactType.MANGA_VOLUME, new Date(), 0);
+            const targetChapter = new MangaChapter(14, 2, 'Chapter 2', ArtifactType.MANGA_CHAPTER, new Date(), 0);
+            manga.children = [volume, firstChapter, secondVolume, targetChapter];
+            manga.children.forEach(child => child.parent = manga);
+            initializeStore(manga);
+
+            vi.mocked(ArtifactService.updateStatus).mockClear();
+            await markFinishedUpTo(targetChapter.id);
+
+            expect(ArtifactService.updateStatus).toHaveBeenCalledWith(
+                [firstChapter.id, targetChapter.id],
+                UserArtifactStatus.FINISHED
+            );
+            expect(firstChapter.userInfo?.status).toBe(UserArtifactStatus.FINISHED);
+            expect(targetChapter.userInfo?.status).toBe(UserArtifactStatus.FINISHED);
+            expect(volume.userInfo).toBeNull();
+            expect(secondVolume.userInfo).toBeNull();
         });
     });
 
