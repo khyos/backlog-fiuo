@@ -11,21 +11,24 @@
         [ArtifactType.GAME]:   'Game',
         [ArtifactType.MOVIE]:  'Movie',
         [ArtifactType.TVSHOW]: 'TV Show',
-        [ArtifactType.ANIME]:  'Anime'
+        [ArtifactType.ANIME]:  'Anime',
+        [ArtifactType.MANGA]:  'Manga'
     };
 
     const TYPE_COLOR: Record<string, 'blue' | 'orange' | 'green' | 'purple' | 'indigo' | 'pink'> = {
         [ArtifactType.GAME]:   'blue',
         [ArtifactType.MOVIE]:  'orange',
         [ArtifactType.TVSHOW]: 'green',
-        [ArtifactType.ANIME]:  'purple'
+        [ArtifactType.ANIME]:  'purple',
+        [ArtifactType.MANGA]:  'pink'
     };
 
     const ARTIFACT_HREF: Record<string, string> = {
         [ArtifactType.GAME]:   'game',
         [ArtifactType.MOVIE]:  'movie',
         [ArtifactType.TVSHOW]: 'tvshow',
-        [ArtifactType.ANIME]:  'anime'
+        [ArtifactType.ANIME]:  'anime',
+        [ArtifactType.MANGA]:  'manga'
     };
 
     let updatingId: number | null = null;

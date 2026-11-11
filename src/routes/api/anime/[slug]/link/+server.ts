@@ -95,7 +95,7 @@ const updateMAL = async (animeId: number, malId: string) => {
         if (malAnime.score) {
             await RatingDB.updateRating(animeId, RatingType.MAL, malAnime.score);
         }
-        const releaseDate = MAL.parseAiredDate(malAnime.aired);
+        const releaseDate = malAnime.aired?.from ? new Date(malAnime.aired.from) : undefined;
         const parsedDuration = MAL.parsePerEpisodeDuration(malAnime.duration);
         const durationPerEpisode = (parsedDuration ?? 20) * 60;
 
@@ -104,13 +104,13 @@ const updateMAL = async (animeId: number, malId: string) => {
             const malAnimeEpisodes = await MAL.getAnimeEpisodes(malId);
             if (malAnimeEpisodes.length === 0 && malAnime.episodes > 1) {
                 malAnimeEpisodes.push(...Array.from({ length: malAnime.episodes }, (_, i) => ({
-                    mal_id: i + 1,
+                    malId: i + 1,
                     title: `Episode ${i + 1}`,
                     aired: undefined
                 })));
             }
             for (const episode of malAnimeEpisodes) {
-                const episodeNumber = episode.mal_id;
+                const episodeNumber = episode.malId;
                 const episodeReleaseDate = episode.aired ? new Date(episode.aired) : undefined;
                 const episodeTitle = episode.title;
                 const animeEpisode = anime.children.find(child => child.childIndex === episodeNumber)
@@ -122,7 +122,7 @@ const updateMAL = async (animeId: number, malId: string) => {
                 duration += durationPerEpisode;
             }
             for (const animeEpisode of anime.children) {
-                const episode = malAnimeEpisodes.find(child => child.mal_id === animeEpisode.childIndex);
+                const episode = malAnimeEpisodes.find(child => child.malId === animeEpisode.childIndex);
                 if (!episode) {
                     await AnimeDB.deleteAnimeEpisode(animeEpisode.id);
                 }

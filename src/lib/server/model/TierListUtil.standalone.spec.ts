@@ -149,6 +149,10 @@ describe('TIER_LIST_ARTIFACT_TYPES — root types only', () => {
         expect(TIER_LIST_ARTIFACT_TYPES).toContain(ArtifactType.ANIME);
     });
 
+    it('contains MANGA', () => {
+        expect(TIER_LIST_ARTIFACT_TYPES).toContain(ArtifactType.MANGA);
+    });
+
     it('contains COMICS', () => {
         expect(TIER_LIST_ARTIFACT_TYPES).toContain(ArtifactType.COMICS);
     });

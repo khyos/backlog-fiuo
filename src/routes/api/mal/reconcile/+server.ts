@@ -1,5 +1,6 @@
 import { User, UserRights } from '#lib/model/User';
 import { LinkType } from '#lib/model/Link';
+import { ArtifactType } from '#lib/model/Artifact';
 import { ArtifactDB } from '#lib/server/model/ArtifactDB';
 import { LinkDB } from '#lib/server/model/LinkDB';
 import { JSDOM } from 'jsdom';
@@ -33,6 +34,7 @@ export interface MALReconcileItem {
 export interface MALReconcileResult {
 	username: string;
 	fetchedAt: string;
+	listType: 'anime' | 'manga';
 	totalFetched: number;
 	matchedCount: number;
 	missingCount: number;
@@ -59,8 +61,11 @@ function normalizeDate(raw: string | null | undefined): string | null {
  * The XML format has <myinfo> with <user_name> and <anime> elements with
  * <series_animedb_id>, <series_title>, <my_score>, <my_status>,
  * <my_start_date>, <my_finish_date>.
+ *
+ * Also supports manga exports: <manga> elements with <manga_mangadb_id>,
+ * <manga_title>, <my_score>, <my_status>, <my_start_date>, <my_finish_date>.
  */
-function parseMALXML(xmlContent: string): { username: string; entries: ParsedEntry[] } {
+function parseMALXML(xmlContent: string): { username: string; listType: 'anime' | 'manga'; entries: ParsedEntry[] } {
 	let dom: JSDOM;
 	try {
 		dom = new JSDOM(xmlContent, { contentType: 'text/xml' });
@@ -74,10 +79,7 @@ function parseMALXML(xmlContent: string): { username: string; entries: ParsedEnt
 		const username = doc.querySelector('myinfo > user_name')?.textContent?.trim() ?? '';
 
 		const animeElements = doc.querySelectorAll('anime');
-		if (animeElements.length === 0) {
-			throw new Error('No anime entries found in the XML. Make sure you uploaded an anime list export.');
-		}
-
+		if (animeElements.length > 0) {
 		const entries: ParsedEntry[] = Array.from(animeElements).map((el) => {
 			const malId = el.querySelector('series_animedb_id')?.textContent?.trim() ?? '';
 			const title = el.querySelector('series_title')?.textContent?.trim() ?? '';
@@ -88,8 +90,25 @@ function parseMALXML(xmlContent: string): { username: string; entries: ParsedEnt
 			const startDate = normalizeDate(el.querySelector('my_start_date')?.textContent?.trim());
 			return { malId, title, malScore, malStatus, finishDate, startDate };
 		});
+		return { username, listType: 'anime', entries };
+		}
 
-		return { username, entries };
+		const mangaElements = doc.querySelectorAll('manga');
+		if (mangaElements.length > 0) {
+			const entries: ParsedEntry[] = Array.from(mangaElements).map((el) => {
+				const malId = el.querySelector('manga_mangadb_id')?.textContent?.trim() ?? '';
+				const title = el.querySelector('manga_title')?.textContent?.trim() ?? '';
+				const rawScore = parseInt(el.querySelector('my_score')?.textContent?.trim() ?? '0', 10);
+				const malScore = rawScore > 0 ? rawScore : null;
+				const malStatus = el.querySelector('my_status')?.textContent?.trim() ?? '';
+				const finishDate = normalizeDate(el.querySelector('my_finish_date')?.textContent?.trim());
+				const startDate = normalizeDate(el.querySelector('my_start_date')?.textContent?.trim());
+				return { malId, title, malScore, malStatus, finishDate, startDate };
+			});
+			return { username, listType: 'manga', entries };
+		}
+
+		throw new Error('No anime or manga entries found in the XML. Make sure you uploaded a valid MAL list export.');
 	} finally {
 		dom.window.close();
 	}
@@ -127,11 +146,15 @@ export async function POST({ request, locals }: RequestEvent) {
 	}
 
 	try {
-		const { username, entries } = parseMALXML(xmlContent);
+		const { username, listType, entries } = parseMALXML(xmlContent);
 
 		const reconcileItems: MALReconcileItem[] = await Promise.all(
 			entries.map(async (entry) => {
-				const dbArtifact = await LinkDB.getArtifactByLink(LinkType.MAL, entry.malId);
+				const dbArtifact = await LinkDB.getArtifactByLink(
+						LinkType.MAL,
+						entry.malId,
+						listType === 'manga' ? ArtifactType.MANGA : ArtifactType.ANIME
+					);
 
 				let dbScore: number | null = null;
 				let dbEndDate: string | null = null;
@@ -143,9 +166,13 @@ export async function POST({ request, locals }: RequestEvent) {
 					dbStartDate = userInfo?.startDate?.toISOString() ?? null;
 				}
 
+				const malUrlBase = listType === 'manga'
+					? `https://myanimelist.net/manga/${entry.malId}`
+					: `https://myanimelist.net/anime/${entry.malId}`;
+
 				return {
 					...entry,
-					malUrl: `https://myanimelist.net/anime/${entry.malId}`,
+					malUrl: malUrlBase,
 					dbId: dbArtifact?.id ?? null,
 					dbType: dbArtifact?.artifactType ?? null,
 					dbScore,
@@ -160,6 +187,7 @@ export async function POST({ request, locals }: RequestEvent) {
 		const result: MALReconcileResult = {
 			username,
 			fetchedAt: new Date().toISOString(),
+			listType,
 			totalFetched: reconcileItems.length,
 			matchedCount,
 			missingCount: reconcileItems.length - matchedCount,

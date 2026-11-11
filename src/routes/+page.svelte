@@ -6,7 +6,8 @@
         ForwardSolid,
         ClapperboardPlaySolid,
         ImageSolid,
-        StarSolid
+        StarSolid,
+        BookOpenSolid
     } from "flowbite-svelte-icons";
     import { ArtifactType } from "#lib/model/Artifact";
 </script>
@@ -85,6 +86,16 @@
                                     <span class="text-sm font-semibold text-white relative z-10">Anime</span>
                                 </div>
                             </a>
+                            <div class="col-span-2 flex justify-center">
+                                <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
+                                <a href="/backlog/current/{ArtifactType.MANGA}" class="group/btn relative overflow-hidden w-[calc(50%-0.5rem)]">
+                                    <div class="relative h-24 flex flex-col items-center justify-center space-y-2 bg-gradient-to-br from-pink-500 to-fuchsia-600 hover:from-pink-600 hover:to-fuchsia-700 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 hover:rotate-1">
+                                        <div class="absolute inset-0 bg-white/20 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300 rounded-xl"></div>
+                                        <BookOpenSolid class="w-6 h-6 text-white relative z-10 group-hover/btn:scale-110 transition-transform duration-300" />
+                                        <span class="text-sm font-semibold text-white relative z-10">Manga</span>
+                                    </div>
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </Card>
@@ -137,6 +148,16 @@
                                     <span class="text-sm font-semibold text-white relative z-10">Anime</span>
                                 </div>
                             </a>
+                            <div class="col-span-2 flex justify-center">
+                                <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
+                                <a href="/backlog/future/{ArtifactType.MANGA}" class="group/btn relative overflow-hidden w-[calc(50%-0.5rem)]">
+                                    <div class="relative h-24 flex flex-col items-center justify-center space-y-2 bg-gradient-to-br from-pink-500 to-fuchsia-600 hover:from-pink-600 hover:to-fuchsia-700 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 hover:rotate-1">
+                                        <div class="absolute inset-0 bg-white/20 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300 rounded-xl"></div>
+                                        <BookOpenSolid class="w-6 h-6 text-white relative z-10 group-hover/btn:scale-110 transition-transform duration-300" />
+                                        <span class="text-sm font-semibold text-white relative z-10">Manga</span>
+                                    </div>
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </Card>

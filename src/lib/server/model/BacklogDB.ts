@@ -7,6 +7,7 @@ import { getDbRow, getDbRows, runDbInsert, runDbQuery } from "../database";
 import { AnimeDB } from "./anime/AnimeDB";
 import { BacklogItemDB } from "./BacklogItemDB";
 import { GameDB } from "./game/GameDB";
+import { MangaDB } from "./manga/MangaDB";
 import { MovieDB } from "./movie/MovieDB";
 import { TvshowDB } from "./tvshow/TvshowDB";
 
@@ -114,6 +115,9 @@ export class BacklogDB {
         switch (artifactType) {
             case ArtifactType.ANIME:
                 backlogItems = await AnimeDB.getBacklogItems(backlogId, rankingType, finalBacklogOrder);
+                break;
+            case ArtifactType.MANGA:
+                backlogItems = await MangaDB.getBacklogItems(backlogId, rankingType, finalBacklogOrder);
                 break;
             case ArtifactType.GAME:
                 backlogItems = await GameDB.getBacklogItems(backlogId, rankingType, finalBacklogOrder);

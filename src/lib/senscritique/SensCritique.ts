@@ -15,6 +15,10 @@ export class SensCritique {
         return SensCritique.getRating(`https://www.senscritique.com/serie/${tvshowId}`);
     }
 
+    static async getBDRating(mangaId: string): Promise<number | null> {
+        return SensCritique.getRating(`https://www.senscritique.com/bd/${mangaId}`);
+    }
+
     static async getRating(url: string): Promise<number | null> {
         const response = await got(url);
         let dom;
@@ -54,6 +58,10 @@ export class SensCritique {
 
     static async searchTvshow(query: string) {
         return await SensCritique.searchArtifact(query, 'tvShow');
+    }
+
+    static async searchBD(query: string) {
+        return await SensCritique.searchArtifact(query, 'bd');
     }
 
     static async searchArtifact(query: string, universe: string) {

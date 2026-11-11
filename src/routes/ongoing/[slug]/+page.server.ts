@@ -2,6 +2,7 @@ import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { User } from '#lib/model/User';
 import { AnimeDB } from '#lib/server/model/anime/AnimeDB';
+import { MangaDB } from '#lib/server/model/manga/MangaDB';
 import { TvshowDB } from '#lib/server/model/tvshow/TvshowDB';
 import { UserList } from '#lib/model/UserList';
 import { ArtifactType, type Artifact } from '#lib/model/Artifact';
@@ -30,6 +31,10 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		validArtifactType = ArtifactType.ANIME;
 		const animes = await AnimeDB.getUserOngoingAnimes(user.id, true);
 		items = await processOngoingArtifacts(user.id, animes);
+	} else if (artifactType === 'manga') {
+		validArtifactType = ArtifactType.MANGA;
+		const mangas = await MangaDB.getUserOngoingMangas(user.id, true);
+		items = await processOngoingArtifacts(user.id, mangas);
 	} else {
 		error(400, 'Invalid artifact type');
 	}

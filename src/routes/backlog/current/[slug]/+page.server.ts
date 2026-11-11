@@ -6,12 +6,14 @@ import { ArtifactType } from '#lib/model/Artifact';
 import { User } from '#lib/model/User';
 import { AnimeDB } from '#lib/server/model/anime/AnimeDB';
 import { GameDB } from '#lib/server/model/game/GameDB';
+import { MangaDB } from '#lib/server/model/manga/MangaDB';
 import { MovieDB } from '#lib/server/model/movie/MovieDB';
 import { TvshowDB } from '#lib/server/model/tvshow/TvshowDB';
 
 const COMPATIBLE_ARTIFACT_TYPES: ArtifactType[] = [
 	ArtifactType.ANIME,
 	ArtifactType.GAME,
+	ArtifactType.MANGA,
 	ArtifactType.MOVIE,
 	ArtifactType.TVSHOW
 ];
@@ -40,6 +42,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	const suggestedArtifacts = suggestedArtifactsDB.map((artifactDB) => {
 		if (artifactDB.type === ArtifactType.ANIME) {
 			return AnimeDB.deserialize(artifactDB);
+		} else if (artifactDB.type === ArtifactType.MANGA) {
+			return MangaDB.deserialize(artifactDB);
 		} else if (artifactDB.type === ArtifactType.GAME) {
 			return GameDB.deserialize(artifactDB);
 		} else if (artifactDB.type === ArtifactType.MOVIE) {

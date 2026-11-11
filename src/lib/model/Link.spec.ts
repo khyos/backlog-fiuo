@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { Link, LinkType, SERIALIZE_TYPE, getLinkTypeLabel, getLinkTypesByArtifactType, type ILink } from './Link';
+import { Link, LinkType, SERIALIZE_TYPE, getLinkTypeLabel, getLinkTypesByArtifactType, getMangaLinkTypes, getAnimeLinkTypes, getGameLinkTypes, getMovieLinkTypes, getTvshowLinkTypes, type ILink } from './Link';
 import { ArtifactType } from './Artifact';
 
 describe('Link', () => {
@@ -99,5 +99,40 @@ describe('getLinkTypesByArtifactType', () => {
     test('should return empty array for unknown artifact type', () => {
         const types = getLinkTypesByArtifactType('UNKNOWN' as ArtifactType);
         expect(types).toEqual([]);
+    });
+});
+
+/**
+ * Complementary wiring coverage for the newly-added MANGABAKA link type.
+ * The pre-existing label test and list tests above intentionally do NOT mention
+ * MANGABAKA, so these assert the new enum member is wired in exactly where it
+ * should be (manga list only) and nowhere else.
+ */
+describe('MANGABAKA link wiring', () => {
+    test('enum member has the stringified value "MANGABAKA"', () => {
+        expect(LinkType.MANGABAKA).toBe('MANGABAKA');
+    });
+
+    test('getLinkTypeLabel returns "MangaBaka"', () => {
+        expect(getLinkTypeLabel(LinkType.MANGABAKA)).toBe('MangaBaka');
+    });
+
+    test('getMangaLinkTypes includes MANGABAKA', () => {
+        expect(getMangaLinkTypes()).toContain(LinkType.MANGABAKA);
+    });
+
+    test('getLinkTypesByArtifactType(MANGA) includes MANGABAKA', () => {
+        expect(getLinkTypesByArtifactType(ArtifactType.MANGA)).toContain(LinkType.MANGABAKA);
+    });
+
+    test('MANGABAKA is not offered for any other artifact type', () => {
+        expect(getAnimeLinkTypes()).not.toContain(LinkType.MANGABAKA);
+        expect(getGameLinkTypes()).not.toContain(LinkType.MANGABAKA);
+        expect(getMovieLinkTypes()).not.toContain(LinkType.MANGABAKA);
+        expect(getTvshowLinkTypes()).not.toContain(LinkType.MANGABAKA);
+        expect(getLinkTypesByArtifactType(ArtifactType.ANIME)).not.toContain(LinkType.MANGABAKA);
+        expect(getLinkTypesByArtifactType(ArtifactType.GAME)).not.toContain(LinkType.MANGABAKA);
+        expect(getLinkTypesByArtifactType(ArtifactType.MOVIE)).not.toContain(LinkType.MANGABAKA);
+        expect(getLinkTypesByArtifactType(ArtifactType.TVSHOW)).not.toContain(LinkType.MANGABAKA);
     });
 });

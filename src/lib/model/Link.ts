@@ -6,6 +6,7 @@ export enum LinkType {
     IGDB = 'IGDB',
     ITAD = 'ITAD',
     MAL = 'MAL',
+    MANGABAKA = 'MANGABAKA',
     METACRITIC = 'METACRITIC',
     OPENCRITIC = 'OPENCRITIC',
     ROTTEN_TOMATOES =  'ROTTEN_TOMATOES',
@@ -24,6 +25,8 @@ export function getLinkTypeLabel(linkType: LinkType) {
             return 'ITAD';
         case LinkType.MAL:
             return 'MyAnimeList';
+        case LinkType.MANGABAKA:
+            return 'MangaBaka';
         case LinkType.METACRITIC:
             return 'Metacritic';
         case LinkType.OPENCRITIC:
@@ -50,6 +53,8 @@ export function getLinkTypesByArtifactType(artifactType: ArtifactType) {
         return getTvshowLinkTypes();
     } else if (artifactType === ArtifactType.ANIME) {
         return getAnimeLinkTypes();
+    } else if (artifactType === ArtifactType.MANGA) {
+        return getMangaLinkTypes();
     }
     return [];
 }
@@ -68,6 +73,10 @@ export function getTvshowLinkTypes() {
 
 export function getAnimeLinkTypes() {
     return [LinkType.MAL, LinkType.SENSCRITIQUE];
+}
+
+export function getMangaLinkTypes() {
+    return [LinkType.MAL, LinkType.SENSCRITIQUE, LinkType.MANGABAKA];
 }
 
 

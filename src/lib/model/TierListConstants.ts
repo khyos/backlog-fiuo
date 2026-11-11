@@ -5,5 +5,6 @@ export const TIER_LIST_ARTIFACT_TYPES: ArtifactType[] = [
     ArtifactType.MOVIE,
     ArtifactType.TVSHOW,
     ArtifactType.ANIME,
+    ArtifactType.MANGA,
     ArtifactType.COMICS,
 ];

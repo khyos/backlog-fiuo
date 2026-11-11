@@ -26,7 +26,8 @@
         [ArtifactType.GAME]: 'Games',
         [ArtifactType.MOVIE]: 'Movies',
         [ArtifactType.TVSHOW]: 'TV Shows',
-        [ArtifactType.ANIME]: 'Anime'
+        [ArtifactType.ANIME]: 'Anime',
+        [ArtifactType.MANGA]: 'Manga'
     };
 
     const STATUS_LABEL: Record<string, string> = {
@@ -37,20 +38,29 @@
         [UserArtifactStatus.WISHLIST]: 'Wishlist'
     };
 
-    const MAIN_TYPES = [ArtifactType.GAME, ArtifactType.MOVIE, ArtifactType.TVSHOW, ArtifactType.ANIME];
+    const MAIN_TYPES = [ArtifactType.GAME, ArtifactType.MOVIE, ArtifactType.TVSHOW, ArtifactType.ANIME, ArtifactType.MANGA];
 
     const TYPE_COLOR: Record<string, string> = {
         [ArtifactType.GAME]:           '#3b82f6',
         [ArtifactType.MOVIE]:          '#f97316',
         [ArtifactType.TVSHOW]:         '#10b981',
         [ArtifactType.ANIME]:          '#8b5cf6',
+        [ArtifactType.MANGA]:          '#ec4899',
         [ArtifactType.TVSHOW_EPISODE]: '#10b981',
-        [ArtifactType.ANIME_EPISODE]:  '#8b5cf6'
+        [ArtifactType.ANIME_EPISODE]:  '#8b5cf6',
+        [ArtifactType.MANGA_CHAPTER]:  '#ec4899'
     };
 
     const EPISODE_TYPE: Record<string, ArtifactType> = {
         [ArtifactType.TVSHOW]: ArtifactType.TVSHOW_EPISODE,
-        [ArtifactType.ANIME]:  ArtifactType.ANIME_EPISODE
+        [ArtifactType.ANIME]:  ArtifactType.ANIME_EPISODE,
+        [ArtifactType.MANGA]:  ArtifactType.MANGA_CHAPTER
+    };
+
+    const EPISODE_SECTION_LABEL: Record<string, string> = {
+        [ArtifactType.TVSHOW]: 'Episodes watched',
+        [ArtifactType.ANIME]:  'Episodes watched',
+        [ArtifactType.MANGA]:  'Chapters read'
     };
 
     const SUB_PERIOD_LABEL: Record<Period, string> = {
@@ -276,7 +286,7 @@
                 {#if stat.episodeCount !== null && stat.episodeBars !== null}
                     <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
                         <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1">
-                            Episodes watched {SUB_PERIOD_LABEL[selectedPeriod]}
+                            {EPISODE_SECTION_LABEL[stat.type] ?? 'Episodes watched'} {SUB_PERIOD_LABEL[selectedPeriod]}
                         </p>
                         <div class="flex items-baseline gap-3 mb-2">
                             <span class="text-2xl font-semibold dark:text-white">{stat.episodeCount}</span>

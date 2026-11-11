@@ -42,6 +42,13 @@
         { name: 'On Going', href: '/ongoing/anime' },
         { name: 'My List', href: '/mylist/anime' }
     ];
+
+    const mangaMenu = [
+        { name: 'Search', href: '/manga' },
+        { name: 'Create', href: '/manga/create' },
+        { name: 'On Going', href: '/ongoing/manga' },
+        { name: 'My List', href: '/mylist/manga' }
+    ];
 </script>
 
 <Navbar class="px-0">
@@ -97,6 +104,12 @@
         <NavLi class="cursor-pointer">Anime<ChevronDownOutline class="w-5 h-5 ms-2 text-primary-800 dark:text-white inline"/></NavLi>
         <Dropdown simple class="w-30">
             {#each animeMenu as item (item.name)}
+                <DropdownItem href={item.href} class="hover:text-primary-600 dark:hover:text-primary-500">{item.name}</DropdownItem>
+            {/each}
+        </Dropdown>
+        <NavLi class="cursor-pointer">Manga<ChevronDownOutline class="w-5 h-5 ms-2 text-primary-800 dark:text-white inline"/></NavLi>
+        <Dropdown simple class="w-30">
+            {#each mangaMenu as item (item.name)}
                 <DropdownItem href={item.href} class="hover:text-primary-600 dark:hover:text-primary-500">{item.name}</DropdownItem>
             {/each}
         </Dropdown>

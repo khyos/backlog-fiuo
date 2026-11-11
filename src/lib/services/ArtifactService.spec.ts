@@ -34,7 +34,7 @@ describe('ArtifactService', () => {
     describe('getAsyncInfo', () => {
         test('should fetch anime info from MAL', async () => {
             const malResponse = {
-                images: { jpg: { image_url: 'https://example.com/anime.jpg' } },
+                imageUrl: 'https://example.com/anime.jpg',
                 synopsis: 'Test anime description'
             };
 

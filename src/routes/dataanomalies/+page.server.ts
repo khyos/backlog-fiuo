@@ -43,6 +43,16 @@ export const load: PageServerLoad = async ({ locals }) => {
 		[ArtifactType.TVSHOW]
 	);
 
+	const mangaNoChapters = await getDbRows<DataAnomalyEntry>(
+		`SELECT a.id AS artifactId, a.title, a.type
+		FROM artifact a
+		WHERE a.type = ?
+		  AND NOT EXISTS (
+			SELECT 1 FROM artifact ch WHERE ch.parent_artifact_id = a.id
+		  )`,
+		[ArtifactType.MANGA]
+	);
+
 	const groups: DataAnomalyGroup[] = [
 		{
 			key: 'anime_no_episodes',
@@ -55,6 +65,12 @@ export const load: PageServerLoad = async ({ locals }) => {
 			label: 'TV Show — no episodes in database',
 			description: 'TV show entries that have no season or episode records in the database.',
 			entries: tvshowNoEpisodes
+		},
+		{
+			key: 'manga_no_chapters',
+			label: 'Manga — no chapters or volumes in database',
+			description: 'Manga entries that have no chapter or volume records in the database.',
+			entries: mangaNoChapters
 		}
 	];
 
