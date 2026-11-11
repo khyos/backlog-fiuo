@@ -131,7 +131,7 @@ export class MangaDB {
     // ========================================
     // Create Operations
     // ========================================
-    static async createManga(title: string, description: string = '', releaseDate: Date = new Date(), duration: number = 0, genreIds: number[], links: Link[], ratings: Rating[]): Promise<Manga> {
+    static async createManga(title: string, description: string = '', releaseDate: Date = new Date(7258118400000), duration: number = 0, genreIds: number[], links: Link[], ratings: Rating[]): Promise<Manga> {
         const mangaId = await ArtifactDB.createArtifact(title, ArtifactType.MANGA, description, releaseDate, duration);
 
         for (const genreId of genreIds) {

@@ -71,10 +71,10 @@
     let tableSearch: string = '';
 
     const universeOptions = [
-        { value: 'film',   name: 'Films' },
-        { value: 'game',   name: 'Games' },
-        { value: 'tvshow', name: 'TV Shows / Anime' },
-        { value: 'bd',     name: 'Manga / BD' },
+        { value: 'film',      name: 'Films' },
+        { value: 'game',      name: 'Games' },
+        { value: 'tvshow',    name: 'TV Shows / Anime' },
+        { value: 'comicBook', name: 'Manga / BD' },
     ];
 
     const modeOptions = [
@@ -235,11 +235,11 @@
         return scoreDesynced || dateDesynced;
     }
 
-    function scUniverseForItem(item: ReconcileItem): 'movie' | 'game' | 'tvshow' | 'serie' | 'bd' {
+    function scUniverseForItem(item: ReconcileItem): 'movie' | 'game' | 'tvshow' | 'serie' | 'comicBook' {
         // SC universe numbers: 1=Films, 3=Jeux vidéo, 4=Séries, 6=BDs
         if (item.universe === 1) return 'movie';
         if (item.universe === 3) return 'game';
-        if (item.universe === 6) return 'bd';
+        if (item.universe === 6) return 'comicBook'; // 6 = BDs (manga or comic book)
         return 'serie'; // 4 = Séries (tvshow or anime)
     }
 </script>
@@ -480,7 +480,7 @@
                                         {:else if scUniverse === 'game'}
                                             <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
                                             <Button size="xs" color="blue" href={createUrl(item, 'game')} target="_blank" rel="noopener noreferrer">Create Game</Button>
-                                        {:else if scUniverse === 'bd'}
+                                        {:else if scUniverse === 'comicBook'}
                                             <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
                                             <Button size="xs" color="blue" href={createUrl(item, 'manga')} target="_blank" rel="noopener noreferrer">Create Manga</Button>
                                         {:else}
