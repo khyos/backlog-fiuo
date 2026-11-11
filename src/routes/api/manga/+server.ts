@@ -47,12 +47,12 @@ export async function POST({ request, locals }: RequestEvent) {
         }
     }
 
-    const releaseDate = malManga.published?.from ? new Date(malManga.published.from) : new Date();
+    const releaseDate = malManga.published?.from ? new Date(malManga.published.from) : undefined;
 
     const genreIds: number[] = [];
     if (malManga.genres) {
         for (const genre of malManga.genres) {
-            genreIds.push(genre.mal_id);
+            genreIds.push(genre.malId);
         }
     }
 

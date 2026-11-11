@@ -96,7 +96,7 @@ const updateMAL = async (mangaId: number, malId: string) => {
         await RatingDB.updateRating(mangaId, RatingType.MAL, malManga.score);
     }
 
-    const releaseDate = malManga.published?.from ? new Date(malManga.published.from) : new Date();
+    const releaseDate = malManga.published?.from ? new Date(malManga.published.from) : undefined;
     const chapterCount = malManga.chapters ?? 0;
     const volumeCount = malManga.volumes ?? 0;
     const durationPerChapter = 10 * 60;
@@ -108,9 +108,9 @@ const updateMAL = async (mangaId: number, malId: string) => {
         for (let i = 1; i <= chapterCount; i++) {
             const existing = existingChapters.find(c => c.childIndex === i);
             if (!existing) {
-                await MangaDB.createMangaChapter(manga.id, i, `Chapter ${i}`, releaseDate, durationPerChapter);
+                await MangaDB.createMangaChapter(manga.id, i, `Chapter ${i}`, undefined, durationPerChapter);
             } else {
-                await MangaDB.updateMangaChapter(existing.id, i, existing.title, releaseDate, durationPerChapter);
+                await MangaDB.updateMangaChapter(existing.id, i, existing.title, undefined, durationPerChapter);
             }
         }
         for (const chapter of existingChapters) {
@@ -124,9 +124,9 @@ const updateMAL = async (mangaId: number, malId: string) => {
         for (let i = 1; i <= volumeCount; i++) {
             const existing = existingVolumes.find(v => v.childIndex === i);
             if (!existing) {
-                await MangaDB.createMangaVolume(manga.id, i, `Volume ${i}`, releaseDate, 0);
+                await MangaDB.createMangaVolume(manga.id, i, `Volume ${i}`, undefined, 0);
             } else {
-                await MangaDB.updateMangaVolume(existing.id, i, existing.title, releaseDate, 0);
+                await MangaDB.updateMangaVolume(existing.id, i, existing.title, undefined, 0);
             }
         }
         for (const volume of existingVolumes) {

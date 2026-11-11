@@ -47,12 +47,12 @@ export async function POST({ request, locals }: RequestEvent) {
         }
     }
 
-    const releaseDate = MAL.parseAiredDate(malAnime.aired);
+    const releaseDate = malAnime.aired?.from ? new Date(malAnime.aired.from) : undefined;
 
     const genreIds: number[] = [];
     if (malAnime.genres) {
         for (const genre of malAnime.genres) {
-            genreIds.push(genre.mal_id);
+            genreIds.push(genre.malId);
         }
     }
 
@@ -74,13 +74,13 @@ export async function POST({ request, locals }: RequestEvent) {
         const animeEpisodes = await MAL.getAnimeEpisodes(malId);
         if (animeEpisodes.length === 0 && malAnime.episodes > 1) {
             animeEpisodes.push(...Array.from({ length: malAnime.episodes }, (_, i) => ({
-                mal_id: i + 1,
+                malId: i + 1,
                 title: `Episode ${i + 1}`,
                 aired: undefined
             })));
         }
         for (const episode of animeEpisodes) {
-            const episodeNumber = episode.mal_id;
+            const episodeNumber = episode.malId;
             const episodeReleaseDate = episode.aired ? new Date(episode.aired) : undefined;
             const episodeTitle = episode.title;
             await AnimeDB.createAnimeEpisode(anime.id, episodeNumber, episodeTitle, episodeReleaseDate, durationPerEpisode);

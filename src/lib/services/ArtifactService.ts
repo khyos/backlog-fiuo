@@ -20,12 +20,12 @@ export async function getAsyncInfo(artifactType: ArtifactType, artifactId: numbe
     if (artifactType === ArtifactType.ANIME) {
         const response = await fetch(`/api/anime/${artifactId}/mal`);
         const info = await response.json();
-        asyncInfo.poster = info?.images?.jpg?.image_url;
+        asyncInfo.poster = info?.imageUrl;
         asyncInfo.description = info?.synopsis;
     } else if (artifactType === ArtifactType.MANGA) {
         const response = await fetch(`/api/manga/${artifactId}/mal`);
         const info = await response.json();
-        asyncInfo.poster = info?.images?.jpg?.image_url;
+        asyncInfo.poster = info?.imageUrl;
         asyncInfo.description = info?.synopsis;
     } else if (artifactType === ArtifactType.GAME) {
         const response = await fetch(`/api/game/${artifactId}/poster`);
