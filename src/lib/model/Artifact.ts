@@ -144,16 +144,23 @@ export abstract class Artifact implements Serializable<IArtifact> {
 
     getOngoingTrackingProgress(): ArtifactTrackingProgress[] {
         const artifactsByType = new Map<ArtifactType, Artifact[]>();
+        const parentTypes = new Set<ArtifactType>();
         const collectDescendants = (artifact: Artifact) => {
             for (const child of artifact.children) {
                 const artifacts = artifactsByType.get(child.type) ?? [];
                 artifacts.push(child);
                 artifactsByType.set(child.type, artifacts);
+                if (child.children.length > 0) {
+                    parentTypes.add(child.type);
+                }
                 collectDescendants(child);
             }
         };
         collectDescendants(this);
 
+        // Only track the lowest level: types whose artifacts have no children of
+        // their own. This keeps both volume and chapter for manga (flat siblings)
+        // while dropping seasons for tv shows (episodes live below them).
         return Array.from(artifactsByType, ([childType, artifacts]) => {
             let last: Artifact | null = null;
             let next: Artifact | null = null;
@@ -165,7 +172,7 @@ export abstract class Artifact implements Serializable<IArtifact> {
                 last = artifact;
             }
             return { childType, last, next };
-        });
+        }).filter((progress) => !parentTypes.has(progress.childType));
     }
 
     getArtifactById(artifactId: number): Artifact | null {
