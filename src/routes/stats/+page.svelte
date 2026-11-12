@@ -63,6 +63,16 @@
         [ArtifactType.MANGA]:  'Chapters read'
     };
 
+    const TRACKED_ITEM_TYPE: Partial<Record<ArtifactType, ArtifactType>> = {
+        [ArtifactType.TVSHOW]: ArtifactType.TVSHOW_SEASON,
+        [ArtifactType.MANGA]: ArtifactType.MANGA_VOLUME
+    };
+
+    const TRACKED_ITEM_LABEL: Partial<Record<ArtifactType, string>> = {
+        [ArtifactType.TVSHOW]: 'Seasons completed',
+        [ArtifactType.MANGA]: 'Volumes read'
+    };
+
     const SUB_PERIOD_LABEL: Record<Period, string> = {
         week:      'per day',
         month:     'per day',
@@ -81,6 +91,16 @@
             if (e.type !== type || !e.endDate) return false;
             return e.endDate >= start && e.endDate <= end;
         }).length;
+    }
+
+    function countCompletedInPeriod(entries: StatEntry[], type: ArtifactType, start: number, end: number) {
+        return entries.filter(e =>
+            e.type === type &&
+            e.status === UserArtifactStatus.FINISHED &&
+            e.endDate !== null &&
+            e.endDate >= start &&
+            e.endDate <= end
+        ).length;
     }
 
     function computeStats(entries: StatEntry[], start: number, end: number, subPeriods: SubPeriod[]) {
@@ -124,6 +144,18 @@
                 }));
             }
 
+            const trackedItemType = TRACKED_ITEM_TYPE[type];
+            const trackedItemCount = trackedItemType
+                ? countCompletedInPeriod(entries, trackedItemType, start, end)
+                : null;
+            const trackedItemBars = trackedItemType
+                ? subPeriods.map(sp => ({
+                    label: sp.label,
+                    showLabel: sp.displayLabel ?? false,
+                    value: countCompletedInPeriod(entries, trackedItemType, sp.start, sp.end)
+                }))
+                : null;
+
         // Split anime into short (≤2 episodes) and regular (>2 episodes)
         type AnimeBars = { finishedCount: number; totalDuration: number; bars: { label: string; showLabel: boolean; value: number }[] };
         let animeShort: AnimeBars | null = null;
@@ -161,7 +193,7 @@
             };
         }
 
-        return { type, finishedCount: finishedInPeriod.length, totalDuration, averageScore, statusCounts, bars, episodeCount, episodeBars, animeShort, animeRegular };
+        return { type, finishedCount: finishedInPeriod.length, totalDuration, averageScore, statusCounts, bars, episodeCount, episodeBars, trackedItemCount, trackedItemBars, animeShort, animeRegular };
         });
     }
 
@@ -281,6 +313,19 @@
                         <BarChart bars={stat.bars} color={TYPE_COLOR[stat.type]} />
                     {/if}
                 </div>
+
+                {#if stat.trackedItemCount !== null && stat.trackedItemBars !== null}
+                    <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+                        <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1">
+                            {TRACKED_ITEM_LABEL[stat.type]} {SUB_PERIOD_LABEL[selectedPeriod]}
+                        </p>
+                        <div class="flex items-baseline gap-3 mb-2">
+                            <span class="text-2xl font-semibold dark:text-white">{stat.trackedItemCount}</span>
+                            <span class="text-xs text-gray-500 dark:text-gray-400">this {selectedPeriod}</span>
+                        </div>
+                        <BarChart bars={stat.trackedItemBars} color={TYPE_COLOR[stat.type]} />
+                    </div>
+                {/if}
 
                 <!-- Episode chart for anime / tvshow -->
                 {#if stat.episodeCount !== null && stat.episodeBars !== null}
