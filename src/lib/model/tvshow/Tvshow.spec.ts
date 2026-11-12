@@ -84,6 +84,19 @@ describe('Tvshow', () => {
             expect(result.next).toBe(episode3);
         });
 
+        test('should provide generic progress streams for each descendant type', () => {
+            episode1.updateUserStatus(UserArtifactStatus.FINISHED);
+            episode2.updateUserStatus(UserArtifactStatus.FINISHED);
+
+            const result = tvshow.getOngoingTrackingProgress();
+            const seasonProgress = result.find((progress) => progress.childType === ArtifactType.TVSHOW_SEASON);
+            const episodeProgress = result.find((progress) => progress.childType === ArtifactType.TVSHOW_EPISODE);
+
+            expect(seasonProgress?.next).toBe(season1);
+            expect(episodeProgress?.last).toBe(episode2);
+            expect(episodeProgress?.next).toBe(episode3);
+        });
+
         test('should return last finished episode when all are finished', () => {
             episode1.updateUserStatus(UserArtifactStatus.FINISHED);
             episode2.updateUserStatus(UserArtifactStatus.FINISHED);

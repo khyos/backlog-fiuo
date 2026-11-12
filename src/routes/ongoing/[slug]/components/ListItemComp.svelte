@@ -5,12 +5,17 @@
     import { CirclePauseSolid, ClapperboardPlaySolid, ClockArrowOutline } from "flowbite-svelte-icons";
     import { UserArtifactStatus } from "#lib/model/UserArtifact";
     import { TimeUtil } from "#lib/util/TimeUtil";
+    import { ArtifactTypeUtil } from "#lib/model/ArtifactTypeUtil";
 
     export let artifact: Artifact;
 
     $: userListStoreInst = $userListStore;
-    let lastAndNext = artifact.lastAndNextOngoing;
-    $: { void $userListStore; lastAndNext = artifact.lastAndNextOngoing; }
+    let trackingProgress = artifact.getOngoingTrackingProgress();
+    $: hasNext = trackingProgress.some((progress) => progress.next !== null);
+    $: {
+        void $userListStore;
+        trackingProgress = artifact.getOngoingTrackingProgress();
+    }
 </script>
 
 <TableBodyRow class="text-gray-950 border-gray-300">
@@ -26,27 +31,39 @@
         </div>
     </TableBodyCell>
     <TableBodyCell>
-        {lastAndNext.last?.numbering}
-        <br />
-        <span class="font-normal truncate block max-w-xs" title={lastAndNext.last?.title}>{lastAndNext.last?.title}</span>
-    </TableBodyCell>
-    <TableBodyCell>
-        <div style="display: inline-flex">
-            {#if lastAndNext.next}
-                {lastAndNext.next?.numbering} - {TimeUtil.formatDate(lastAndNext.next?.releaseDate)}
-                {#if lastAndNext.next?.releaseDate && new Date() < lastAndNext.next?.releaseDate}
-                <ClockArrowOutline size="xs" color="navy" class="ml-1" style='transform: scale(-1, 1); margin-top:auto; margin-bottom:auto'/>
-                {/if}
-            {:else}
-                -
+        {#each trackingProgress as progress (progress.childType)}
+            {#if progress.last}
+                <div>{ArtifactTypeUtil.getTypeName(progress.childType)} {progress.last.numbering}</div>
+                <span class="font-normal truncate block max-w-xs" title={progress.last.title}>{progress.last.title}</span>
             {/if}
-        </div>
-        <br />
-        <span class="font-normal truncate block max-w-xs" title={lastAndNext.next?.title}>{lastAndNext.next?.title}</span>
+        {/each}
     </TableBodyCell>
     <TableBodyCell>
-        {#if lastAndNext.next}
-            <Button size="xs" onclick={() => updateStatus(lastAndNext.next!.id)}>Seen</Button>
+        {#if hasNext}
+            {#each trackingProgress as progress (progress.childType)}
+                {#if progress.next}
+                    <div class="inline-flex">
+                        {ArtifactTypeUtil.getTypeName(progress.childType)} {progress.next.numbering} - {TimeUtil.formatDate(progress.next.releaseDate)}
+                        {#if progress.next.releaseDate && new Date() < progress.next.releaseDate}
+                            <ClockArrowOutline size="xs" color="navy" class="ml-1" style='transform: scale(-1, 1); margin-top:auto; margin-bottom:auto'/>
+                        {/if}
+                    </div>
+                    <span class="font-normal truncate block max-w-xs" title={progress.next.title}>{progress.next.title}</span>
+                {/if}
+            {/each}
+        {:else}
+            -
         {/if}
+    </TableBodyCell>
+    <TableBodyCell>
+        {#each trackingProgress as progress (progress.childType)}
+            {#if progress.next}
+                <div>
+                    <Button size="xs" class="mb-1" onclick={() => updateStatus(progress.next!.id)}>
+                        Seen {ArtifactTypeUtil.getTypeName(progress.childType).toLowerCase()}
+                    </Button>
+                </div>
+            {/if}
+        {/each}
     </TableBodyCell>
 </TableBodyRow>
