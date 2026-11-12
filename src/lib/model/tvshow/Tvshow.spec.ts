@@ -84,7 +84,7 @@ describe('Tvshow', () => {
             expect(result.next).toBe(episode3);
         });
 
-        test('should provide generic progress streams for each descendant type', () => {
+        test('should only provide progress streams for leaf descendant types', () => {
             episode1.updateUserStatus(UserArtifactStatus.FINISHED);
             episode2.updateUserStatus(UserArtifactStatus.FINISHED);
 
@@ -92,7 +92,7 @@ describe('Tvshow', () => {
             const seasonProgress = result.find((progress) => progress.childType === ArtifactType.TVSHOW_SEASON);
             const episodeProgress = result.find((progress) => progress.childType === ArtifactType.TVSHOW_EPISODE);
 
-            expect(seasonProgress?.next).toBe(season1);
+            expect(seasonProgress).toBeUndefined();
             expect(episodeProgress?.last).toBe(episode2);
             expect(episodeProgress?.next).toBe(episode3);
         });
