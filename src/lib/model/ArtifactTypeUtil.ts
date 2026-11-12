@@ -1,6 +1,23 @@
 import { ArtifactType } from "./Artifact";
 
 export class ArtifactTypeUtil {
+    static getTypeName(artifactType: ArtifactType): string {
+        const names: Record<ArtifactType, string> = {
+            [ArtifactType.ANIME]: 'Anime',
+            [ArtifactType.ANIME_EPISODE]: 'Episode',
+            [ArtifactType.COMICS]: 'Comics',
+            [ArtifactType.GAME]: 'Game',
+            [ArtifactType.MANGA]: 'Manga',
+            [ArtifactType.MANGA_CHAPTER]: 'Chapter',
+            [ArtifactType.MANGA_VOLUME]: 'Volume',
+            [ArtifactType.MOVIE]: 'Movie',
+            [ArtifactType.TVSHOW]: 'TV Show',
+            [ArtifactType.TVSHOW_SEASON]: 'Season',
+            [ArtifactType.TVSHOW_EPISODE]: 'Episode'
+        };
+        return names[artifactType];
+    }
+
     static getChildName(artifactType: ArtifactType, index: number): string | null {
         if (artifactType === ArtifactType.TVSHOW) {
             if (index === 0) {

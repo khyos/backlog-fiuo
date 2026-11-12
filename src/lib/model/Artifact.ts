@@ -50,6 +50,12 @@ export interface IArtifact extends ISerializable {
     status?: string | null
 }
 
+export interface ArtifactTrackingProgress {
+    childType: ArtifactType;
+    last: Artifact | null;
+    next: Artifact | null;
+}
+
 export type ArtifactAsyncInfo = {
     description: string | null,
     poster: string | null
@@ -134,6 +140,32 @@ export abstract class Artifact implements Serializable<IArtifact> {
             ids.push(...child.getArtifactIds());
         }
         return ids;
+    }
+
+    getOngoingTrackingProgress(): ArtifactTrackingProgress[] {
+        const artifactsByType = new Map<ArtifactType, Artifact[]>();
+        const collectDescendants = (artifact: Artifact) => {
+            for (const child of artifact.children) {
+                const artifacts = artifactsByType.get(child.type) ?? [];
+                artifacts.push(child);
+                artifactsByType.set(child.type, artifacts);
+                collectDescendants(child);
+            }
+        };
+        collectDescendants(this);
+
+        return Array.from(artifactsByType, ([childType, artifacts]) => {
+            let last: Artifact | null = null;
+            let next: Artifact | null = null;
+            for (const artifact of artifacts) {
+                if (artifact.userInfo?.status !== UserArtifactStatus.FINISHED) {
+                    next = artifact;
+                    break;
+                }
+                last = artifact;
+            }
+            return { childType, last, next };
+        });
     }
 
     getArtifactById(artifactId: number): Artifact | null {
