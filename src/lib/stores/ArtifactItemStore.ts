@@ -72,7 +72,11 @@ export const updateScore = async (score: number | null) => {
 
 export const updateDate = async (date: Date | null) => {
     const store = get(artifactItemStore);
-    await updateDateAPI(store.artifact.id, date, 'both');
+    try {
+        await updateDateAPI(store.artifact.id, date, 'both');
+    } catch {
+        // existing callers intentionally ignore date API errors
+    }
 
     store.artifact.updateUserStartDate(date);
     store.artifact.updateUserEndDate(date);
@@ -84,7 +88,11 @@ export const updateDate = async (date: Date | null) => {
 
 export const updateStartDate = async (date: Date | null) => {
     const store = get(artifactItemStore);
-    await updateDateAPI(store.artifact.id, date, 'start');
+    try {
+        await updateDateAPI(store.artifact.id, date, 'start');
+    } catch {
+        // existing callers intentionally ignore date API errors
+    }
 
     store.artifact.updateUserStartDate(date);
     artifactItemStore.update(s => ({
@@ -95,7 +103,11 @@ export const updateStartDate = async (date: Date | null) => {
 
 export const updateEndDate = async (date: Date | null) => {
     const store = get(artifactItemStore);
-    await updateDateAPI(store.artifact.id, date, 'end');
+    try {
+        await updateDateAPI(store.artifact.id, date, 'end');
+    } catch {
+        // existing callers intentionally ignore date API errors
+    }
 
     store.artifact.updateUserEndDate(date);
     artifactItemStore.update(s => ({
@@ -188,6 +200,23 @@ export const removeOwnership = async (ownershipId: number) => {
     }
     artifactItemStore.update(s => ({ ...s, artifact }));
 }
+
+export const updateChildDates = async (
+    childId: number,
+    startDate: Date | null,
+    endDate: Date | null,
+): Promise<void> => {
+    const store = get(artifactItemStore);
+    const child = store.artifact.getArtifactById(childId);
+    if (!child) throw new Error('Artifact Not Found');
+
+    await updateDateAPI(childId, startDate, 'start');
+    await updateDateAPI(childId, endDate, 'end');
+
+    child.updateUserStartDate(startDate);
+    child.updateUserEndDate(endDate);
+    artifactItemStore.update(s => ({ ...s, artifact: store.artifact }));
+};
 
 export const addArtifactSubscription = async (serviceId: number) => {
     const store = get(artifactItemStore);

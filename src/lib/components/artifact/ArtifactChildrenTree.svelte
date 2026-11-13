@@ -76,7 +76,7 @@
                         <Button size="xs" color="light" class="!p-1.5 mx-2">
                             <DotsVerticalOutline class="w-4 h-4" />
                         </Button>
-                        <Dropdown placement="bottom-end">
+                        <Dropdown placement="bottom-end" class="list-none">
                             <DropdownItem
                                 onclick={() =>
                                     markFinishedUpTo(firstLevelChild.id)}
@@ -164,6 +164,7 @@
                                                         </Button>
                                                         <Dropdown
                                                             placement="bottom-end"
+                                                            class="list-none"
                                                         >
                                                             <DropdownItem
                                                                 onclick={() =>
@@ -240,7 +241,7 @@
                                                     <Button size="xs" color="light" class="!p-1">
                                                         <DotsVerticalOutline class="w-3 h-3" />
                                                     </Button>
-                                                    <Dropdown placement="bottom-end">
+                                                    <Dropdown placement="bottom-end" class="list-none">
                                                         <DropdownItem onclick={() => markFinishedUpTo(child.id)}>Mark finished up to here</DropdownItem>
                                                     </Dropdown>
                                                 </div>

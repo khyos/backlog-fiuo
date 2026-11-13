@@ -307,11 +307,11 @@ describe('ArtifactService', () => {
 
     describe('updateDate', () => {
         test('should send date update request', async () => {
-            global.fetch = vi.fn().mockResolvedValue({});
+            global.fetch = vi.fn().mockResolvedValue({ ok: true });
             const consoleSpy = vi.spyOn(console, 'error');
 
             await updateDate(1, currentDate, 'start');
-            
+
             expect(global.fetch).toHaveBeenCalledWith('/api/artifact/1/userDate', {
                 method: 'POST',
                 body: JSON.stringify({
@@ -324,18 +324,20 @@ describe('ArtifactService', () => {
             expect(mockAlert).not.toHaveBeenCalled();
         });
 
-        test('should handle error in date update', async () => {
+        test('should throw on network error in date update', async () => {
             global.fetch = vi.fn().mockRejectedValue(new Error('Network error'));
-            const consoleSpy = vi.spyOn(console, 'error');
 
-            await updateDate(1, currentDate, 'start');
+            await expect(updateDate(1, currentDate, 'start')).rejects.toThrow('Network error');
+        });
 
-            expect(consoleSpy).toHaveBeenCalledWith('Error updating date:', expect.any(Error));
-            expect(mockAlert).toHaveBeenCalledWith('Failed to update date');
+        test('should throw on non-ok response in date update', async () => {
+            global.fetch = vi.fn().mockResolvedValue({ ok: false });
+
+            await expect(updateDate(1, currentDate, 'start')).rejects.toThrow('Failed to update date');
         });
 
         test('should handle null date', async () => {
-            global.fetch = vi.fn().mockResolvedValue({});
+            global.fetch = vi.fn().mockResolvedValue({ ok: true });
 
             await updateDate(1, null, 'both');
 
