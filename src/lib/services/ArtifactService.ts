@@ -115,16 +115,16 @@ export const updateScore = async (artifactId: number, score: number | null) => {
 }
 
 export const updateDate = async (artifactId: number, date: Date | null, startEnd: 'start' | 'end' | 'both') => {
-    fetch(`/api/artifact/${artifactId}/userDate`, {
+    const response = await fetch(`/api/artifact/${artifactId}/userDate`, {
         method: "POST",
         body: JSON.stringify({
             date: date ? date.toISOString() : null,
             startEnd: startEnd
         }),
-    }).catch(error => {
-        console.error("Error updating date:", error);
-        alert("Failed to update date");
     });
+    if (!response.ok) {
+        throw new Error('Failed to update date');
+    }
 }
 
 export const addOwnership = async (artifactId: number, platform: string, note: string | null): Promise<number> => {

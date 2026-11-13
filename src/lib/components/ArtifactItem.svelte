@@ -8,6 +8,7 @@
     import {
         Card,
         Badge,
+        Button,
         Heading,
         P,
         Hr,
@@ -25,6 +26,7 @@
     import ArtifactSubscriptionManager from "#lib/components/artifact/ArtifactSubscriptionManager.svelte";
     import ArtifactUserInfoPanel from "#lib/components/artifact/ArtifactUserInfoPanel.svelte";
     import ArtifactChildrenTree from "#lib/components/artifact/ArtifactChildrenTree.svelte";
+    import ArtifactChildrenDatesModal from "#lib/components/artifact/ArtifactChildrenDatesModal.svelte";
 
     // Common properties that all artifact types share
     $: artifactItemStoreInst = $artifactItemStore;
@@ -37,6 +39,7 @@
     export let canEdit: boolean = false;
 
     let artifactAsyncInfo: ArtifactAsyncInfo | null = null;
+    let showDatesModal = false;
     onMount(() => {
         getAsyncInfo(artifact.type, artifact.id).then((asyncInfo) => {
             artifactAsyncInfo = asyncInfo;
@@ -122,6 +125,13 @@
                 </div>
             {/if}
 
+            {#if userConnected && artifact.children.length > 0}
+                <div class="flex justify-end mb-2">
+                    <Button size="xs" color="light" onclick={() => (showDatesModal = true)}>
+                        Detailed View
+                    </Button>
+                </div>
+            {/if}
             <ArtifactChildrenTree {userConnected} />
         </div>
 
@@ -151,4 +161,9 @@
             <ArtifactLinkManager {canEdit} />
         </div>
     </div>
+    <ArtifactChildrenDatesModal
+        bind:open={showDatesModal}
+        onClose={() => (showDatesModal = false)}
+        {userConnected}
+    />
 </Card>
